@@ -85,6 +85,7 @@ function DriverCard({ driver }: { driver: Driver }) {
   const [focused, setFocused] = useState(false);
   const active = hovered || focused;
   const duration = driver.duration ?? driverHoverTransition.duration;
+  const easing = driver.easing ?? driverHoverTransition.easing;
 
   return (
     <li className="w-[80%] shrink-0 snap-start sm:w-auto">
@@ -96,7 +97,7 @@ function DriverCard({ driver }: { driver: Driver }) {
           effect={driver.effect}
           direction={driver.direction}
           duration={duration}
-          easing={driverHoverTransition.easing}
+          easing={easing}
           label={driver.name}
           className="h-full min-h-0 rounded-2xl"
           // Efeitos que escondem a foto (curtain) revelam este fundo; sem ele, a cor desbota sobre o branco.

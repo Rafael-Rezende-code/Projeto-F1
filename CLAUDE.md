@@ -22,12 +22,16 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   ("Fique no grid / Não perca a próxima volta").
 - Seção "Os pilotos / Escolha seu piloto" (`components/drivers-section.tsx`) logo abaixo do hero: 4 cards
   `rounded-2xl` com `HoverTransition`, um efeito por piloto (ripple, strips, curtain, wipe; 0,5 s, ease-out
-  expo; Hamilton com duração própria de 0,85 s). Dados, efeitos e duração em `lib/drivers.ts`; fotos em
-  `public/images/pilotos` (servidas em AVIF/WebP q90).
+  expo; Hamilton com 0,95 s e curva própria ease-in-out, para a cortina abrir em ~0,48 s). Dados, efeitos,
+  duração e curva em `lib/drivers.ts`; fotos em `public/images/pilotos` (servidas em AVIF/WebP q90).
 - `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo da seção de pilotos. Lista em `lib/f1-teams.ts`;
   equipe sem `src` aparece com o nome em texto. Logos reais: Ferrari, Mercedes, Red Bull e Audi (pretas a
-  55%, 100% no hover do item; `crop` ignora as margens transparentes dos arquivos e `displayHeight` dá a
-  altura óptica). **McLaren pendente:** `mclaren.jpg` tem fundo branco sólido; aguarda PNG/SVG transparente.
+  55%, 100% no hover do item; `displayHeight` dá a altura óptica). Arquivos em `public/images/logos-equipes`
+  já recortados (sem margem), em minúsculas e com ~3× a altura exibida; originais em
+  `assets/logos-equipes-originais` (fora do deploy). O hover desacelera a faixa à metade. O leitor de tela lê
+  uma lista única (`sr-only`); a faixa animada é `aria-hidden`.
+  **McLaren pendente:** `mclaren.jpg` tem fundo branco sólido; quando chegar `mclaren.svg` (ou PNG
+  transparente), usar o novo e apagar o `.jpg`.
 
 ## Decisões já tomadas
 
@@ -54,10 +58,9 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - O site **não tem modo escuro**: os fundos das seções são fixos e iguais nos dois temas. Mas as variáveis
   CSS (`--foreground` etc.) mudam com `prefers-color-scheme: dark`, então texto sem cor própria herda branco
   no modo escuro do sistema. Em componentes novos, use cores fixas (`text-black`, `text-white`), nunca
-  `text-foreground` nem `dark:`. Ainda herdam a cor do tema (pendente): títulos "Essenciais do dia de prova"
-  e "O que o grid veste" e os nomes da grade "Com quem você corre?".
-- `LogoMarquee`: com `duration={80}` e `durationOnHover={25}`, o hover **acelera** a faixa (pendente de
-  decisão; desacelerar exige `durationOnHover` maior que `duration`).
+  `text-foreground` nem `dark:`. Hoje nenhum texto ou ícone visível da página muda de cor com o tema.
+- `LogoMarquee` (`InfiniteSlider`): `durationOnHover` maior que `duration` desacelera. A transição de
+  velocidade dividia a distância por `contentSize` em vez de `contentSize / 2` (corrigido).
 - Toda a página fica em `app/page.tsx` (client component).
 - Spotlight do hero (`RevealLayer` em `app/page.tsx`): máscara CSS `radial-gradient` posicionada por
   `--spot-x`/`--spot-y` (antes era um PNG gerado por canvas a cada frame, que travava a página). O loop

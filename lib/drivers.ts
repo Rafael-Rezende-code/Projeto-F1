@@ -20,6 +20,8 @@ export type Driver = {
   direction: HoverTransitionDirection;
   /** Duração própria em segundos. Sem ela, usa driverHoverTransition.duration. */
   duration?: number;
+  /** Curva própria (CSS). Sem ela, usa driverHoverTransition.easing. */
+  easing?: string;
 };
 
 // Transição compartilhada pelos cards: duração em segundos e curva ease-out expo.
@@ -68,8 +70,10 @@ export const drivers: Driver[] = [
     href: "#collection",
     effect: "curtain",
     direction: "right",
-    // Cortina de palco: abre com mais peso que os outros cards.
-    duration: 0.85,
+    // Cortina de palco: começa devagar e abre com peso. Com esta curva, a cortina fica toda aberta na
+    // metade da duração (~0,48 s); com 0,85 s ficava no limite de 0,4 s.
+    duration: 0.95,
+    easing: "cubic-bezier(0.65, 0, 0.35, 1)",
   },
   {
     slug: "bortoleto",
