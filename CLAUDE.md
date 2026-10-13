@@ -22,7 +22,8 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   ("Fique no grid / Não perca a próxima volta").
 - Seção "Os pilotos / Escolha seu piloto" (`components/drivers-section.tsx`) logo abaixo do hero: 4 cards
   `rounded-2xl` com `HoverTransition`, um efeito por piloto (ripple, strips, curtain, wipe; 0,5 s, ease-out
-  expo). Dados, efeitos e duração em `lib/drivers.ts`; fotos em `public/images/pilotos`.
+  expo; Hamilton com duração própria de 0,85 s). Dados, efeitos e duração em `lib/drivers.ts`; fotos em
+  `public/images/pilotos` (servidas em AVIF/WebP q90).
 - `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo da seção de pilotos. Lista em `lib/f1-teams.ts`;
   equipe sem `src` aparece com o nome em texto.
 
@@ -40,14 +41,18 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   não estiver no PATH). Dev: `corepack pnpm dev`. Build: `corepack pnpm build`.
 - Não há script de lint nem ESLint configurado; até isso mudar, usar `npx tsc --noEmit` como checagem.
 - `next.config.mjs` tem `typescript.ignoreBuildErrors: true` (o build não falha por erro de tipo). O
-  `images.unoptimized` foi removido na tarefa dos pilotos: o `next/image` otimiza (use `sizes` corretos).
+  `next/image` otimiza (sem `unoptimized`), com `formats` AVIF/WebP e `qualities: [75, 90]` (o Next 16 só
+  aceita qualidades listadas). Depois de mudar o `next.config`, reinicie o dev server: o otimizador de
+  imagens pode ficar travado no restart automático.
+- Fotos dos pilotos: `sizes` = largura real do card × 1,5 (sobreamostragem medida: o navegador borra ao
+  reduzir perto de 1:1). Não "corrigir" para 1× sem medir a nitidez de novo.
 - Registry `@componentry` (https://componentry.fun/r/{name}.json) configurado no `components.json`.
 - `components/ui/hover-transition.tsx` (do @componentry) recebeu a prop opcional `active` (modo
   controlado). Se reinstalar pelo shadcn, reaplicar.
 - O tema escuro do Tailwind (`dark:`) só ativa com a classe `.dark`; as variáveis CSS (`--foreground`
   etc.) também mudam com `prefers-color-scheme: dark`. As seções usam cores fixas (`bg-white`, `#111`).
 - Toda a página fica em `app/page.tsx` (client component).
-- **Pendência de performance (aguardando aprovação):** o spotlight do hero (`RevealLayer` em `app/page.tsx`)
-  gera um PNG com `canvas.toDataURL` a cada frame enquanto o mouse se move (e por ~1 s depois, pela
-  suavização), mesmo com o hero fora da tela; a página inteira re-renderiza a cada frame. Isso trava
-  animações no resto da página. Por isso `DriversSection` é `memo`.
+- Spotlight do hero (`RevealLayer` em `app/page.tsx`): máscara CSS `radial-gradient` posicionada por
+  `--spot-x`/`--spot-y` (antes era um PNG gerado por canvas a cada frame, que travava a página). O loop
+  `requestAnimationFrame` pausa quando o hero sai da tela (IntersectionObserver). Com o hero visível, a
+  página ainda re-renderiza a cada frame; por isso `DriversSection` é `memo`.

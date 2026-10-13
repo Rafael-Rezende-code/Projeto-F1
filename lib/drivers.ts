@@ -18,6 +18,8 @@ export type Driver = {
   /** Efeito do HoverTransition e direção de entrada. */
   effect: HoverTransitionEffect;
   direction: HoverTransitionDirection;
+  /** Duração própria em segundos. Sem ela, usa driverHoverTransition.duration. */
+  duration?: number;
 };
 
 // Transição compartilhada pelos cards: duração em segundos e curva ease-out expo.
@@ -66,6 +68,8 @@ export const drivers: Driver[] = [
     href: "#collection",
     effect: "curtain",
     direction: "right",
+    // Cortina de palco: abre com mais peso que os outros cards.
+    duration: 0.85,
   },
   {
     slug: "bortoleto",

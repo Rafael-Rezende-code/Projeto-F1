@@ -29,20 +29,18 @@ const products = [
   { name: 'Apex Circuit Tote', price: 'R$ 169,90', category: 'Acessórios', image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=85' },
 ]
 
+// Máscara CSS com os mesmos stops do gradiente que antes era desenhado num canvas e exportado como PNG a cada frame.
+const SPOTLIGHT_MASK = `radial-gradient(circle ${SPOTLIGHT_R}px at var(--spot-x) var(--spot-y), rgba(255,255,255,1) 0%, rgba(255,255,255,1) 40%, rgba(255,255,255,0.75) 60%, rgba(255,255,255,0.4) 75%, rgba(255,255,255,0.12) 88%, rgba(255,255,255,0) 100%)`
+
 function RevealLayer({ image, cursorX, cursorY }: { image: string; cursorX: number; cursorY: number }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   const revealRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const canvas = canvasRef.current; const reveal = revealRef.current
-    if (!canvas || !reveal) return
-    const context = canvas.getContext('2d'); if (!context || cursorX < 0 || cursorY < 0) return
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight; context.clearRect(0, 0, canvas.width, canvas.height)
-    const gradient = context.createRadialGradient(cursorX, cursorY, 0, cursorX, cursorY, SPOTLIGHT_R)
-    gradient.addColorStop(0, 'rgba(255,255,255,1)'); gradient.addColorStop(0.4, 'rgba(255,255,255,1)'); gradient.addColorStop(0.6, 'rgba(255,255,255,0.75)'); gradient.addColorStop(0.75, 'rgba(255,255,255,0.4)'); gradient.addColorStop(0.88, 'rgba(255,255,255,0.12)'); gradient.addColorStop(1, 'rgba(255,255,255,0)')
-    context.fillStyle = gradient; context.beginPath(); context.arc(cursorX, cursorY, SPOTLIGHT_R, 0, Math.PI * 2); context.fill()
-    const mask = canvas.toDataURL(); reveal.style.maskImage = `url(${mask})`; reveal.style.webkitMaskImage = `url(${mask})`
+    const reveal = revealRef.current
+    if (!reveal || cursorX < 0 || cursorY < 0) return
+    reveal.style.setProperty('--spot-x', `${cursorX}px`); reveal.style.setProperty('--spot-y', `${cursorY}px`)
+    if (!reveal.style.maskImage) { reveal.style.maskImage = SPOTLIGHT_MASK; reveal.style.webkitMaskImage = SPOTLIGHT_MASK }
   }, [cursorX, cursorY])
-  return <><canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ display: 'none' }} /><div ref={revealRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-30 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${image})`, maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }} /></>
+  return <div ref={revealRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-30 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${image})`, maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }} />
 }
 
 function SectionIntro({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
@@ -78,12 +76,18 @@ function TeamMarquee() {
 }
 
 export default function Page() {
-  const [cursorPos, setCursorPos] = useState({ x: -999, y: -999 }); const mouse = useRef({ x: -999, y: -999 }); const smooth = useRef({ x: -999, y: -999 }); const rafRef = useRef<number | null>(null)
+  const [cursorPos, setCursorPos] = useState({ x: -999, y: -999 }); const mouse = useRef({ x: -999, y: -999 }); const smooth = useRef({ x: -999, y: -999 }); const rafRef = useRef<number | null>(null); const heroRef = useRef<HTMLElement>(null)
   const [cartCount, setCartCount] = useState(0); const [notice, setNotice] = useState('')
-  useEffect(() => { const handleMouseMove = (event: MouseEvent) => { mouse.current = { x: event.clientX, y: event.clientY } }; const animate = () => { smooth.current.x += (mouse.current.x - smooth.current.x) * 0.1; smooth.current.y += (mouse.current.y - smooth.current.y) * 0.1; setCursorPos({ ...smooth.current }); rafRef.current = requestAnimationFrame(animate) }; window.addEventListener('mousemove', handleMouseMove); rafRef.current = requestAnimationFrame(animate); return () => { window.removeEventListener('mousemove', handleMouseMove); if (rafRef.current) cancelAnimationFrame(rafRef.current) } }, [])
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => { mouse.current = { x: event.clientX, y: event.clientY } }; const animate = () => { smooth.current.x += (mouse.current.x - smooth.current.x) * 0.1; smooth.current.y += (mouse.current.y - smooth.current.y) * 0.1; setCursorPos({ ...smooth.current }); rafRef.current = requestAnimationFrame(animate) }
+    // O spotlight só roda com o hero na tela: fora dele, o loop (e o re-render por frame) para.
+    const start = () => { if (rafRef.current === null) rafRef.current = requestAnimationFrame(animate) }; const stop = () => { if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null } }
+    const observer = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop())); if (heroRef.current) observer.observe(heroRef.current)
+    window.addEventListener('mousemove', handleMouseMove); return () => { window.removeEventListener('mousemove', handleMouseMove); observer.disconnect(); stop() }
+  }, [])
   const addToCart = (name: string) => { setCartCount((count) => count + 1); setNotice(`${name} foi adicionado à sacola`); window.setTimeout(() => setNotice(''), 2400) }
   return <main id="top" className="min-h-screen bg-white tracking-[-0.02em]" style={{ fontFamily: "'Inter', sans-serif" }}>
-    <section className="relative h-screen w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
+    <section ref={heroRef} className="relative h-screen w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
       <div className="absolute inset-0 z-10 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${BASE_IMAGE})` }} /><RevealLayer image={REVEAL_IMAGE} cursorX={cursorPos.x} cursorY={cursorPos.y} /><div className="absolute inset-0 z-20 bg-gradient-to-b from-black/30 via-transparent to-black/45" />
       <header className="absolute left-0 right-0 top-0 z-50 flex items-center justify-between px-5 py-5 text-white sm:px-10 sm:py-7 md:px-14"><a href="#top" className="font-playfair text-3xl italic tracking-[-0.07em]" aria-label="Apex início">Apex<span className="text-[#e8702a]">.</span></a><nav className="hidden items-center gap-10 text-[11px] font-medium uppercase tracking-[0.18em] md:flex" aria-label="Navegação principal"><a href="#collection" className="transition-opacity hover:opacity-60">Coleção</a><a href="#story" className="transition-opacity hover:opacity-60">Manifesto</a><a href="#journal" className="transition-opacity hover:opacity-60">Diário</a></nav><div className="flex items-center gap-4"><button aria-label="Sacola de compras" className="relative transition-opacity hover:opacity-60"><ShoppingBag strokeWidth={1.5} />{cartCount > 0 && <span className="absolute -right-2 -top-2 flex size-4 items-center justify-center rounded-full bg-[#e8702a] text-[9px]">{cartCount}</span>}</button><button aria-label="Abrir menu" className="md:hidden"><Menu strokeWidth={1.5} /></button></div></header>
       <div className="pointer-events-none absolute left-0 right-0 top-[14%] z-50 flex flex-col items-center px-5 text-center text-white"><h1 className="leading-[0.95]" style={{ fontSize: '14px' }}><span className="font-playfair block text-5xl font-normal italic sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.05em' }}>Feita para</span><span className="mt-[-0.08em] block text-5xl font-normal italic sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.08em' }}>pilotos</span></h1></div>

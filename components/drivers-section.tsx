@@ -6,8 +6,14 @@ import { ArrowRight } from "lucide-react";
 import { HoverTransition } from "@/components/ui/hover-transition";
 import { driverHoverTransition, drivers, type Driver } from "@/lib/drivers";
 
-// Largura do card: 1 coluna em carrossel (<640px), 2 colunas (<1024px), 4 colunas (máx. 1400px).
-const IMAGE_SIZES = "(min-width: 1480px) 340px, (min-width: 1024px) 25vw, (min-width: 640px) 50vw, 80vw";
+// Largura real do card em cada breakpoint (o navegador multiplica pelo DPR para escolher a imagem):
+// ≥1480: 4 colunas no máx. de 1400px − 3 gaps de 12px = 341px; ≥1024: 4 colunas em 100vw − 80px de padding;
+// ≥640: 2 colunas (1 gap); abaixo: carrossel com cards de 80% de (100vw − 40px).
+// × 1,5 (sobreamostragem, medida): o navegador borra ao reduzir a foto numa proporção perto de 1:1
+// (ex.: 750→654px). Com 1,5× ele escolhe uma fonte maior e mais nítida, limitada pelo Next ao original (1024px).
+const IMAGE_SIZES =
+  "(min-width: 1480px) 512px, (min-width: 1024px) calc((100vw - 116px) / 4 * 1.5), (min-width: 640px) calc((100vw - 92px) / 2 * 1.5), calc((80vw - 32px) * 1.5)";
+const IMAGE_QUALITY = 90;
 
 function splitName(name: string) {
   const [first, ...rest] = name.split(" ");
@@ -30,6 +36,7 @@ function DefaultFace({ driver }: { driver: Driver }) {
         alt=""
         fill
         sizes={IMAGE_SIZES}
+        quality={IMAGE_QUALITY}
         className="object-cover"
         style={{ objectPosition: driver.imagePosition }}
       />
@@ -77,6 +84,7 @@ function DriverCard({ driver }: { driver: Driver }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const active = hovered || focused;
+  const duration = driver.duration ?? driverHoverTransition.duration;
 
   return (
     <li className="w-[80%] shrink-0 snap-start sm:w-auto">
@@ -87,7 +95,7 @@ function DriverCard({ driver }: { driver: Driver }) {
           active={active}
           effect={driver.effect}
           direction={driver.direction}
-          duration={driverHoverTransition.duration}
+          duration={duration}
           easing={driverHoverTransition.easing}
           label={driver.name}
           className="h-full min-h-0 rounded-2xl"
@@ -95,7 +103,7 @@ function DriverCard({ driver }: { driver: Driver }) {
           // Só existe enquanto ativo (e até a saída terminar): em repouso, deixaria um filete nos cantos.
           style={{
             backgroundColor: active ? driver.color : "transparent",
-            transition: `background-color 0s linear ${active ? 0 : driverHoverTransition.duration}s`,
+            transition: `background-color 0s linear ${active ? 0 : duration}s`,
           }}
           defaultComponent={<DefaultFace driver={driver} />}
           hoverComponent={<HoverFace driver={driver} />}
