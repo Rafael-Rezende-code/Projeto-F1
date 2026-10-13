@@ -20,8 +20,10 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 
 - `AnimatedGridPattern` (`components/ui/animated-grid-pattern.tsx`) como fundo da seção da newsletter
   ("Fique no grid / Não perca a próxima volta").
-- `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo do hero. Lista em `lib/f1-teams.ts`; equipe sem
-  `src` aparece com o nome em texto.
+- Seção "Os pilotos / Escolha seu piloto" (`components/drivers-section.tsx`) logo abaixo do hero: 4 cards
+  com `HoverTransition` (wipe da cor da equipe). Dados em `lib/drivers.ts`; fotos em `public/images/pilotos`.
+- `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo da seção de pilotos. Lista em `lib/f1-teams.ts`;
+  equipe sem `src` aparece com o nome em texto.
 
 ## Decisões já tomadas
 
@@ -36,8 +38,11 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - Gerenciador: pnpm (versão em `packageManager` do `package.json`; usar via `corepack pnpm` se o `pnpm`
   não estiver no PATH). Dev: `corepack pnpm dev`. Build: `corepack pnpm build`.
 - Não há script de lint nem ESLint configurado; até isso mudar, usar `npx tsc --noEmit` como checagem.
-- `next.config.mjs` tem `typescript.ignoreBuildErrors: true` (o build não falha por erro de tipo) e
-  `images.unoptimized: true` (o `next/image` serve o arquivo original, sem redimensionar).
+- `next.config.mjs` tem `typescript.ignoreBuildErrors: true` (o build não falha por erro de tipo). O
+  `images.unoptimized` foi removido na tarefa dos pilotos: o `next/image` otimiza (use `sizes` corretos).
+- Registry `@componentry` (https://componentry.fun/r/{name}.json) configurado no `components.json`.
+- `components/ui/hover-transition.tsx` (do @componentry) recebeu a prop opcional `active` (modo
+  controlado). Se reinstalar pelo shadcn, reaplicar.
 - O tema escuro do Tailwind (`dark:`) só ativa com a classe `.dark`; as variáveis CSS (`--foreground`
   etc.) também mudam com `prefers-color-scheme: dark`. As seções usam cores fixas (`bg-white`, `#111`).
 - Toda a página fica em `app/page.tsx` (client component).

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, ArrowUpRight, CirclePlay, Globe, Heart, Menu, ShoppingBag } from 'lucide-react'
 import { useReducedMotion } from 'motion/react'
+import { DriversSection } from '@/components/drivers-section'
 import { AnimatedGridPattern } from '@/components/ui/animated-grid-pattern'
 import { LogoItem, LogoMarquee } from '@/components/ui/logo-marquee'
 import { f1Teams } from '@/lib/f1-teams'
@@ -88,6 +89,8 @@ export default function Page() {
       <div className="pointer-events-none absolute left-0 right-0 top-[14%] z-50 flex flex-col items-center px-5 text-center text-white"><h1 className="leading-[0.95]" style={{ fontSize: '14px' }}><span className="font-playfair block text-5xl font-normal italic sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.05em' }}>Feita para</span><span className="mt-[-0.08em] block text-5xl font-normal italic sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.08em' }}>pilotos</span></h1></div>
       <p className="absolute bottom-14 left-10 z-50 hidden max-w-[260px] text-sm leading-relaxed text-white/80 md:left-14 sm:block">Cada milissegundo é projetado. Das superfícies aerodinâmicas às unidades de potência construídas com precisão, a Fórmula 1 é onde tecnologia, velocidade e habilidade humana encontram o limite.</p><div className="absolute bottom-10 left-5 right-5 z-50 flex max-w-full flex-col items-start gap-4 sm:bottom-24 sm:left-auto sm:right-10 sm:max-w-[260px] sm:gap-5 md:right-14"><p className="text-xs leading-relaxed text-white/80 sm:text-sm">Explore camisetas premium de Fórmula 1, memorabilia das pistas, colecionáveis e peças inspiradas nas máquinas e equipes que definem o automobilismo.</p><a href="#collection" className="group inline-flex items-center gap-3 rounded-full bg-[#e8702a] px-7 py-3 text-sm font-medium text-white transition-all hover:scale-[1.03] hover:bg-[#d2611f] active:scale-95">Ver coleção <ArrowUpRight /></a></div><div className="absolute bottom-6 left-1/2 z-50 hidden -translate-x-1/2 items-center gap-3 text-[10px] uppercase tracking-[0.25em] text-white/60 lg:flex"><span className="h-px w-8 bg-white/50" /> Pilotos <span className="h-px w-8 bg-white/50" /></div>
     </section>
+
+    <DriversSection />
 
     <TeamMarquee />
 
