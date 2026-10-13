@@ -21,7 +21,8 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - `AnimatedGridPattern` (`components/ui/animated-grid-pattern.tsx`) como fundo da seção da newsletter
   ("Fique no grid / Não perca a próxima volta").
 - Seção "Os pilotos / Escolha seu piloto" (`components/drivers-section.tsx`) logo abaixo do hero: 4 cards
-  com `HoverTransition` (wipe da cor da equipe). Dados em `lib/drivers.ts`; fotos em `public/images/pilotos`.
+  `rounded-2xl` com `HoverTransition`, um efeito por piloto (ripple, strips, curtain, wipe; 0,5 s, ease-out
+  expo). Dados, efeitos e duração em `lib/drivers.ts`; fotos em `public/images/pilotos`.
 - `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo da seção de pilotos. Lista em `lib/f1-teams.ts`;
   equipe sem `src` aparece com o nome em texto.
 
@@ -46,3 +47,7 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - O tema escuro do Tailwind (`dark:`) só ativa com a classe `.dark`; as variáveis CSS (`--foreground`
   etc.) também mudam com `prefers-color-scheme: dark`. As seções usam cores fixas (`bg-white`, `#111`).
 - Toda a página fica em `app/page.tsx` (client component).
+- **Pendência de performance (aguardando aprovação):** o spotlight do hero (`RevealLayer` em `app/page.tsx`)
+  gera um PNG com `canvas.toDataURL` a cada frame enquanto o mouse se move (e por ~1 s depois, pela
+  suavização), mesmo com o hero fora da tela; a página inteira re-renderiza a cada frame. Isso trava
+  animações no resto da página. Por isso `DriversSection` é `memo`.

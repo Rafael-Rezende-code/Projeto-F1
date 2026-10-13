@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, type FocusEvent } from "react";
+import { memo, useState, type FocusEvent } from "react";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { HoverTransition } from "@/components/ui/hover-transition";
-import { drivers, type Driver } from "@/lib/drivers";
+import { driverHoverTransition, drivers, type Driver } from "@/lib/drivers";
 
 // Largura do card: 1 coluna em carrossel (<640px), 2 colunas (<1024px), 4 colunas (máx. 1400px).
 const IMAGE_SIZES = "(min-width: 1480px) 340px, (min-width: 1024px) 25vw, (min-width: 640px) 50vw, 80vw";
@@ -76,6 +76,7 @@ function DriverCard({ driver }: { driver: Driver }) {
   // Hover só com mouse (no toque o link navega direto) e foco só via teclado (focus-visible).
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  const active = hovered || focused;
 
   return (
     <li className="w-[80%] shrink-0 snap-start sm:w-auto">
@@ -83,18 +84,25 @@ function DriverCard({ driver }: { driver: Driver }) {
         <HoverTransition
           aria-hidden="true"
           tabIndex={-1}
-          active={hovered || focused}
-          effect="wipe"
-          direction="right"
-          duration={0.7}
+          active={active}
+          effect={driver.effect}
+          direction={driver.direction}
+          duration={driverHoverTransition.duration}
+          easing={driverHoverTransition.easing}
           label={driver.name}
-          className="h-full min-h-0"
+          className="h-full min-h-0 rounded-2xl"
+          // Efeitos que escondem a foto (curtain) revelam este fundo; sem ele, a cor desbota sobre o branco.
+          // Só existe enquanto ativo (e até a saída terminar): em repouso, deixaria um filete nos cantos.
+          style={{
+            backgroundColor: active ? driver.color : "transparent",
+            transition: `background-color 0s linear ${active ? 0 : driverHoverTransition.duration}s`,
+          }}
           defaultComponent={<DefaultFace driver={driver} />}
           hoverComponent={<HoverFace driver={driver} />}
         />
         <a
           href={driver.href}
-          className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+          className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
           onPointerEnter={(event) => event.pointerType === "mouse" && setHovered(true)}
           onPointerLeave={() => setHovered(false)}
           onFocus={(event) => setFocused(isFocusVisible(event))}
@@ -109,7 +117,8 @@ function DriverCard({ driver }: { driver: Driver }) {
   );
 }
 
-export function DriversSection() {
+// memo: a página re-renderiza a cada frame (spotlight do hero); sem props, a seção não precisa acompanhar.
+export const DriversSection = memo(function DriversSection() {
   return (
     <section id="pilotos" aria-labelledby="pilotos-titulo" className="bg-white px-5 py-20 sm:px-10 sm:py-28">
       <div className="mx-auto max-w-[1400px]">
@@ -128,4 +137,4 @@ export function DriversSection() {
       </div>
     </section>
   );
-}
+});

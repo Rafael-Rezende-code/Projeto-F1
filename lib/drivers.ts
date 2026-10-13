@@ -1,3 +1,5 @@
+import type { HoverTransitionDirection, HoverTransitionEffect } from "@/components/ui/hover-transition";
+
 export type Driver = {
   slug: string;
   name: string;
@@ -13,6 +15,15 @@ export type Driver = {
   /** object-position da foto no card 4:5, para enquadrar rosto e capacete. */
   imagePosition?: string;
   href: string;
+  /** Efeito do HoverTransition e direção de entrada. */
+  effect: HoverTransitionEffect;
+  direction: HoverTransitionDirection;
+};
+
+// Transição compartilhada pelos cards: duração em segundos e curva ease-out expo.
+export const driverHoverTransition = {
+  duration: 0.5,
+  easing: "cubic-bezier(0.22, 1, 0.36, 1)",
 };
 
 // Ordem de exibição.
@@ -27,6 +38,8 @@ export const drivers: Driver[] = [
     image: "/images/pilotos/norris.jpeg",
     imagePosition: "50% 30%",
     href: "#collection",
+    effect: "ripple",
+    direction: "bottom-left",
   },
   {
     slug: "verstappen",
@@ -38,6 +51,8 @@ export const drivers: Driver[] = [
     image: "/images/pilotos/verstappen.png",
     imagePosition: "50% 30%",
     href: "#collection",
+    effect: "strips",
+    direction: "right",
   },
   {
     slug: "hamilton",
@@ -49,6 +64,8 @@ export const drivers: Driver[] = [
     image: "/images/pilotos/hamilton.png",
     imagePosition: "50% 30%",
     href: "#collection",
+    effect: "curtain",
+    direction: "right",
   },
   {
     slug: "bortoleto",
@@ -61,5 +78,7 @@ export const drivers: Driver[] = [
     image: "/images/pilotos/bortoleto.png",
     imagePosition: "50% 30%",
     href: "#collection",
+    effect: "wipe",
+    direction: "bottom",
   },
 ];
