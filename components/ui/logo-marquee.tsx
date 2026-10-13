@@ -9,8 +9,13 @@ export type Logo = {
   /** Caminho do arquivo (ex.: "/logos/ferrari.svg"). Sem src, o nome aparece em texto. */
   src?: string;
   alt: string;
+  /** Dimensões do arquivo em px. */
   width?: number;
   height?: number;
+  /** Área do desenho no arquivo [x, y, largura, altura] em px: ignora margens transparentes do arquivo. */
+  crop?: [number, number, number, number];
+  /** Altura óptica do desenho no desktop, em px (no celular, 75%). Padrão: 32. */
+  displayHeight?: number;
 };
 
 type InfiniteSliderProps = {
@@ -100,23 +105,44 @@ const InfiniteSlider = memo(function InfiniteSlider({
   );
 });
 
+// Cor escura fixa: a faixa tem fundo claro sempre, independente do tema do sistema.
+const itemClass = "select-none opacity-55 transition-opacity duration-300 hover:opacity-100 motion-reduce:transition-none";
+
 export const LogoItem = memo(function LogoItem({ logo }: { logo: Logo }) {
   if (!logo.src) {
     return (
-      <span className="select-none whitespace-nowrap text-xs font-semibold uppercase tracking-[0.25em] text-foreground/50 md:text-sm">
+      <span className={cn(itemClass, "whitespace-nowrap text-xs font-semibold uppercase tracking-[0.25em] text-black md:text-sm")}>
         {logo.alt}
       </span>
     );
   }
+  const height = logo.displayHeight ?? 32;
+  const sizeVars = { "--logo-h-sm": `${height * 0.75}px`, "--logo-h-md": `${height}px` } as React.CSSProperties;
+  let imgStyle: React.CSSProperties = { height: "var(--logo-h)" };
+  if (logo.crop && logo.width && logo.height) {
+    // O img é escalado para o desenho ter --logo-h de altura; as margens transparentes do arquivo
+    // viram margem negativa, então o item ocupa só a área do desenho.
+    const [x, y, w, h] = logo.crop;
+    const px = (n: number) => `calc(var(--logo-h) * ${(n / h).toFixed(4)})`;
+    const neg = (n: number) => `calc(var(--logo-h) * ${(-n / h).toFixed(4)})`;
+    imgStyle = {
+      height: px(logo.height),
+      margin: `${neg(y)} ${neg(logo.width - x - w)} ${neg(logo.height - y - h)} ${neg(x)}`,
+    };
+  }
   return (
-    <img
-      alt={logo.alt}
-      src={logo.src}
-      width={logo.width}
-      height={logo.height}
-      loading="lazy"
-      className="pointer-events-none h-6 w-auto select-none brightness-0 opacity-50 md:h-8 dark:invert"
-    />
+    <span className={cn(itemClass, "flex shrink-0 [--logo-h:var(--logo-h-sm)] md:[--logo-h:var(--logo-h-md)]")} style={sizeVars}>
+      <img
+        alt={logo.alt}
+        src={logo.src}
+        width={logo.width}
+        height={logo.height}
+        loading="lazy"
+        draggable={false}
+        className="pointer-events-none w-auto max-w-none brightness-0"
+        style={imgStyle}
+      />
+    </span>
   );
 });
 

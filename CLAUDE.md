@@ -25,7 +25,9 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   expo; Hamilton com duração própria de 0,85 s). Dados, efeitos e duração em `lib/drivers.ts`; fotos em
   `public/images/pilotos` (servidas em AVIF/WebP q90).
 - `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo da seção de pilotos. Lista em `lib/f1-teams.ts`;
-  equipe sem `src` aparece com o nome em texto.
+  equipe sem `src` aparece com o nome em texto. Logos reais: Ferrari, Mercedes, Red Bull e Audi (pretas a
+  55%, 100% no hover do item; `crop` ignora as margens transparentes dos arquivos e `displayHeight` dá a
+  altura óptica). **McLaren pendente:** `mclaren.jpg` tem fundo branco sólido; aguarda PNG/SVG transparente.
 
 ## Decisões já tomadas
 
@@ -49,8 +51,13 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - Registry `@componentry` (https://componentry.fun/r/{name}.json) configurado no `components.json`.
 - `components/ui/hover-transition.tsx` (do @componentry) recebeu a prop opcional `active` (modo
   controlado). Se reinstalar pelo shadcn, reaplicar.
-- O tema escuro do Tailwind (`dark:`) só ativa com a classe `.dark`; as variáveis CSS (`--foreground`
-  etc.) também mudam com `prefers-color-scheme: dark`. As seções usam cores fixas (`bg-white`, `#111`).
+- O site **não tem modo escuro**: os fundos das seções são fixos e iguais nos dois temas. Mas as variáveis
+  CSS (`--foreground` etc.) mudam com `prefers-color-scheme: dark`, então texto sem cor própria herda branco
+  no modo escuro do sistema. Em componentes novos, use cores fixas (`text-black`, `text-white`), nunca
+  `text-foreground` nem `dark:`. Ainda herdam a cor do tema (pendente): títulos "Essenciais do dia de prova"
+  e "O que o grid veste" e os nomes da grade "Com quem você corre?".
+- `LogoMarquee`: com `duration={80}` e `durationOnHover={25}`, o hover **acelera** a faixa (pendente de
+  decisão; desacelerar exige `durationOnHover` maior que `duration`).
 - Toda a página fica em `app/page.tsx` (client component).
 - Spotlight do hero (`RevealLayer` em `app/page.tsx`): máscara CSS `radial-gradient` posicionada por
   `--spot-x`/`--spot-y` (antes era um PNG gerado por canvas a cada frame, que travava a página). O loop
