@@ -14,14 +14,14 @@ export function CartContents({ variant, onNavigate }: { variant: 'drawer' | 'pag
   const remaining = freeShippingRemaining(subtotalCents)
   const progress = Math.min(100, Math.round((subtotalCents / FREE_SHIPPING_THRESHOLD_CENTS) * 100))
 
-  if (!ready) return <p className="px-1 py-10 text-sm text-black/55">Carregando a sacola…</p>
+  if (!ready) return <p className="px-1 py-10 text-sm text-black/60">Carregando a sacola…</p>
 
   if (items.length === 0) {
     return (
       <div className={`flex flex-col items-center text-center ${variant === 'page' ? 'rounded-2xl bg-[#f5f5f3] px-6 py-20' : 'px-2 py-16'}`}>
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Sacola vazia</p>
         <p className="mt-3 text-2xl font-medium tracking-[-0.05em]">Nada no grid por enquanto.</p>
-        <p className="mt-3 max-w-xs text-sm leading-6 text-black/55">Escolha sua equipe ou seu piloto e monte o kit do próximo GP.</p>
+        <p className="mt-3 max-w-xs text-sm leading-6 text-black/60">Escolha sua equipe ou seu piloto e monte o kit do próximo GP.</p>
         <Link href="/produtos" onClick={onNavigate} className="mt-6 rounded-xl bg-black px-6 py-3 text-xs font-medium text-white transition hover:bg-[#b94f01]">
           Ver a coleção
         </Link>
@@ -43,7 +43,7 @@ export function CartContents({ variant, onNavigate }: { variant: 'drawer' | 'pag
                   <Link href={`/produtos/${item.slug}`} onClick={onNavigate} className="text-sm font-medium hover:underline">
                     {item.name}
                   </Link>
-                  <p className="mt-1 text-xs text-black/55">Tamanho: {item.size}</p>
+                  <p className="mt-1 text-xs text-black/60">Tamanho: {item.size}</p>
                 </div>
                 <p className="whitespace-nowrap text-sm">{formatPrice(item.priceCents * item.quantity)}</p>
               </div>
@@ -57,8 +57,8 @@ export function CartContents({ variant, onNavigate }: { variant: 'drawer' | 'pag
                     <Plus size={14} />
                   </button>
                 </div>
-                {item.quantity >= item.stock && <span className="text-[11px] text-black/55">Máximo em estoque</span>}
-                <button type="button" onClick={() => removeItem(item.sku)} aria-label={`Remover ${item.name} (${item.size})`} className="rounded-xl p-2 text-black/55 transition hover:bg-black/5 hover:text-black">
+                {item.quantity >= item.stock && <span className="text-[11px] text-black/60">Máximo em estoque</span>}
+                <button type="button" onClick={() => removeItem(item.sku)} aria-label={`Remover ${item.name} (${item.size})`} className="rounded-xl p-2 text-black/60 transition hover:bg-black/5 hover:text-black">
                   <Trash2 size={16} strokeWidth={1.5} />
                 </button>
               </div>
@@ -84,7 +84,7 @@ export function CartContents({ variant, onNavigate }: { variant: 'drawer' | 'pag
           <dt>Subtotal</dt>
           <dd className="text-lg font-medium tracking-[-0.03em]">{formatPrice(subtotalCents)}</dd>
         </dl>
-        <p className="mt-1 text-xs text-black/55">Frete e prazo calculados no checkout.</p>
+        <p className="mt-1 text-xs text-black/60">Frete e prazo calculados no checkout.</p>
         <Link href="/checkout" onClick={onNavigate} className="mt-5 flex w-full items-center justify-center rounded-xl bg-[#b94f01] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#9f4300]">
           Finalizar compra
         </Link>

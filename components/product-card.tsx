@@ -59,7 +59,7 @@ export function ProductCard({
           </Link>
         )}
       </div>
-      {categoryName && <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-black/55">{categoryName}</p>}
+      {categoryName && <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-black/60">{categoryName}</p>}
       <div className={`${categoryName ? "mt-1" : "mt-4"} flex items-start justify-between gap-3`}>
         <h3 className="min-w-0 text-sm font-medium text-black sm:text-base">
           <Link href={href} className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-4 focus-visible:after:outline-black">
@@ -68,7 +68,7 @@ export function ProductCard({
         </h3>
         <p className="shrink-0 text-right text-sm text-black/65">
           {product.compareAtPriceCents && (
-            <span className="block whitespace-nowrap text-xs text-black/40 line-through">
+            <span className="block whitespace-nowrap text-xs text-black/60 line-through">
               <span className="sr-only">De </span>
               {formatPrice(product.compareAtPriceCents)}
             </span>

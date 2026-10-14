@@ -164,6 +164,19 @@ interna e sem arredondamento).
 - Rodapé com a identificação do fornecedor exigida pelo Decreto 7.962/2013 (razão social, CNPJ, endereço, e-mail e
   telefone) em `lib/company.ts` — **placeholders: preencher antes de vender** — e links para a Política e os Termos.
 
+### SEO e qualidade (fase 7)
+
+- `metadata` por página (título com template "%s | Apex", descrição, canonical), `metadataBase` = `SITE_URL`
+  (`lib/site.ts`, sobrescrevível por `NEXT_PUBLIC_SITE_URL`), Open Graph básico (imagem do hero por padrão; produto e
+  piloto usam a própria foto), `app/sitemap.ts` (home, catálogo, categorias, equipes, pilotos, produtos e páginas
+  institucionais) e `app/robots.ts` (fora do índice: `/carrinho`, `/checkout`, `/pedido/`).
+- E2E: `corepack pnpm test:e2e` (Playwright, `e2e/compra.spec.ts`: home → equipe → produto → tamanho → sacola →
+  checkout → confirmação, em desktop e celular; ViaCEP simulado no teste). Usa o **Edge instalado** (`channel: "msedge"`),
+  sem baixar navegadores; sobe o dev server se não houver um em :3000.
+- Lighthouse mobile (build de produção local, mediana de 3, 14/10/2026): home Performance 89, Acessibilidade 100, Boas
+  práticas 96, SEO 100; página de produto 94 / 100 / 96 / 100. Boas práticas 96 = 404 de `/_vercel/insights` (só local).
+- Contraste: cinzas de texto nas páginas novas no mínimo `text-black/60` (`/40`–`/55` reprovavam sobre `#f5f5f3`).
+
 ### Como trocar o seed por Supabase
 
 1. Criar as tabelas `categories`, `teams`, `drivers`, `products` e `product_variants` (sku único, size, color,
@@ -209,6 +222,8 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   `[color-scheme:light]` (o site não tem modo escuro).
 - **Rodapé (fase 6):** "Trocas" virou "Trocas e devoluções"; "Guia de tamanhos" aponta para o FAQ (não há página
   própria ainda). Circuitos e Cultura F1 continuam apontando para seções da home.
+- **Testes e2e (fase 7):** Playwright instalado só como pacote (`@playwright/test`, ~14 MB), rodando no Edge do
+  sistema, para não baixar navegadores. Os botões de compra rápida ganharam nome próprio ("Adicionar X à sacola").
 - **Cabeçalho da equipe:** bloco `rounded-2xl` na cor da equipe que entra da esquerda (clip-path) ao abrir a
   página; a lista "Outras equipes" usa a linha editorial com o wipe no hover.
 
@@ -218,7 +233,7 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   não estiver no PATH). Dev: `corepack pnpm dev`. Build: `corepack pnpm build`.
 - Lint: `corepack pnpm lint` (ESLint 9 + `eslint-config-next`, config padrão em `eslint.config.mjs`; o ESLint
   10 ainda não é suportado pelos plugins do Next). Rodar também `npx tsc --noEmit`, porque o build ignora erros
-  de tipo. Avisos conhecidos (intencionais): `<img>` em `LogoItem` (logos pequenas, monocromáticas) e `pin` sem uso no
+  de tipo. Testes: `corepack pnpm test` (vitest) e `corepack pnpm test:e2e` (Playwright). Avisos conhecidos (intencionais): `<img>` em `LogoItem` (logos pequenas, monocromáticas) e `pin` sem uso no
   `glyph-portal.tsx` (de terceiro). A regra `react-hooks/immutability` está desligada só para o `glyph-portal.tsx`
   no `eslint.config.mjs` (falso positivo num contador local durante o render).
 - `next.config.mjs` tem `typescript.ignoreBuildErrors: true` (o build não falha por erro de tipo). O
@@ -259,6 +274,10 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
 ## Pendências (atualizado em 14/10/2026)
 
 - **Branch `perf/server-components`:** aguardando teste na prévia da Vercel e aprovação para merge na `main`.
+- **Branch `feat/loja`** (criada a partir da `perf/server-components`): loja completa (fases 1 a 7). Sem merge na
+  `main`. Depende do responsável: integração de pagamento (Mercado Pago ou Stripe), banco (Supabase) para catálogo e
+  pedidos, textos legais, razão social/CNPJ/endereço em `lib/company.ts`, fotos licenciadas de produtos, e conferir
+  as cores das equipes com os manuais de marca.
 - **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
   a seção "Diário".
 - O 404 de `/_vercel/insights/script.js` só ocorre localmente.

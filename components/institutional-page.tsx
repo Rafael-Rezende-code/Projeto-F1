@@ -27,12 +27,12 @@ export function InstitutionalPageView({ page }: { page: InstitutionalPage }) {
         <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: page.title }]} />
         <div className="mt-8">
           <PageIntro eyebrow={page.eyebrow} title={page.title} body={page.description} />
-          {page.updatedLabel && <p className="mt-4 text-xs text-black/50">Última atualização: [DATA]</p>}
+          {page.updatedLabel && <p className="mt-4 text-xs text-black/60">Última atualização: [DATA]</p>}
         </div>
 
         {page.sections.length > 1 && (
           <nav aria-label="Nesta página" className="mt-10 rounded-2xl bg-[#f5f5f3] p-6">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black/55">Nesta página</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black/60">Nesta página</p>
             <ol className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
               {page.sections.map((section, index) => (
                 <li key={section}>
@@ -72,10 +72,10 @@ export function InstitutionalPageView({ page }: { page: InstitutionalPage }) {
 
           {page.slug === "contato" && (
             <dl className="grid gap-4 rounded-2xl border border-black/10 p-6 text-sm sm:grid-cols-2">
-              <div><dt className="text-xs text-black/50">E-mail</dt><dd className="mt-1">{company.email}</dd></div>
-              <div><dt className="text-xs text-black/50">Telefone</dt><dd className="mt-1">{company.phone}</dd></div>
-              <div><dt className="text-xs text-black/50">Horário</dt><dd className="mt-1">{company.hours}</dd></div>
-              <div><dt className="text-xs text-black/50">Endereço</dt><dd className="mt-1">{company.address}</dd></div>
+              <div><dt className="text-xs text-black/60">E-mail</dt><dd className="mt-1">{company.email}</dd></div>
+              <div><dt className="text-xs text-black/60">Telefone</dt><dd className="mt-1">{company.phone}</dd></div>
+              <div><dt className="text-xs text-black/60">Horário</dt><dd className="mt-1">{company.hours}</dd></div>
+              <div><dt className="text-xs text-black/60">Endereço</dt><dd className="mt-1">{company.address}</dd></div>
             </dl>
           )}
         </div>

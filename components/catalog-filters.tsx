@@ -37,7 +37,7 @@ export function CatalogFilters({
     "w-full appearance-none rounded-xl border border-black/15 bg-white px-4 py-3 pr-9 text-sm text-black transition hover:border-black/40 focus-visible:border-black focus-visible:outline-none";
   const select = (name: string, label: string, value: string | undefined, options: Option[], all: string | null) => (
     <label className="relative block">
-      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-black/55">{label}</span>
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-black/60">{label}</span>
       <select name={name} defaultValue={value ?? ""} onChange={submit} className={field}>
         {all !== null && <option value="">{all}</option>}
         {options.map((option) => (
@@ -46,7 +46,7 @@ export function CatalogFilters({
           </option>
         ))}
       </select>
-      <span aria-hidden="true" className="pointer-events-none absolute bottom-3.5 right-4 text-xs text-black/50">
+      <span aria-hidden="true" className="pointer-events-none absolute bottom-3.5 right-4 text-xs text-black/60">
         ▾
       </span>
     </label>

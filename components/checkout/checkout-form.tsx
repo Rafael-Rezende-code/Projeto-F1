@@ -33,7 +33,7 @@ function Field({ label, error, children, hint, className = "" }: { label: string
     <div className={className}>
       <label htmlFor={id} className="mb-1.5 block text-xs font-medium text-black/70">{label}</label>
       {children({ id, "aria-invalid": Boolean(error), "aria-describedby": describedBy })}
-      {hint && !error && <p id={`${id}-dica`} className="mt-1.5 text-xs text-black/50">{hint}</p>}
+      {hint && !error && <p id={`${id}-dica`} className="mt-1.5 text-xs text-black/60">{hint}</p>}
       {error && <p id={`${id}-erro`} className="mt-1.5 text-xs text-[#b42318]">{error}</p>}
     </div>
   );
@@ -143,7 +143,7 @@ export function CheckoutForm() {
     });
   };
 
-  if (!ready) return <p className="py-16 text-sm text-black/55">Carregando a sacola…</p>;
+  if (!ready) return <p className="py-16 text-sm text-black/60">Carregando a sacola…</p>;
   if (items.length === 0)
     return (
       <div className="mx-auto max-w-md rounded-2xl bg-[#f5f5f3] px-6 py-16 text-center">
@@ -156,7 +156,7 @@ export function CheckoutForm() {
   const sectionHeader = (index: Step) => (
     <div className="flex items-start justify-between gap-4">
       <h2 ref={(el) => { headingRefs.current[index] = el; }} tabIndex={-1} className="flex items-center gap-3 text-lg font-medium tracking-[-0.03em] outline-none">
-        <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-full text-xs ${index < step ? "bg-black text-white" : index === step ? "bg-[#b94f01] text-white" : "bg-black/10 text-black/50"}`}>
+        <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-full text-xs ${index < step ? "bg-black text-white" : index === step ? "bg-[#b94f01] text-white" : "bg-black/10 text-black/60"}`}>
           {index < step ? <Check size={14} /> : index + 1}
         </span>
         {STEPS[index]}
@@ -227,7 +227,7 @@ export function CheckoutForm() {
                   />
                 )}
               </Field>
-              <p aria-live="polite" className={`self-end pb-3 text-xs sm:col-span-4 ${cepStatus?.tone === "error" ? "text-[#b42318]" : "text-black/55"}`}>
+              <p aria-live="polite" className={`self-end pb-3 text-xs sm:col-span-4 ${cepStatus?.tone === "error" ? "text-[#b42318]" : "text-black/60"}`}>
                 {cepStatus?.text}
               </p>
               <Field label="Rua" error={errors.street} className="sm:col-span-4">
@@ -277,7 +277,7 @@ export function CheckoutForm() {
                         <input type="radio" name="entrega" value={item.id} checked={form.shippingId === item.id} onChange={() => set("shippingId", item.id)} className="size-4 accent-[#b94f01]" />
                         <span>
                           <span className="block text-sm font-medium">{item.label}</span>
-                          <span className="block text-xs text-black/55">{item.days}</span>
+                          <span className="block text-xs text-black/60">{item.days}</span>
                         </span>
                       </span>
                       <span className="text-sm">{price === 0 ? "Grátis" : formatPrice(price)}</span>
@@ -285,7 +285,7 @@ export function CheckoutForm() {
                   );
                 })}
               </div>
-              <p className="mt-3 text-xs text-black/50">Prazos e valores simulados (sem transportadora integrada).</p>
+              <p className="mt-3 text-xs text-black/60">Prazos e valores simulados (sem transportadora integrada).</p>
               {errors.shippingId && <p className="mt-2 text-xs text-[#b42318]">{errors.shippingId}</p>}
               {continueButton()}
             </fieldset>
@@ -358,7 +358,7 @@ export function CheckoutForm() {
               <div className="flex min-w-0 flex-1 justify-between gap-3 text-sm">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{item.name}</p>
-                  <p className="text-xs text-black/55">Tam. {item.size} · Qtd. {item.quantity}</p>
+                  <p className="text-xs text-black/60">Tam. {item.size} · Qtd. {item.quantity}</p>
                 </div>
                 <p className="whitespace-nowrap">{formatPrice(item.priceCents * item.quantity)}</p>
               </div>

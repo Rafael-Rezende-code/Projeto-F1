@@ -63,7 +63,7 @@ export function CartDrawer() {
       >
         <div className="flex items-center justify-between border-b border-black/10 pb-4">
           <h2 id="sacola-titulo" className="text-xl font-medium tracking-[-0.04em]">
-            Sacola {count > 0 && <span className="text-black/45">({count})</span>}
+            Sacola {count > 0 && <span className="text-black/60">({count})</span>}
           </h2>
           <button type="button" data-autofocus onClick={close} aria-label="Fechar sacola" className="rounded-xl p-2 transition hover:bg-black/5">
             <X size={20} strokeWidth={1.5} />

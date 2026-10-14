@@ -5,7 +5,7 @@ export type Crumb = { label: string; href?: string };
 
 // Trilha de navegação (o último item é a página atual).
 export function Breadcrumbs({ items, tone = "dark" }: { items: Crumb[]; tone?: "dark" | "light" }) {
-  const muted = tone === "light" ? "text-white/70 hover:text-white" : "text-black/55 hover:text-black";
+  const muted = tone === "light" ? "text-white/70 hover:text-white" : "text-black/60 hover:text-black";
   const current = tone === "light" ? "text-white" : "text-black";
   return (
     <nav aria-label="Trilha de navegação" className="text-xs">

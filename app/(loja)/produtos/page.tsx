@@ -48,7 +48,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
             drivers={drivers.map((d) => ({ value: d.slug, label: d.name }))}
           />
           <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-            <p aria-live="polite" className="mr-2 text-black/55">
+            <p aria-live="polite" className="mr-2 text-black/60">
               {products.length === 1 ? "1 produto" : `${products.length} produtos`}
             </p>
             {chips.map((chip) => (
@@ -64,7 +64,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
             {chips.length > 0 && (
               <Link
                 href={catalogHref({ ordem: current.ordem, categoria: undefined, equipe: undefined, piloto: undefined, preco: undefined })}
-                className="text-xs text-black/55 underline underline-offset-4 hover:text-black"
+                className="text-xs text-black/60 underline underline-offset-4 hover:text-black"
               >
                 Limpar filtros
               </Link>
@@ -79,7 +79,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
             <div className="mx-auto max-w-md rounded-2xl bg-[#f5f5f3] px-6 py-16 text-center">
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Nenhum resultado</p>
               <h2 className="mt-3 text-2xl font-medium tracking-[-0.05em]">Nada no grid com esses filtros.</h2>
-              <p className="mt-3 text-sm leading-6 text-black/55">Tente remover algum filtro ou escolher outra faixa de preço.</p>
+              <p className="mt-3 text-sm leading-6 text-black/60">Tente remover algum filtro ou escolher outra faixa de preço.</p>
               <Link href="/produtos" className="mt-6 inline-flex rounded-xl bg-black px-6 py-3 text-xs font-medium text-white transition hover:bg-[#b94f01]">
                 Ver todos os produtos
               </Link>

@@ -101,7 +101,7 @@ export default async function ProductPage({ params }: Params) {
 
             <p className="mt-5 flex flex-wrap items-baseline gap-3">
               {product.compareAtPriceCents && (
-                <span className="text-base text-black/45 line-through">
+                <span className="text-base text-black/60 line-through">
                   <span className="sr-only">De </span>
                   {formatPrice(product.compareAtPriceCents)}
                 </span>
@@ -112,7 +112,7 @@ export default async function ProductPage({ params }: Params) {
               </span>
               {discount > 0 && <span className="rounded-md bg-black px-2 py-1 text-[10px] font-semibold tracking-[0.12em] text-white">-{discount}%</span>}
             </p>
-            <p className="mt-1 text-xs text-black/55">ou 3x de {formatPrice(Math.ceil(product.priceCents / 3))} sem juros</p>
+            <p className="mt-1 text-xs text-black/60">ou 3x de {formatPrice(Math.ceil(product.priceCents / 3))} sem juros</p>
 
             <div className="mt-8">
               <ProductPurchase product={product} />
@@ -122,7 +122,7 @@ export default async function ProductPage({ params }: Params) {
               <section aria-labelledby="descricao" className="border-b border-black/10 py-6">
                 <h2 id="descricao" className="text-sm font-medium">Descrição</h2>
                 <p className="mt-3 text-sm leading-7 text-black/65">{product.description}</p>
-                {product.illustrative && <p className="mt-3 text-xs text-black/45">Produto ilustrativo (catálogo de demonstração).</p>}
+                {product.illustrative && <p className="mt-3 text-xs text-black/60">Produto ilustrativo (catálogo de demonstração).</p>}
               </section>
               <details className="group border-b border-black/10 py-5">
                 <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">

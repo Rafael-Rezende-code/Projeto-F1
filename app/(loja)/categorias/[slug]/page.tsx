@@ -46,7 +46,7 @@ export default async function CategoryPage({ params }: Params) {
             ))}
           </nav>
         </div>
-        <p className="mt-10 border-t border-black/10 pt-6 text-sm text-black/55">
+        <p className="mt-10 border-t border-black/10 pt-6 text-sm text-black/60">
           {products.length} produtos ·{" "}
           <Link href={`/produtos?categoria=${category.slug}`} className="underline underline-offset-4 hover:text-black">
             filtrar por equipe, piloto ou preço

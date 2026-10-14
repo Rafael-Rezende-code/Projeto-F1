@@ -1,14 +1,16 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: 'Apex — Feita para pilotos', template: '%s | Apex' },
   description: SITE_DESCRIPTION,
-  openGraph: { type: 'website', locale: 'pt_BR', siteName: SITE_NAME },
+  // Open Graph básico; páginas de produto/piloto trocam a imagem. Imagem padrão: a do hero.
+  openGraph: { type: 'website', locale: 'pt_BR', siteName: SITE_NAME, images: [{ url: OG_IMAGE, alt: 'Apex — Feita para pilotos' }] },
+  twitter: { card: 'summary_large_image' },
   generator: 'v0.app',
   icons: {
     icon: [

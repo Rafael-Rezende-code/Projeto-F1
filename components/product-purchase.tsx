@@ -37,9 +37,9 @@ export function ProductPurchase({ product }: { product: Product }) {
     <div className="flex flex-col gap-6">
       {!single && (
         <fieldset>
-          <legend className="mb-3 flex w-full items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-black/55">
+          <legend className="mb-3 flex w-full items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-black/60">
             Tamanho
-            {variant && <span className="normal-case tracking-normal text-black/55">{variant.stock <= 3 ? `Restam ${variant.stock}` : "Em estoque"}</span>}
+            {variant && <span className="normal-case tracking-normal text-black/60">{variant.stock <= 3 ? `Restam ${variant.stock}` : "Em estoque"}</span>}
           </legend>
           <div className="flex flex-wrap gap-2">
             {product.variants.map((item) => {

@@ -138,5 +138,5 @@ export function CartButton() {
 export function AddToCartButton({ product, className }: { product: Product; className?: string }) {
   const { addItem } = useCart()
   const variant = product.variants.find((item) => item.stock > 0)
-  return <button type="button" disabled={!variant} onClick={() => variant && addItem(product, variant, 1)} className={className}>Adicionar à sacola</button>
+  return <button type="button" disabled={!variant} onClick={() => variant && addItem(product, variant, 1)} aria-label={`Adicionar ${product.name} à sacola`} className={className}>Adicionar à sacola</button>
 }
