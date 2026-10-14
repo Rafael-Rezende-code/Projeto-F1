@@ -47,6 +47,14 @@ export class SeedCatalogRepository implements CatalogRepository {
       .map((item) => item.other);
   }
 
+  async getVariantBySku(sku: string) {
+    for (const product of this.active()) {
+      const variant = product.variants.find((item) => item.sku === sku);
+      if (variant) return { product, variant };
+    }
+    return null;
+  }
+
   async getPriceRange() {
     const prices = this.active().map((product) => product.priceCents);
     return { minCents: Math.min(...prices), maxCents: Math.max(...prices) };

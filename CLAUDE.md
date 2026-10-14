@@ -125,6 +125,37 @@ interna e sem arredondamento).
   foco volta ao botão); conteúdo compartilhado com `/carrinho` em `components/cart-contents.tsx`.
 - Testes: `corepack pnpm test` (vitest; `lib/**/*.test.ts`, sem DOM).
 
+### Checkout (fase 5) — pedidos SIMULADOS
+
+- `/checkout` (`components/checkout/checkout-form.tsx`): etapas Contato (nome, e-mail, telefone, CPF com máscara e
+  dígitos verificadores), Endereço (CEP com máscara e busca no ViaCEP pelo cliente, com timeout de 6 s; falha ou CEP
+  inexistente → preenchimento manual), Entrega (opções simuladas em `lib/checkout/shipping.ts`; a Econômica é grátis
+  acima do limite de frete grátis) e Pagamento (Pix, cartão, boleto) com aceite obrigatório dos Termos e da Política.
+- Validação com zod (`lib/checkout/schema.ts`) por etapa no cliente e do pedido inteiro no servidor, na server action
+  `app/(loja)/checkout/actions.ts` (`placeOrder`), que **recalcula preço, estoque, frete e total pelo catálogo** (não
+  confia no cliente). Máscaras/validadores em `lib/validators/br.ts` (com testes).
+- **Sem persistência:** o pedido montado pelo servidor volta ao cliente, que o guarda no `sessionStorage`
+  (`apex:pedido:<id>`) e abre `/pedido/[id]`. Em outra aba/dispositivo a página mostra só o número. Para valer de
+  verdade: gravar o pedido (ex.: tabela `orders` + `order_lines` no Supabase) dentro da action, baixar estoque numa
+  transação e ler `/pedido/[id]` do banco (com verificação de dono do pedido).
+- O campo de cartão **não existe** de propósito: os dados do cartão devem ser coletados pelo componente do provedor
+  (PCI). Nada de número de cartão passa pelo nosso servidor.
+
+### Pagamento (lib/payments) — o que falta para integrar
+
+- Interface `PaymentProvider` (`lib/payments/types.ts`); a action só usa `getPaymentProvider()` (`lib/payments/index.ts`).
+  Hoje: `SimulatedPaymentProvider` (cartão aprovado na hora; Pix/boleto pendentes com instruções fictícias).
+- **Mercado Pago:** criar conta e aplicação; chaves `MP_ACCESS_TOKEN` (servidor) e `NEXT_PUBLIC_MP_PUBLIC_KEY`; instalar o
+  SDK (`mercadopago`); implementar `lib/payments/mercado-pago.ts` (Pix: `payment.create` com `payment_method_id: "pix"`
+  → QR Code; boleto: `bolbradesco`; cartão: Card Payment Brick no cliente gera o token e o servidor cria o pagamento);
+  rota de webhook (`app/api/webhooks/mercado-pago/route.ts`) validando a assinatura para mudar o pedido de "aguardando"
+  para "pago"; pedidos persistidos (ver acima).
+- **Stripe:** conta com Brasil habilitado; `STRIPE_SECRET_KEY` e `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`; SDK `stripe` e
+  `@stripe/stripe-js`; `lib/payments/stripe.ts` criando PaymentIntent (cartão; Pix e boleto via `payment_method_types`)
+  e Payment Element no cliente; webhook `payment_intent.succeeded` com `STRIPE_WEBHOOK_SECRET`.
+- Em ambos: escolher o provedor por `PAYMENT_PROVIDER`, nunca expor chave secreta ao cliente, idempotência por
+  `orderId`, e testar com as chaves de teste antes das de produção.
+
 ### Como trocar o seed por Supabase
 
 1. Criar as tabelas `categories`, `teams`, `drivers`, `products` e `product_variants` (sku único, size, color,
@@ -162,6 +193,12 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
 - **Sacola (fase 4):** o aviso "adicionado à sacola" também informa quando o estoque limita a quantidade. O preço
   guardado no item é o do momento da adição; o checkout recalcula tudo no servidor. Frete grátis a partir de
   R$ 299,00 (valor de exemplo; ajustar em `lib/cart/config.ts`).
+- **Checkout (fase 5):** duas opções de entrega simuladas (Econômica R$ 24,90, 7–10 dias úteis, grátis acima de
+  R$ 299; Expressa R$ 49,90, 2–4 dias úteis). Parcelamento "3x sem juros" na página de produto é só texto. Sem
+  campo de cartão (fica para o provedor). O pedido confirmado esvazia a sacola.
+- **Esquema de cores claro nas páginas da loja:** o `globals.css` troca `color-scheme` para escuro no modo escuro do
+  sistema, o que deixava selects, rádios e checkboxes nativos escuros. O layout `app/(loja)` força
+  `[color-scheme:light]` (o site não tem modo escuro).
 - **Cabeçalho da equipe:** bloco `rounded-2xl` na cor da equipe que entra da esquerda (clip-path) ao abrir a
   página; a lista "Outras equipes" usa a linha editorial com o wipe no hover.
 
