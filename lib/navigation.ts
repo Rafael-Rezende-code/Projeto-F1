@@ -25,17 +25,22 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
       { label: "Pilotos", href: "/#pilotos" },
       { label: "Circuitos", href: "/#collection" },
       { label: "Cultura F1", href: "/#story" },
-      { label: "Sobre a Apex", href: "/#collection" },
+      { label: "Sobre a Apex", href: "/sobre" },
     ],
   },
   {
     heading: "Ajuda",
     links: [
-      { label: "Contato", href: "/#collection" },
-      { label: "Envio", href: "/#collection" },
-      { label: "Trocas", href: "/#collection" },
-      { label: "Guia de tamanhos", href: "/#collection" },
-      { label: "FAQ", href: "/#collection" },
+      { label: "Contato", href: "/contato" },
+      { label: "Envio", href: "/envio" },
+      { label: "Trocas e devoluções", href: "/trocas-e-devolucoes" },
+      { label: "Guia de tamanhos", href: "/faq" },
+      { label: "FAQ", href: "/faq" },
     ],
   },
+];
+
+export const legalLinks: NavLink[] = [
+  { label: "Política de Privacidade", href: "/politica-de-privacidade" },
+  { label: "Termos de Uso", href: "/termos-de-uso" },
 ];

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CirclePlay, Globe } from "lucide-react";
-import { footerColumns } from "@/lib/navigation";
+import { company } from "@/lib/company";
+import { footerColumns, legalLinks } from "@/lib/navigation";
 
 // Rodapé do site (home e páginas internas). Mesmo visual do rodapé original da home; links em lib/navigation.ts.
 export function SiteFooter() {
@@ -26,8 +27,24 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="mx-auto mt-16 flex max-w-[1400px] flex-col justify-between gap-5 border-t border-white/10 pt-6 text-[10px] uppercase tracking-[0.12em] text-white/50 sm:flex-row">
-        <span>© 2026 Apex. Todos os direitos reservados.</span>
+      {/* Identificação do fornecedor (Decreto 7.962/2013). Dados em lib/company.ts (placeholders até o lançamento). */}
+      <address className="mx-auto mt-16 grid max-w-[1400px] gap-x-8 gap-y-2 border-t border-white/10 pt-6 text-xs not-italic leading-5 text-white/50 sm:grid-cols-2 lg:grid-cols-4">
+        <span>{company.legalName}</span>
+        <span>CNPJ {company.cnpj}</span>
+        <span>{company.address}</span>
+        <span>
+          {company.email} · {company.phone}
+        </span>
+      </address>
+      <div className="mx-auto mt-6 flex max-w-[1400px] flex-col justify-between gap-5 border-t border-white/10 pt-6 text-[10px] uppercase tracking-[0.12em] text-white/50 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+          <span>© 2026 Apex. Todos os direitos reservados.</span>
+          {legalLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="transition hover:text-white">
+              {link.label}
+            </Link>
+          ))}
+        </div>
         <div className="flex gap-5">
           <a href="#top" aria-label="Instagram"><Globe size={15} /></a>
           <a href="#top" aria-label="TikTok"><CirclePlay size={15} /></a>

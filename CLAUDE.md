@@ -156,6 +156,14 @@ interna e sem arredondamento).
 - Em ambos: escolher o provedor por `PAYMENT_PROVIDER`, nunca expor chave secreta ao cliente, idempotência por
   `orderId`, e testar com as chaves de teste antes das de produção.
 
+### Páginas legais e institucionais (fase 6) — ESQUELETO
+
+- `/politica-de-privacidade`, `/termos-de-uso`, `/trocas-e-devolucoes`, `/envio`, `/contato`, `/faq` e `/sobre`: só
+  títulos e seções (`lib/institutional.ts`, visual em `components/institutional-page.tsx`). **Todo o texto é
+  "[CONTEÚDO A SER REDIGIDO]"**: o conteúdo jurídico é escrito pelo responsável, não pelo assistente.
+- Rodapé com a identificação do fornecedor exigida pelo Decreto 7.962/2013 (razão social, CNPJ, endereço, e-mail e
+  telefone) em `lib/company.ts` — **placeholders: preencher antes de vender** — e links para a Política e os Termos.
+
 ### Como trocar o seed por Supabase
 
 1. Criar as tabelas `categories`, `teams`, `drivers`, `products` e `product_variants` (sku único, size, color,
@@ -199,6 +207,8 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
 - **Esquema de cores claro nas páginas da loja:** o `globals.css` troca `color-scheme` para escuro no modo escuro do
   sistema, o que deixava selects, rádios e checkboxes nativos escuros. O layout `app/(loja)` força
   `[color-scheme:light]` (o site não tem modo escuro).
+- **Rodapé (fase 6):** "Trocas" virou "Trocas e devoluções"; "Guia de tamanhos" aponta para o FAQ (não há página
+  própria ainda). Circuitos e Cultura F1 continuam apontando para seções da home.
 - **Cabeçalho da equipe:** bloco `rounded-2xl` na cor da equipe que entra da esquerda (clip-path) ao abrir a
   página; a lista "Outras equipes" usa a linha editorial com o wipe no hover.
 
