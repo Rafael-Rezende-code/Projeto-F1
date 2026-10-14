@@ -52,7 +52,7 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   não estiver no PATH). Dev: `corepack pnpm dev`. Build: `corepack pnpm build`.
 - Lint: `corepack pnpm lint` (ESLint 9 + `eslint-config-next`, config padrão em `eslint.config.mjs`; o ESLint
   10 ainda não é suportado pelos plugins do Next). Rodar também `npx tsc --noEmit`, porque o build ignora erros
-  de tipo. Avisos conhecidos: `<img>` em `ProductCard`, `CategoryCard` e `LogoItem`.
+  de tipo. Aviso conhecido (intencional): `<img>` em `LogoItem` (logos pequenas, monocromáticas).
 - `next.config.mjs` tem `typescript.ignoreBuildErrors: true` (o build não falha por erro de tipo). O
   `next/image` otimiza (sem `unoptimized`), com `formats` AVIF/WebP e `qualities: [75, 90]` (o Next 16 só
   aceita qualidades listadas). Depois de mudar o `next.config`, reinicie o dev server: o otimizador de
