@@ -1,0 +1,16 @@
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+
+// Páginas internas da loja: cabeçalho sólido + rodapé do site. A home (app/page.tsx) tem o cabeçalho sobre o hero.
+export default function LojaLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div id="top" className="flex min-h-screen flex-col bg-white tracking-[-0.02em] text-black">
+      <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-xl focus:bg-black focus:px-4 focus:py-3 focus:text-sm focus:text-white">
+        Pular para o conteúdo
+      </a>
+      <SiteHeader />
+      <main id="conteudo" className="flex-1">{children}</main>
+      <SiteFooter />
+    </div>
+  );
+}

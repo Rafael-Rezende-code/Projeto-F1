@@ -103,6 +103,17 @@ interna e sem arredondamento).
 - Identidade das equipes (cor, logo) continua em `lib/teams.ts`; o seed só a expõe como `Team`. Pilotos vêm de
   `lib/drivers.ts` (cards da home) + o mapa de equipe em `lib/catalog/seed/drivers.ts`.
 
+### Rotas da loja
+
+- `app/(loja)/` (layout com `SiteHeader` sólido + `SiteFooter`): `/produtos` (filtros na URL: `categoria`, `equipe`,
+  `piloto`, `preco` = faixas de `lib/catalog/filters.ts`, `ordem`), `/produtos/[slug]` (galeria, tamanhos, JSON-LD
+  Product), `/equipes/[slug]`, `/pilotos/[slug]`, `/categorias/[slug]`. Páginas de detalhe com `generateStaticParams`.
+  `loading.tsx` com esqueletos (`components/skeletons.tsx`), 404 em `app/not-found.tsx`.
+- Componentes: `ProductCard`/`ProductGrid` (card usado também na home), `TeamCard` (home), `TeamRow` (lista
+  editorial), `Breadcrumbs`, `PageIntro`. Links do cabeçalho/rodapé em `lib/navigation.ts`; URL do site em `lib/site.ts`.
+- A home continua com o cabeçalho próprio sobre o hero; o rodapé virou `components/site-footer.tsx` (mesmo visual).
+  `CartProvider` subiu para `app/layout.tsx` (a sacola vale em todas as páginas).
+
 ### Como trocar o seed por Supabase
 
 1. Criar as tabelas `categories`, `teams`, `drivers`, `products` e `product_variants` (sku único, size, color,
@@ -127,7 +138,18 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   negrito) em vez do rótulo pequeno do mockup.
 - **Seed (fase 2):** produtos por equipe são camiseta, boné, moletom e jaqueta; por piloto, camiseta, boné, miniatura
   de capacete 1:5 e pôster (foto do piloto). Estoques determinísticos com alguns tamanhos esgotados, para exercitar
-  a interface. Slugs dos pilotos seguem os de `lib/drivers.ts` (`/pilotos/norris` etc.).
+  a interface. Slugs dos pilotos seguem os de `lib/drivers.ts` (`/pilotos/norris` etc.). O "Classic Racing Hoodie"
+  ganhou preço "de" (R$ 459,90) para exercitar o "de/por" na home.
+- **Compra rápida no card (fase 3):** produto de tamanho único entra direto na sacola; produto com tamanhos mostra
+  "Escolher tamanho" e leva à página do produto (adicionar sem tamanho não faz sentido).
+- **Links (fase 3):** "Coleção" (cabeçalho), "Ver todos os produtos" e "Comprar a coleção" levam a `/produtos`; o
+  "Ver coleção" do hero continua rolando até a seção de categorias. Cards de pilotos → `/pilotos/[slug]`, categorias →
+  `/categorias/[slug]`. Rodapé: categorias e "Novidades" (`/produtos?ordem=novidades`); Equipes e Pilotos → âncoras
+  da home (não há página-índice).
+- **Cabeçalho das páginas internas:** versão sólida (fundo branco) do cabeçalho da home, com menu do celular em
+  `<details>` (o botão de menu da home continua sem ação, como no original; sugerido corrigir).
+- **Cabeçalho da equipe:** bloco `rounded-2xl` na cor da equipe que entra da esquerda (clip-path) ao abrir a
+  página; a lista "Outras equipes" usa a linha editorial com o wipe no hover.
 
 ## Notas técnicas
 

@@ -167,3 +167,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Loja: cabeçalho da equipe (/equipes/[slug]) entra com a cor da equipe varrendo da esquerda. Sempre animado
+   (decisão de produto: animações ligadas mesmo com reduced motion). */
+@keyframes apex-wipe-in {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.apex-wipe-in { animation: apex-wipe-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+/* Esqueleto de carregamento (loading.tsx) */
+@keyframes apex-pulse { 50% { opacity: 0.5; } }
+.apex-skeleton { background: #ececea; animation: apex-pulse 1.4s ease-in-out infinite; }

@@ -1,10 +1,14 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { CartProvider } from '@/components/cart'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Apex — Built for the pursuit',
-  description: 'Premium Formula 1 merchandise, collectibles and racing culture.',
+  metadataBase: new URL(SITE_URL),
+  title: { default: 'Apex — Feita para pilotos', template: '%s | Apex' },
+  description: SITE_DESCRIPTION,
+  openGraph: { type: 'website', locale: 'pt_BR', siteName: SITE_NAME },
   generator: 'v0.app',
   icons: {
     icon: [
@@ -41,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="antialiased">
-        {children}
+        <CartProvider>{children}</CartProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

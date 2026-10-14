@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { TeamIdentity } from "@/lib/teams";
 
@@ -7,7 +8,7 @@ export function TeamCard({ team, className = "" }: { team: TeamIdentity; classNa
   const { logo } = team;
   const height = (logo.displayHeight ?? 32) * 1.15;
   return (
-    <a
+    <Link
       href={`/equipes/${team.slug}`}
       className={`group relative isolate flex aspect-[1.4] flex-col items-center justify-center overflow-hidden rounded-2xl text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black ${className}`}
       style={{ backgroundColor: team.color }}
@@ -26,6 +27,6 @@ export function TeamCard({ team, className = "" }: { team: TeamIdentity; classNa
       <span className="absolute inset-x-3 bottom-3 text-center text-[19px] font-bold leading-6 tracking-[-0.03em] sm:bottom-4 lg:text-xl">
         {team.name}
       </span>
-    </a>
+    </Link>
   );
 }
