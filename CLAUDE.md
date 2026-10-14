@@ -70,12 +70,9 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   velocidade dividia a distância por `contentSize` em vez de `contentSize / 2` (corrigido).
 - Toda a página fica em `app/page.tsx` (client component).
 - Spotlight do hero (`RevealLayer` em `app/page.tsx`): máscara CSS `radial-gradient` posicionada por
-  `--spot-x`/`--spot-y` (antes era um PNG gerado por canvas a cada frame, que travava a página). O loop
-  `requestAnimationFrame` pausa quando o hero sai da tela (IntersectionObserver). Com o hero visível, a
-  página ainda re-renderiza a cada frame; por isso `DriversSection` é `memo`.
-
-## Pendências (fim da rodada de 13/10/2026)
-
+  `--spot-x`/`--spot-y`, escritas direto na div via ref dentro do `requestAnimationFrame`, **sem setState**
+  (a página não re-renderiza a cada frame). O loop pausa quando o hero sai da tela (IntersectionObserver).
+  Antes do primeiro movimento do mouse a camada fica sem máscara (comportamento original do v0).
 - **Item 9, aplicado (`#b94f01`):** rótulos laranja de 10px sobre fundo claro ("Os pilotos",
   "Explore a coleção", "A coleção", "Escolha sua equipe", "Mais desejados") de `#e8702a` (3,10:1) para
   `#b94f01` (5,02:1 no branco, 4,60:1 no `#f5f5f3`, mesmo matiz). Rótulos sobre fundo escuro ficam como estão.
