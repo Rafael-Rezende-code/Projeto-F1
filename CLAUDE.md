@@ -25,13 +25,14 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   expo; Hamilton com 0,95 s e curva própria ease-in-out, para a cortina abrir em ~0,48 s). Dados, efeitos,
   duração e curva em `lib/drivers.ts`; fotos em `public/images/pilotos` (servidas em AVIF/WebP q90).
 - `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo da seção de pilotos. Lista em `lib/f1-teams.ts`;
-  equipe sem `src` aparece com o nome em texto. Logos reais: Ferrari, Mercedes, Red Bull e Audi (pretas a
-  55%, 100% no hover do item; `displayHeight` dá a altura óptica). Arquivos em `public/images/logos-equipes`
-  já recortados (sem margem), em minúsculas e com ~3× a altura exibida; originais em
-  `assets/logos-equipes-originais` (fora do deploy). O hover desacelera a faixa à metade. O leitor de tela lê
-  uma lista única (`sr-only`); a faixa animada é `aria-hidden`.
-  **McLaren pendente:** `mclaren.jpg` tem fundo branco sólido; quando chegar `mclaren.svg` (ou PNG
-  transparente), usar o novo e apagar o `.jpg`.
+  equipe sem `src` aparece com o nome em texto. Logos reais (pretas a 55%, 100% no hover do item;
+  `displayHeight` dá a altura óptica): Ferrari, Mercedes, McLaren, Red Bull, Williams, Alpine, Haas, Audi e
+  Cadillac. Arquivos em `public/images/logos-equipes` já recortados (sem margem), em minúsculas, WebP sem
+  perdas com ~3× a altura exibida; originais em `assets/logos-equipes-originais` (fora do deploy). O hover
+  desacelera a faixa à metade. O leitor de tela lê uma lista única (`sr-only`); a faixa animada é `aria-hidden`.
+  **Em texto por enquanto:** Aston Martin (`aston-martin.png` tem fundo branco sólido, sem transparência) e
+  Racing Bulls (sem arquivo). O escudo da Cadillac vira uma massa preta no modo monocromático (perde os
+  detalhes internos).
 
 ## Decisões já tomadas
 
