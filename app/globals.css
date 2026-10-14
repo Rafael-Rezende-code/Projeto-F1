@@ -7,6 +7,8 @@
 
 * { font-family: 'Inter', sans-serif; }
 .font-playfair { font-family: 'Playfair Display', serif; }
+/* Título cinético "Luzes apagadas.": Inter variável só nele (lib/fonts.ts). Fora de @layer, como a regra * acima. */
+.font-kinetic, .font-kinetic * { font-family: var(--font-kinetic), sans-serif; }
 
 @theme inline {
   --color-sidebar-ring: var(--sidebar-ring);

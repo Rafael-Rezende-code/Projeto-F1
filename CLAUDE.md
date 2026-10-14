@@ -32,10 +32,16 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   desacelera a faixa à metade. O leitor de tela lê uma lista única (`sr-only`); a faixa animada é `aria-hidden`.
   A Cadillac usa o arquivo `cadillac-wordmark` (versão branca, com escudo e nome); o `cadillac.png` antigo
   (escudo que virava massa preta) ficou só em `assets/`.
+- Título "Luzes apagadas." (#journal) com `KineticText` (`components/ui/kinetic-text.tsx`): só em desktop com
+  mouse (`lg` + `hover:hover`); no celular/toque fica o `h2` original, sem efeito. Usa a Inter variável 100–900
+  apenas nesse título (`lib/fonts.ts`, `next/font/local`, arquivo em `app/fonts/`, classe `.font-kinetic` no
+  `globals.css`). O `next/font/google` não serve aqui: registra a família como "Inter" e vazaria para o site todo.
 
 ## Decisões já tomadas
 
-- KineticText e TechText: descartados por ora.
+- TechText: descartado por ora. KineticText: só no título "Luzes apagadas." (ver Estado atual).
+- **Inter e Playfair nunca carregaram; site usa fonte do sistema. Decisão de tipografia pendente para rodada
+  própria.** (O `@import` do Google Fonts em `app/globals.css` não chega ao CSS final.)
 - GlyphPortal ("VELOCIDADE", campo vermelho): adiado. Falhou no v0. Será refeito depois, com teste no
   navegador, como seção própria antes de "Luzes apagadas".
 - **Licenciamento pendente:** as fotos em `public/images/editorial` são placeholders e precisam de
@@ -84,12 +90,6 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 
 ## Pendências (atualizado em 14/10/2026)
 
-- **KineticText ("Luzes apagadas."):** o componente existe em `components/ui/kinetic-text.tsx`, mas **não está
-  aplicado**. Descoberta: o `@import` do Google Fonts no `app/globals.css` **não chega ao CSS final** (nem em
-  dev, nem no build, nem no site publicado), então a Inter e a Playfair Display nunca carregam e o site usa
-  as fontes padrão do sistema. A troca para a Inter variável (`next/font`, 100–900) está na branch
-  `fonte-inter-variavel` (não mesclada): ela muda larguras de texto e 2–4 quebras de linha, então aguarda
-  decisão. A Playfair continua sem carregar.
 - **GitHub:** `origin` = https://github.com/Rafael-Rezende-code/Projeto-F1.git, branch `main`.
 - **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
   uma seção "Diário". Para nitidez plena em retina, originais horizontais com ≥ 2880px.
