@@ -93,12 +93,23 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   (a página não re-renderiza a cada frame). O loop pausa quando o hero sai da tela (IntersectionObserver).
   Antes do primeiro movimento do mouse a camada fica sem máscara (comportamento original do v0).
 
+## Roteiro (próximos passos, em ordem)
+
+1. **Tipografia:** decidir e carregar as fontes do site (hoje Inter e Playfair não carregam; o site usa a fonte do
+   sistema). Só o título "Luzes apagadas." usa a Inter variável, via `lib/fonts.ts`.
+2. **Refinar os cards de pilotos.**
+3. **Página de produto.**
+4. **GlyphPortal "VELOCIDADE"**, como seção própria antes de "Luzes apagadas", **respeitando reduced motion**
+   (exceção à regra de animações sempre ligadas).
+5. **Seção "Diário"**, com as fotos `senna-sentado` e `senna-champanhe`.
+6. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos e das
+   equipes.
+
 ## Pendências (atualizado em 14/10/2026)
 
-- **GitHub:** `origin` = https://github.com/Rafael-Rezende-code/Projeto-F1.git, branch `main`.
+- **Fotos das equipes em "Com quem você corre?":** 8 fotos em `public/images/equipes/` (uma para cada equipe da
+  seção). Aguardando a escolha entre a proposta A (foto sempre visível) e a B (foto no hover).
+- **Branch `perf/server-components`:** aguardando teste na prévia da Vercel e aprovação para merge na `main`.
 - **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
-  uma seção "Diário". Para nitidez plena em retina, originais horizontais com ≥ 2880px.
-- **Divisão servidor/cliente (branch `perf/server-components`, aguardando decisão de merge):** Lighthouse mobile,
-  5 execuções intercaladas por versão, medianas: Performance 78 → 92, TBT 583 → 296 ms, thread principal
-  4,6 → 3,7 s, JS executado 1,56 → 1,17 s; LCP e FCP sem diferença; Acessibilidade 100, Boas práticas 96 e
-  SEO 100 nas duas. A máquina oscila muito (TBT de 56 a 3866 ms), e em 1 das 5 duplas a versão nova foi pior.
+  a seção "Diário".
+- O 404 de `/_vercel/insights/script.js` só ocorre localmente.
