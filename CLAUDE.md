@@ -27,11 +27,12 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   `rounded-2xl` com `HoverTransition`, um efeito por piloto (ripple, strips, curtain, wipe; 0,5 s, ease-out
   expo; Hamilton com 0,95 s e curva própria ease-in-out, para a cortina abrir em ~0,48 s). Dados, efeitos,
   duração e curva em `lib/drivers.ts`; fotos em `public/images/pilotos` (servidas em AVIF/WebP q90).
-- `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo da seção de pilotos. Lista em `lib/f1-teams.ts`;
+- `LogoMarquee` / `TeamMarquee`: faixa de equipes logo abaixo dos cards de pilotos, como uma assinatura (sem
+  bordas, espaçamento curto acima e abaixo). Lista em `lib/f1-teams.ts`;
   equipe sem `src` aparece com o nome em texto. Logos reais (pretas a 55%, 100% no hover do item;
   `displayHeight` dá a altura óptica): as 11 equipes (Ferrari, Mercedes, McLaren, Red Bull, Aston Martin, Williams,
   Alpine, Haas, Racing Bulls, Audi e Cadillac). Arquivos em `public/images/logos-equipes` já recortados (sem margem), em minúsculas, WebP sem
-  perdas com ~3× a altura exibida; originais em `assets/logos-equipes-originais` (fora do deploy). O hover
+  perdas com ~3× a altura exibida (a Ferrari só tem 2,4×: o desenho original tem 59px de altura); originais em `assets/logos-equipes-originais` (fora do deploy). O hover
   desacelera a faixa à metade. O leitor de tela lê uma lista única (`sr-only`); a faixa animada é `aria-hidden`.
   A Cadillac usa o arquivo `cadillac-wordmark` (versão branca, com escudo e nome); o `cadillac.png` antigo
   (escudo que virava massa preta) ficou só em `assets/`.
