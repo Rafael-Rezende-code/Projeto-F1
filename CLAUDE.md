@@ -81,16 +81,17 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 
 ## Pendências (atualizado em 14/10/2026)
 
-- **Item 9, aplicado (`#b94f01`):** rótulos laranja de 10px sobre fundo claro ("Os pilotos",
-  "Explore a coleção", "A coleção", "Escolha sua equipe", "Mais desejados") de `#e8702a` (3,10:1) para
-  `#b94f01` (5,02:1 no branco, 4,60:1 no `#f5f5f3`, mesmo matiz). Rótulos sobre fundo escuro ficam como estão.
-- **Lighthouse mobile (build de produção, local):** Performance 74, Acessibilidade 96, Boas práticas 96,
-  SEO 100. Principais problemas, ainda sem correção:
-  1. Total Blocking Time de 950 ms: o loop do spotlight chama `setCursorPos` a cada frame mesmo sem mouse,
-     e a página inteira re-renderiza 60×/s enquanto o hero está visível. A correção sugerida é pular o
-     `setState` quando a posição não muda.
-  2. Contraste: rótulos laranja (item 9), botão "Ver coleção" e selo "NOVO" (branco sobre `#e8702a`),
-     categorias dos produtos (`text-black/45` sobre `#f5f5f3`) e textos do rodapé (`text-white/45`).
-  3. Erro no console: 404 em `/_vercel/insights/script.js`. Só acontece localmente; na Vercel o script existe.
-- Checagem final: build limpo, tsc e lint ok; caminhos de imagem batem com a caixa exata; nenhum segredo
-  no código nem no histórico do git.
+- **KineticText ("Luzes apagadas."):** o componente existe em `components/ui/kinetic-text.tsx`, mas **não está
+  aplicado**. A Inter vem do Google Fonts com pesos estáticos 300–700 (`app/globals.css`); o efeito usa 300 a
+  900, então o 900 cairia em 700. Para funcionar, trocar o import para a Inter variável (`wght@100..900`), o
+  que mexe na configuração de fontes; aguardando decisão.
+- **GitHub:** o repositório ainda não tem remote. Quando houver a URL do repositório vazio: `git remote add
+  origin <url>`, branch `main` e `git push -u origin main`.
+- **Logos em texto:** Aston Martin (`aston-martin.png` tem fundo branco sólido) e Racing Bulls (sem arquivo).
+- **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
+  uma seção "Diário". Para nitidez plena em retina, originais horizontais com ≥ 2880px.
+- **Lighthouse mobile (build de produção, local, 3 execuções):** Performance 69–76, Acessibilidade 100, Boas
+  práticas 96, SEO 100. O bloqueio de thread (TBT) oscila de 970 a 2280 ms entre execuções nesta máquina; o
+  custo está na hidratação da página inteira como um único componente client e na renderização, não em JS
+  isolado. Reduzir de verdade exigiria dividir `app/page.tsx` em componentes de servidor e de cliente
+  (refatoração, fora do escopo até aprovação). O 404 de `/_vercel/insights/script.js` só ocorre localmente.
