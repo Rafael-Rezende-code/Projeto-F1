@@ -6,6 +6,12 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    // GlyphPortal é de terceiro e não deve ser alterado. O contador local `characterOffset` é reatribuído dentro
+    // de um Array.from síncrono durante o render (inofensivo); a regra do React Compiler acusa como erro.
+    files: ["components/ui/glyph-portal.tsx"],
+    rules: { "react-hooks/immutability": "off" },
+  },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 

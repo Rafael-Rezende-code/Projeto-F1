@@ -60,6 +60,13 @@ interna e sem arredondamento).
   escuro embaixo e nome em branco. A foto ocupa o card menos a faixa do nome e se dissolve na cor da base, para o
   emblema não ficar sob o nome. Dados (foto, cor da base, enquadramento) em `lib/teams.ts`; fotos em
   `public/images/equipes/`. Audi, Cadillac e Racing Bulls ficam de fora (sem foto).
+- Seção "VELOCIDADE" logo antes de "Luzes apagadas": `GlyphPortal` (`components/ui/glyph-portal.tsx`, de terceiro,
+  MIT; **não alterar lógica nem CSS interno**) montado por `components/velocidade-portal.tsx` com `next/dynamic` e
+  `ssr: false` (evita o hydration mismatch do `useId`) e placeholder de 100svh. Papel/tinta iguais à seção anterior
+  (#f5f5f3 / preto), campo vermelho #c8102e com gradiente próprio, conteúdo "Cada décimo conta." + link para
+  #collection. Respeita reduced motion (fica estático, conteúdo no fluxo). O pin usa `position: sticky`: **nenhum
+  ancestral pode ter overflow hidden/auto, transform ou filter** (para cortar overflow horizontal, use
+  `overflow-x-clip`).
 - Título "Luzes apagadas." (#journal) com `KineticText` (`components/ui/kinetic-text.tsx`): só em desktop com
   mouse (`lg` + `hover:hover`); no celular/toque fica o `h2` original, sem efeito. Usa a Inter variável 100–900
   apenas nesse título (`lib/fonts.ts`, `next/font/local`, arquivo em `app/fonts/`, classe `.font-kinetic` no
@@ -70,8 +77,6 @@ interna e sem arredondamento).
 - TechText: descartado por ora. KineticText: só no título "Luzes apagadas." (ver Estado atual).
 - **Inter e Playfair nunca carregaram; site usa fonte do sistema. Decisão de tipografia pendente para rodada
   própria.** (O `@import` do Google Fonts em `app/globals.css` não chega ao CSS final.)
-- GlyphPortal ("VELOCIDADE", campo vermelho): adiado. Falhou no v0. Será refeito depois, com teste no
-  navegador, como seção própria antes de "Luzes apagadas".
 - **Licenciamento pendente:** as fotos em `public/images/editorial` são placeholders e precisam de
   licenciamento antes do lançamento comercial (antes da venda). Em uso: `abraco-redbull-ferrari` ("Mais que
   uma corrida", #story), `senna-pneus` ("Cada detalhe importa") e `verstappen-capacete` ("Luzes apagadas",
@@ -91,7 +96,9 @@ interna e sem arredondamento).
   não estiver no PATH). Dev: `corepack pnpm dev`. Build: `corepack pnpm build`.
 - Lint: `corepack pnpm lint` (ESLint 9 + `eslint-config-next`, config padrão em `eslint.config.mjs`; o ESLint
   10 ainda não é suportado pelos plugins do Next). Rodar também `npx tsc --noEmit`, porque o build ignora erros
-  de tipo. Aviso conhecido (intencional): `<img>` em `LogoItem` (logos pequenas, monocromáticas).
+  de tipo. Avisos conhecidos (intencionais): `<img>` em `LogoItem` (logos pequenas, monocromáticas) e `pin` sem uso no
+  `glyph-portal.tsx` (de terceiro). A regra `react-hooks/immutability` está desligada só para o `glyph-portal.tsx`
+  no `eslint.config.mjs` (falso positivo num contador local durante o render).
 - `next.config.mjs` tem `typescript.ignoreBuildErrors: true` (o build não falha por erro de tipo). O
   `next/image` otimiza (sem `unoptimized`), com `formats` AVIF/WebP e `qualities: [75, 90]` (o Next 16 só
   aceita qualidades listadas). Depois de mudar o `next.config`, reinicie o dev server: o otimizador de
@@ -123,10 +130,8 @@ interna e sem arredondamento).
    sistema). Só o título "Luzes apagadas." usa a Inter variável, via `lib/fonts.ts`.
 2. **Refinar os cards de pilotos.**
 3. **Página de produto.**
-4. **GlyphPortal "VELOCIDADE"**, como seção própria antes de "Luzes apagadas", **respeitando reduced motion**
-   (exceção à regra de animações sempre ligadas).
-5. **Seção "Diário"**, com as fotos `senna-sentado` e `senna-champanhe`.
-6. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos e das
+4. **Seção "Diário"**, com as fotos `senna-sentado` e `senna-champanhe`.
+5. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos e das
    equipes.
 
 ## Pendências (atualizado em 14/10/2026)
