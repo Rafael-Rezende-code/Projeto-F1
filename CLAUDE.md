@@ -56,10 +56,11 @@ interna e sem arredondamento).
   desacelera a faixa à metade. O leitor de tela lê uma lista única (`sr-only`); a faixa animada é `aria-hidden`.
   A Cadillac usa o arquivo `cadillac-wordmark` (versão branca, com escudo e nome); o `cadillac.png` antigo
   (escudo que virava massa preta) ficou só em `assets/`.
-- Grade "Com quem você corre?" (#teams): 8 cards com foto da equipe (emblema sobre a cor da equipe), gradiente
-  escuro embaixo e nome em branco. A foto ocupa o card menos a faixa do nome e se dissolve na cor da base, para o
-  emblema não ficar sob o nome. Dados (foto, cor da base, enquadramento) em `lib/teams.ts`; fotos em
-  `public/images/equipes/`. Audi, Cadillac e Racing Bulls ficam de fora (sem foto).
+- Grade "Com quem você corre?" (#teams): versão A (flat) com as 11 equipes, 4 + 4 + 3 centralizado (2 por linha no
+  celular, a última centralizada). Card (`components/team-card.tsx`) na cor da equipe, logo e nome **sempre brancos**
+  (nome grande, ≥ 18,7px em negrito); hover escurece a cor e sobe a logo 4px; leva a `/equipes/[slug]`. Cores e
+  identidade em `lib/teams.ts` (`color` = cor do card, escurecida o mínimo para o branco atingir 3:1 quando
+  necessário). As fotos 3D antigas ficaram em `assets/equipes-fotos-3d/` (fora do deploy).
 - Seção "VELOCIDADE" logo antes de "Luzes apagadas": `GlyphPortal` (`components/ui/glyph-portal.tsx`, de terceiro,
   MIT; **não alterar lógica nem CSS interno**) montado por `components/velocidade-portal.tsx` com `next/dynamic` e
   `ssr: false` (evita o hydration mismatch do `useId`) e placeholder de 100svh. Papel/tinta iguais à seção anterior
@@ -89,6 +90,15 @@ interna e sem arredondamento).
   ampliada 1,23× em DPR 2. Em retina (DPR 2) as fotos de largura total ainda são ampliadas (1672px para
   2850px). **Fotos editoriais de largura total precisam de originais com ≥ 2880px de largura para nitidez em
   retina: considerar isso na compra das licenças.**
+
+## Decisões tomadas sem consulta
+
+Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revisão.
+
+- **Cores das equipes (fase 1):** só a McLaren precisou escurecer (`#FF8000` → `#E77400`, 10%). Mercedes
+  (`#00A19C`, 3,2:1) e Alpine (`#0090FF`, 3,3:1) já passam de 3:1 com branco, então ficaram com a cor original
+  (o pedido era o mínimo necessário). Para 3:1 valer pela WCAG, o nome no card passou a ser texto grande (19–20px,
+  negrito) em vez do rótulo pequeno do mockup.
 
 ## Notas técnicas
 

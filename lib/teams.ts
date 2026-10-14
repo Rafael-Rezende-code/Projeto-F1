@@ -1,27 +1,43 @@
-// Grade "Com quem você corre?": nome da equipe + foto (emblema sobre a cor da equipe).
-// Fotos em public/images/equipes, 1600x900 (16:9); a da Mercedes é 1448x1086 (4:3).
-// A foto ocupa o card menos a faixa do nome, e se dissolve na cor da base (color = cor da borda inferior da foto):
-// assim o emblema nunca fica embaixo do nome, mesmo nos cards pequenos do celular.
-// position = object-position da foto; na Mercedes (4:3, mais alta), sobe o enquadramento para o aro não encostar no topo.
-export type Team = {
+import type { Logo } from "@/components/ui/logo-marquee";
+import { f1Teams } from "@/lib/f1-teams";
+
+// Identidade das 11 equipes: nome, slug da rota /equipes/[slug], cores e logo (a mesma da faixa de logos).
+//
+// brandColor: cor principal da identidade da equipe (valores conhecidos das identidades; conferir com os manuais
+// de marca antes do lançamento).
+// color: cor de fundo dos cards e cabeçalhos, com texto e logo SEMPRE brancos (decisão de produto). Quando o
+// branco não atinge 3:1 sobre a brandColor, color é a própria cor escurecida o mínimo necessário (passos de 0,5%
+// rumo ao preto, alvo 3,05:1). O nome vai em tamanho grande (≥ 18,7px em negrito), onde 3:1 é o mínimo WCAG.
+// Contraste do branco: Ferrari 5,2 · Mercedes 3,2 · McLaren 3,05 (escurecida 10%) · Red Bull 16,1 ·
+// Aston Martin 8,3 · Williams 5,4 · Alpine 3,3 · Haas 4,9 · Racing Bulls 8,8 · Audi 6,6 · Cadillac 18,9.
+export type TeamIdentity = {
+  slug: string;
   name: string;
-  image: string;
+  brandColor: string;
   color: string;
-  position?: string;
+  logo: Logo;
+  tagline: string;
 };
 
-export const teams: Team[] = [
-  { name: "Ferrari", image: "/images/equipes/ferrari.jpeg", color: "#ba0e05" },
-  { name: "Mercedes", image: "/images/equipes/mercedes.jpeg", color: "#0d6765", position: "50% 30%" },
-  { name: "McLaren", image: "/images/equipes/mclaren.jpeg", color: "#e65503" },
-  { name: "Red Bull Racing", image: "/images/equipes/redbull.jpeg", color: "#14233d" },
-  { name: "Aston Martin", image: "/images/equipes/astonmartin.jpeg", color: "#13463b" },
-  { name: "Alpine", image: "/images/equipes/alpine.jpeg", color: "#ef92d3" },
-  { name: "Williams", image: "/images/equipes/williams.jpeg", color: "#165bf8" },
-  { name: "Haas", image: "/images/equipes/haas.jpeg", color: "#c7c3c4" },
+const logo = (name: string) => {
+  const found = f1Teams.find((team) => team.alt === name);
+  if (!found) throw new Error(`Logo da equipe "${name}" não encontrada em lib/f1-teams.ts`);
+  return found;
+};
+
+export const teams: TeamIdentity[] = [
+  { slug: "ferrari", name: "Ferrari", brandColor: "#DC0000", color: "#DC0000", logo: logo("Ferrari"), tagline: "O vermelho mais famoso do grid." },
+  { slug: "mercedes", name: "Mercedes", brandColor: "#00A19C", color: "#00A19C", logo: logo("Mercedes"), tagline: "Prata, preto e precisão alemã." },
+  { slug: "mclaren", name: "McLaren", brandColor: "#FF8000", color: "#E77400", logo: logo("McLaren"), tagline: "Papaya de Woking para o mundo." },
+  { slug: "red-bull-racing", name: "Red Bull Racing", brandColor: "#121F45", color: "#121F45", logo: logo("Red Bull Racing"), tagline: "Asas para quem acelera." },
+  { slug: "aston-martin", name: "Aston Martin", brandColor: "#00594F", color: "#00594F", logo: logo("Aston Martin"), tagline: "O verde britânico de corrida." },
+  { slug: "williams", name: "Williams", brandColor: "#005AFF", color: "#005AFF", logo: logo("Williams"), tagline: "Uma das grandes famílias da F1." },
+  { slug: "alpine", name: "Alpine", brandColor: "#0090FF", color: "#0090FF", logo: logo("Alpine"), tagline: "Azul francês em ritmo de corrida." },
+  { slug: "haas", name: "Haas", brandColor: "#DA291C", color: "#DA291C", logo: logo("Haas"), tagline: "A equipe americana do grid." },
+  { slug: "racing-bulls", name: "Racing Bulls", brandColor: "#1634CB", color: "#1634CB", logo: logo("Racing Bulls"), tagline: "A escola de talentos de Faenza." },
+  { slug: "audi", name: "Audi", brandColor: "#BB0A30", color: "#BB0A30", logo: logo("Audi"), tagline: "Quatro argolas no grid." },
+  { slug: "cadillac", name: "Cadillac", brandColor: "#111111", color: "#111111", logo: logo("Cadillac"), tagline: "A estreia americana na F1." },
 ];
 
-// Largura real do card: grade de no máx. 1200px; 4 colunas a partir de 640px, 2 abaixo (página com padding de 20/40px).
-export const TEAM_IMAGE_SIZES =
-  "(min-width: 1280px) 300px, (min-width: 640px) calc((100vw - 80px) / 4), calc((100vw - 40px) / 2)";
-export const TEAM_IMAGE_QUALITY = 90;
+export const getTeamIdentity = (slug: string) => teams.find((team) => team.slug === slug);
+export const getTeamIdentityByName = (name: string) => teams.find((team) => team.name === name);
