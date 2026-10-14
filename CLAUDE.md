@@ -73,3 +73,19 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   `--spot-x`/`--spot-y` (antes era um PNG gerado por canvas a cada frame, que travava a página). O loop
   `requestAnimationFrame` pausa quando o hero sai da tela (IntersectionObserver). Com o hero visível, a
   página ainda re-renderiza a cada frame; por isso `DriversSection` é `memo`.
+
+## Pendências (fim da rodada de 13/10/2026)
+
+- **Item 9, aguardando aprovação (nada aplicado):** rótulos laranja de 10px sobre fundo claro ("Os pilotos",
+  "Explore a coleção", "A coleção", "Escolha sua equipe", "Mais desejados") de `#e8702a` (3,10:1) para
+  `#b94f01` (5,02:1 no branco, 4,60:1 no `#f5f5f3`, mesmo matiz). Rótulos sobre fundo escuro ficam como estão.
+- **Lighthouse mobile (build de produção, local):** Performance 74, Acessibilidade 96, Boas práticas 96,
+  SEO 100. Principais problemas, ainda sem correção:
+  1. Total Blocking Time de 950 ms: o loop do spotlight chama `setCursorPos` a cada frame mesmo sem mouse,
+     e a página inteira re-renderiza 60×/s enquanto o hero está visível. A correção sugerida é pular o
+     `setState` quando a posição não muda.
+  2. Contraste: rótulos laranja (item 9), botão "Ver coleção" e selo "NOVO" (branco sobre `#e8702a`),
+     categorias dos produtos (`text-black/45` sobre `#f5f5f3`) e textos do rodapé (`text-white/45`).
+  3. Erro no console: 404 em `/_vercel/insights/script.js`. Só acontece localmente; na Vercel o script existe.
+- Checagem final: build limpo, tsc e lint ok; caminhos de imagem batem com a caixa exata; nenhum segredo
+  no código nem no histórico do git.
