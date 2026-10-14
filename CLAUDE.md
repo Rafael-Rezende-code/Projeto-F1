@@ -43,7 +43,8 @@ arredondamento aparecer (ex.: imagem do Senna).
   expo; Hamilton com 0,95 s e curva própria ease-in-out, para a cortina abrir em ~0,48 s). Dados, efeitos,
   duração e curva em `lib/drivers.ts`; fotos em `public/images/pilotos` (servidas em AVIF/WebP q90).
 - `LogoMarquee` / `TeamMarquee`: faixa de equipes logo abaixo dos cards de pilotos, como uma assinatura (sem
-  bordas, espaçamento curto acima e abaixo). Lista em `lib/f1-teams.ts`;
+  bordas; 64px dos cards até a faixa no desktop, 48px no celular; ~110px da faixa até "Explore a coleção" no
+  desktop, ~95px no celular). Lista em `lib/f1-teams.ts`;
   equipe sem `src` aparece com o nome em texto. Logos reais (pretas a 55%, 100% no hover do item;
   `displayHeight` dá a altura óptica): as 11 equipes (Ferrari, Mercedes, McLaren, Red Bull, Aston Martin, Williams,
   Alpine, Haas, Racing Bulls, Audi e Cadillac). Arquivos em `public/images/logos-equipes` já recortados (sem margem), em minúsculas, WebP sem
@@ -51,6 +52,10 @@ arredondamento aparecer (ex.: imagem do Senna).
   desacelera a faixa à metade. O leitor de tela lê uma lista única (`sr-only`); a faixa animada é `aria-hidden`.
   A Cadillac usa o arquivo `cadillac-wordmark` (versão branca, com escudo e nome); o `cadillac.png` antigo
   (escudo que virava massa preta) ficou só em `assets/`.
+- Grade "Com quem você corre?" (#teams): 8 cards com foto da equipe (emblema sobre a cor da equipe), gradiente
+  escuro embaixo e nome em branco. A foto ocupa o card menos a faixa do nome e se dissolve na cor da base, para o
+  emblema não ficar sob o nome. Dados (foto, cor da base, enquadramento) em `lib/teams.ts`; fotos em
+  `public/images/equipes/`. Audi, Cadillac e Racing Bulls ficam de fora (sem foto).
 - Título "Luzes apagadas." (#journal) com `KineticText` (`components/ui/kinetic-text.tsx`): só em desktop com
   mouse (`lg` + `hover:hover`); no celular/toque fica o `h2` original, sem efeito. Usa a Inter variável 100–900
   apenas nesse título (`lib/fonts.ts`, `next/font/local`, arquivo em `app/fonts/`, classe `.font-kinetic` no
@@ -122,8 +127,6 @@ arredondamento aparecer (ex.: imagem do Senna).
 
 ## Pendências (atualizado em 14/10/2026)
 
-- **Fotos das equipes em "Com quem você corre?":** 8 fotos em `public/images/equipes/` (uma para cada equipe da
-  seção). Aguardando a escolha entre a proposta A (foto sempre visível) e a B (foto no hover).
 - **Branch `perf/server-components`:** aguardando teste na prévia da Vercel e aprovação para merge na `main`.
 - **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
   a seção "Diário".
