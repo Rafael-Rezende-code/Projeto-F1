@@ -25,7 +25,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   return (
     <CartContext.Provider value={{ count, add }}>
       {children}
-      {notice && <div role="status" className="fixed bottom-5 left-1/2 z-[100] -translate-x-1/2 bg-black px-5 py-3 text-xs text-white shadow-xl">{notice}</div>}
+      {notice && <div role="status" className="fixed bottom-5 left-1/2 z-[100] -translate-x-1/2 rounded-xl bg-black px-5 py-3 text-xs text-white shadow-xl">{notice}</div>}
     </CartContext.Provider>
   )
 }
@@ -37,5 +37,5 @@ export function CartButton() {
 
 export function AddToCartButton({ name }: { name: string }) {
   const { add } = useCart()
-  return <button onClick={() => add(name)} className="absolute bottom-3 left-3 right-3 translate-y-3 bg-black px-4 py-3 text-xs font-medium text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">Adicionar à sacola</button>
+  return <button onClick={() => add(name)} className="absolute bottom-3 left-3 right-3 translate-y-3 rounded-xl bg-black px-4 py-3 text-xs font-medium text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">Adicionar à sacola</button>
 }

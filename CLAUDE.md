@@ -19,6 +19,21 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - Ao terminar cada tarefa: rodar build e lint, abrir o site em dev, conferir desktop e mobile e checar o
   console (sem erros de hydration).
 
+## Padrão de arredondamento
+
+| Elemento | Classe |
+| --- | --- |
+| Cards e imagens em bloco (produto, categoria, equipe, piloto, imagem do Senna) | `rounded-2xl` |
+| Botões e campos (CTAs, setas, favorito, "Adicionar à sacola", input e botão da newsletter, aviso da sacola) | `rounded-xl` |
+| Selos e etiquetas pequenas ("NOVO") | `rounded-md` |
+| Contador da sacola (círculo) | `rounded-full` |
+| Seções de largura total (hero, "Mais que uma corrida", "Luzes apagadas", fundos) | retas |
+
+Card com imagem ou efeito arredondado leva `overflow-hidden` (e `isolate` quando a imagem tem zoom no hover, para
+o Safari não vazar os cantos). O contorno de foco (`outline`) acompanha o `border-radius` sozinho; não use `ring`
+em elemento sem o mesmo arredondamento. Imagem dentro de seção de largura total ganha margem interna para o
+arredondamento aparecer (ex.: imagem do Senna).
+
 ## Estado atual (já integrado)
 
 - `AnimatedGridPattern` (`components/ui/animated-grid-pattern.tsx`) como fundo da seção da newsletter
