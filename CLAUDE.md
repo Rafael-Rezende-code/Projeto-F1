@@ -43,9 +43,13 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   licenciamento antes do lançamento comercial (antes da venda). Em uso: `abraco-redbull-ferrari` ("Mais que
   uma corrida", #story), `senna-pneus` ("Cada detalhe importa") e `verstappen-capacete` ("Luzes apagadas",
   #journal). `senna-sentado` e `senna-champanhe` aguardam uma seção "Diário" de verdade (o #journal atual é
-  a seção "Luzes apagadas"). Dados em `lib/editorial.ts`. Os originais têm só 1170px de largura, em retrato:
-  nas seções de largura total o navegador amplia a foto (1,2× em 1440px, 2,4× em tela retina); para nitidez
-  plena, trocar por originais com ≥ 2880px de largura.
+  a seção "Luzes apagadas"). Dados em `lib/editorial.ts`, com direção de arte por breakpoint:
+  foto vertical (1170px) no celular/tablet (<1024px) e foto horizontal (`*-desktop.png`, 1672px) no desktop, via
+  `components/ui/art-directed-image.tsx` (<picture> + getImageProps: baixa só uma). Para trocar a foto do
+  desktop, colocar o arquivo horizontal em `public/images/editorial/` e mudar o `src` do `desktop` em
+  `lib/editorial.ts`. A `senna-pneus` (lateral) usa só a vertical: no desktop é reduzida (0,62× em DPR 1) e
+  ampliada 1,23× em DPR 2. Em retina (DPR 2) as fotos de largura total ainda são ampliadas (1672px para
+  2850px): para nitidez plena, originais com ≥ 2880px de largura.
 
 ## Notas técnicas
 
