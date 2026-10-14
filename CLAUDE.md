@@ -88,7 +88,7 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   `components/cart.tsx` (sacola: provider, botão do cabeçalho, botão de adicionar e aviso),
   `components/team-marquee.tsx`, `components/newsletter-form.tsx` e `components/drivers-section.tsx`. Em
   componente novo, só use `'use client'` se precisar de estado, efeito ou evento.
-- Spotlight do hero (`RevealLayer` em `app/page.tsx`): máscara CSS `radial-gradient` posicionada por
+- Spotlight do hero (`components/spotlight.tsx`): máscara CSS `radial-gradient` posicionada por
   `--spot-x`/`--spot-y`, escritas direto na div via ref dentro do `requestAnimationFrame`, **sem setState**
   (a página não re-renderiza a cada frame). O loop pausa quando o hero sai da tela (IntersectionObserver).
   Antes do primeiro movimento do mouse a camada fica sem máscara (comportamento original do v0).
