@@ -131,7 +131,7 @@ function DriverCard({ driver }: { driver: Driver }) {
 // memo: a página re-renderiza a cada frame (spotlight do hero); sem props, a seção não precisa acompanhar.
 export const DriversSection = memo(function DriversSection() {
   return (
-    <section id="pilotos" aria-labelledby="pilotos-titulo" className="bg-white px-5 pb-6 pt-20 sm:px-10 sm:pb-8 sm:pt-28">
+    <section id="pilotos" aria-labelledby="pilotos-titulo" className="bg-white px-5 pb-12 pt-20 sm:px-10 sm:pb-16 sm:pt-28">
       <div className="mx-auto max-w-[1400px]">
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Os pilotos</p>
         <h2 id="pilotos-titulo" className="text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl">
