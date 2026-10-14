@@ -106,7 +106,7 @@ const InfiniteSlider = memo(function InfiniteSlider({
 });
 
 // Cor escura fixa: a faixa tem fundo claro sempre, independente do tema do sistema.
-const itemClass = "select-none opacity-55 transition-opacity duration-300 hover:opacity-100 motion-reduce:transition-none";
+const itemClass = "select-none opacity-55 transition-opacity duration-300 hover:opacity-100";
 
 export const LogoItem = memo(function LogoItem({ logo }: { logo: Logo }) {
   if (!logo.src) {

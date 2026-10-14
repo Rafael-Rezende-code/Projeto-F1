@@ -43,6 +43,8 @@ export interface HoverTransitionProps extends Omit<
   label?: string;
   /** Controla o estado por fora (ex.: link envolvendo o card). Sem ele, ativa por hover/foco. */
   active?: boolean;
+  /** false = anima mesmo com prefers-reduced-motion (padrão true: troca instantânea). */
+  respectReducedMotion?: boolean;
 }
 
 type Vector = { x: number; y: number };
@@ -161,6 +163,7 @@ export function HoverTransition({
   easing = "cubic-bezier(0.22, 1, 0.36, 1)",
   label = "Interactive hover transition",
   active: controlledActive,
+  respectReducedMotion = true,
   className,
   onMouseEnter,
   onMouseLeave,
@@ -174,7 +177,8 @@ export function HoverTransition({
   const rootRef = React.useRef<HTMLDivElement>(null);
   const [internalActive, setActive] = React.useState(false);
   const active = controlledActive ?? internalActive;
-  const reducedMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const reducedMotion = respectReducedMotion && prefersReducedMotion;
   const vector = directionVectors[direction];
   const perceivedDurationScale =
     effect === "diagonal" || effect === "ripple" ? 1.25 : 1;

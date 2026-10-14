@@ -11,7 +11,10 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - Alterar só o que a tarefa pede. Melhorias fora do escopo: sugerir, não aplicar.
 - Componentes reutilizáveis em `components/ui`. Dados/configuração separados dos componentes (ex.: `lib/`).
 - Instalar dependências só se não existirem no `package.json`.
-- Respeitar `prefers-reduced-motion`, acessibilidade (aria, foco por teclado, contraste) e mobile.
+- **Animações sempre ligadas (decisão de produto):** faixa, hover dos cards, spotlight, quadrados da newsletter
+  e as demais animam mesmo com `prefers-reduced-motion: reduce`. **Exceção:** animações que movem a tela inteira
+  com o scroll (ex.: GlyphPortal "VELOCIDADE") devem respeitar reduced motion.
+- Respeitar acessibilidade (aria, foco por teclado, contraste) e mobile.
   Nunca causar scroll horizontal na página.
 - Ao terminar cada tarefa: rodar build e lint, abrir o site em dev, conferir desktop e mobile e checar o
   console (sem erros de hydration).
@@ -71,7 +74,8 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - Fotos dos pilotos: `sizes` = largura real do card × 1,5 (sobreamostragem medida: o navegador borra ao
   reduzir perto de 1:1). Não "corrigir" para 1× sem medir a nitidez de novo.
 - Registry `@componentry` (https://componentry.fun/r/{name}.json) configurado no `components.json`.
-- `components/ui/hover-transition.tsx` (do @componentry) recebeu a prop opcional `active` (modo
+- `components/ui/hover-transition.tsx` (do @componentry) recebeu as props opcionais `respectReducedMotion` (os
+  cards passam `false`) e `active` (modo
   controlado). Se reinstalar pelo shadcn, reaplicar.
 - O site **não tem modo escuro**: os fundos das seções são fixos e iguais nos dois temas. Mas as variáveis
   CSS (`--foreground` etc.) mudam com `prefers-color-scheme: dark`, então texto sem cor própria herda branco

@@ -8,7 +8,7 @@ import {
   useState,
   type ComponentPropsWithoutRef,
 } from "react"
-import { motion, useReducedMotion } from "motion/react"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
@@ -47,8 +47,8 @@ export function AnimatedGridPattern({
   const containerRef = useRef<SVGSVGElement | null>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const [squares, setSquares] = useState<Array<Square>>([])
-  const shouldReduceMotion = useReducedMotion()
-  const squareCount = shouldReduceMotion ? 0 : numSquares
+  // Anima sempre, inclusive com prefers-reduced-motion (decisão de produto, ver CLAUDE.md).
+  const squareCount = numSquares
 
   const getPos = useCallback((): [number, number] => {
     return [

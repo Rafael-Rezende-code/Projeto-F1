@@ -94,6 +94,8 @@ function DriverCard({ driver }: { driver: Driver }) {
           aria-hidden="true"
           tabIndex={-1}
           active={active}
+          // Anima sempre, inclusive com prefers-reduced-motion (decisão de produto, ver CLAUDE.md).
+          respectReducedMotion={false}
           effect={driver.effect}
           direction={driver.direction}
           duration={duration}
