@@ -52,7 +52,7 @@ export function ProductCard({
         {inStock.length === 0 ? (
           <span className="absolute bottom-3 left-3 z-10 rounded-md bg-white/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-black">Esgotado</span>
         ) : single ? (
-          <AddToCartButton name={product.name} className={quickClass} />
+          <AddToCartButton product={product} className={quickClass} />
         ) : (
           <Link href={href} tabIndex={-1} aria-hidden="true" className={quickClass}>
             Escolher tamanho

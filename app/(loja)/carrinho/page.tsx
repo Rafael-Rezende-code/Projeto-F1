@@ -1,0 +1,20 @@
+import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { CartContents } from "@/components/cart-contents";
+import { PageIntro } from "@/components/page-intro";
+
+export const metadata: Metadata = { title: "Sacola", robots: { index: false } };
+
+export default function CarrinhoPage() {
+  return (
+    <div className="px-5 pb-24 pt-8 sm:px-10 sm:pt-10">
+      <div className="mx-auto max-w-[1400px]">
+        <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Sacola" }]} />
+        <div className="mb-10 mt-8">
+          <PageIntro eyebrow="Sua compra" title="Sacola" />
+        </div>
+        <CartContents variant="page" />
+      </div>
+    </div>
+  );
+}

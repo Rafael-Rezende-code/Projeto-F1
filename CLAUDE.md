@@ -114,6 +114,17 @@ interna e sem arredondamento).
 - A home continua com o cabeçalho próprio sobre o hero; o rodapé virou `components/site-footer.tsx` (mesmo visual).
   `CartProvider` subiu para `app/layout.tsx` (a sacola vale em todas as páginas).
 
+### Sacola (fase 4)
+
+- Lógica pura em `lib/cart/reducer.ts` (um item por SKU; quantidade sempre entre 1 e o estoque da variante;
+  `sanitizeItems` valida o que vem do localStorage). Constantes em `lib/cart/config.ts`
+  (`FREE_SHIPPING_THRESHOLD_CENTS` = R$ 299,00, chave `apex:sacola:v1`).
+- `components/cart.tsx`: `CartProvider` (context + reducer, persiste no localStorage com try/catch, lê só depois de
+  montar para não dar hydration mismatch, sincroniza entre abas), `CartButton` (abre a gaveta), `AddToCartButton`
+  (compra rápida), `useCart`. Gaveta em `components/cart-drawer.tsx` (diálogo modal: foco preso, Esc, clique fora,
+  foco volta ao botão); conteúdo compartilhado com `/carrinho` em `components/cart-contents.tsx`.
+- Testes: `corepack pnpm test` (vitest; `lib/**/*.test.ts`, sem DOM).
+
 ### Como trocar o seed por Supabase
 
 1. Criar as tabelas `categories`, `teams`, `drivers`, `products` e `product_variants` (sku único, size, color,
@@ -148,6 +159,9 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   da home (não há página-índice).
 - **Cabeçalho das páginas internas:** versão sólida (fundo branco) do cabeçalho da home, com menu do celular em
   `<details>` (o botão de menu da home continua sem ação, como no original; sugerido corrigir).
+- **Sacola (fase 4):** o aviso "adicionado à sacola" também informa quando o estoque limita a quantidade. O preço
+  guardado no item é o do momento da adição; o checkout recalcula tudo no servidor. Frete grátis a partir de
+  R$ 299,00 (valor de exemplo; ajustar em `lib/cart/config.ts`).
 - **Cabeçalho da equipe:** bloco `rounded-2xl` na cor da equipe que entra da esquerda (clip-path) ao abrir a
   página; a lista "Outras equipes" usa a linha editorial com o wipe no hover.
 
