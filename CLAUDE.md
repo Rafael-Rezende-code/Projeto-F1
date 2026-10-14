@@ -73,7 +73,10 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   `text-foreground` nem `dark:`. Hoje nenhum texto ou ícone visível da página muda de cor com o tema.
 - `LogoMarquee` (`InfiniteSlider`): `durationOnHover` maior que `duration` desacelera. A transição de
   velocidade dividia a distância por `contentSize` em vez de `contentSize / 2` (corrigido).
-- Toda a página fica em `app/page.tsx` (client component).
+- `app/page.tsx` é **server component**. Client só onde há interatividade: `components/spotlight.tsx` (hero),
+  `components/cart.tsx` (sacola: provider, botão do cabeçalho, botão de adicionar e aviso),
+  `components/team-marquee.tsx`, `components/newsletter-form.tsx` e `components/drivers-section.tsx`. Em
+  componente novo, só use `'use client'` se precisar de estado, efeito ou evento.
 - Spotlight do hero (`RevealLayer` em `app/page.tsx`): máscara CSS `radial-gradient` posicionada por
   `--spot-x`/`--spot-y`, escritas direto na div via ref dentro do `requestAnimationFrame`, **sem setState**
   (a página não re-renderiza a cada frame). O loop pausa quando o hero sai da tela (IntersectionObserver).
@@ -82,15 +85,15 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 ## Pendências (atualizado em 14/10/2026)
 
 - **KineticText ("Luzes apagadas."):** o componente existe em `components/ui/kinetic-text.tsx`, mas **não está
-  aplicado**. A Inter vem do Google Fonts com pesos estáticos 300–700 (`app/globals.css`); o efeito usa 300 a
-  900, então o 900 cairia em 700. Para funcionar, trocar o import para a Inter variável (`wght@100..900`), o
-  que mexe na configuração de fontes; aguardando decisão.
-- **GitHub:** o repositório ainda não tem remote. Quando houver a URL do repositório vazio: `git remote add
-  origin <url>`, branch `main` e `git push -u origin main`.
+  aplicado**. Descoberta: o `@import` do Google Fonts no `app/globals.css` **não chega ao CSS final** (nem em
+  dev, nem no build, nem no site publicado), então a Inter e a Playfair Display nunca carregam e o site usa
+  as fontes padrão do sistema. A troca para a Inter variável (`next/font`, 100–900) está na branch
+  `fonte-inter-variavel` (não mesclada): ela muda larguras de texto e 2–4 quebras de linha, então aguarda
+  decisão. A Playfair continua sem carregar.
+- **GitHub:** `origin` = https://github.com/Rafael-Rezende-code/Projeto-F1.git, branch `main`.
 - **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
   uma seção "Diário". Para nitidez plena em retina, originais horizontais com ≥ 2880px.
-- **Lighthouse mobile (build de produção, local, 3 execuções):** Performance 69–76, Acessibilidade 100, Boas
-  práticas 96, SEO 100. O bloqueio de thread (TBT) oscila de 970 a 2280 ms entre execuções nesta máquina; o
-  custo está na hidratação da página inteira como um único componente client e na renderização, não em JS
-  isolado. Reduzir de verdade exigiria dividir `app/page.tsx` em componentes de servidor e de cliente
-  (refatoração, fora do escopo até aprovação). O 404 de `/_vercel/insights/script.js` só ocorre localmente.
+- **Divisão servidor/cliente (branch `perf/server-components`, aguardando decisão de merge):** Lighthouse mobile,
+  5 execuções intercaladas por versão, medianas: Performance 78 → 92, TBT 583 → 296 ms, thread principal
+  4,6 → 3,7 s, JS executado 1,56 → 1,17 s; LCP e FCP sem diferença; Acessibilidade 100, Boas práticas 96 e
+  SEO 100 nas duas. A máquina oscila muito (TBT de 56 a 3866 ms), e em 1 das 5 duplas a versão nova foi pior.
