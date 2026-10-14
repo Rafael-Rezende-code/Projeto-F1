@@ -26,13 +26,12 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   duração e curva em `lib/drivers.ts`; fotos em `public/images/pilotos` (servidas em AVIF/WebP q90).
 - `LogoMarquee` / `TeamMarquee`: faixa de equipes abaixo da seção de pilotos. Lista em `lib/f1-teams.ts`;
   equipe sem `src` aparece com o nome em texto. Logos reais (pretas a 55%, 100% no hover do item;
-  `displayHeight` dá a altura óptica): Ferrari, Mercedes, McLaren, Red Bull, Williams, Alpine, Haas, Audi e
-  Cadillac. Arquivos em `public/images/logos-equipes` já recortados (sem margem), em minúsculas, WebP sem
+  `displayHeight` dá a altura óptica): as 11 equipes (Ferrari, Mercedes, McLaren, Red Bull, Aston Martin, Williams,
+  Alpine, Haas, Racing Bulls, Audi e Cadillac). Arquivos em `public/images/logos-equipes` já recortados (sem margem), em minúsculas, WebP sem
   perdas com ~3× a altura exibida; originais em `assets/logos-equipes-originais` (fora do deploy). O hover
   desacelera a faixa à metade. O leitor de tela lê uma lista única (`sr-only`); a faixa animada é `aria-hidden`.
-  **Em texto por enquanto:** Aston Martin (`aston-martin.png` tem fundo branco sólido, sem transparência) e
-  Racing Bulls (sem arquivo). O escudo da Cadillac vira uma massa preta no modo monocromático (perde os
-  detalhes internos).
+  A Cadillac usa o arquivo `cadillac-wordmark` (versão branca, com escudo e nome); o `cadillac.png` antigo
+  (escudo que virava massa preta) ficou só em `assets/`.
 
 ## Decisões já tomadas
 
@@ -49,7 +48,8 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   desktop, colocar o arquivo horizontal em `public/images/editorial/` e mudar o `src` do `desktop` em
   `lib/editorial.ts`. A `senna-pneus` (lateral) usa só a vertical: no desktop é reduzida (0,62× em DPR 1) e
   ampliada 1,23× em DPR 2. Em retina (DPR 2) as fotos de largura total ainda são ampliadas (1672px para
-  2850px): para nitidez plena, originais com ≥ 2880px de largura.
+  2850px). **Fotos editoriais de largura total precisam de originais com ≥ 2880px de largura para nitidez em
+  retina: considerar isso na compra das licenças.**
 
 ## Notas técnicas
 
@@ -87,7 +87,6 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
   que mexe na configuração de fontes; aguardando decisão.
 - **GitHub:** o repositório ainda não tem remote. Quando houver a URL do repositório vazio: `git remote add
   origin <url>`, branch `main` e `git push -u origin main`.
-- **Logos em texto:** Aston Martin (`aston-martin.png` tem fundo branco sólido) e Racing Bulls (sem arquivo).
 - **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
   uma seção "Diário". Para nitidez plena em retina, originais horizontais com ≥ 2880px.
 - **Lighthouse mobile (build de produção, local, 3 execuções):** Performance 69–76, Acessibilidade 100, Boas

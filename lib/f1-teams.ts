@@ -9,14 +9,11 @@ export const f1Teams: Logo[] = [
   { alt: "Mercedes", src: "/images/logos-equipes/mercedes.webp", width: 251, height: 78, displayHeight: 26 },
   { alt: "McLaren", src: "/images/logos-equipes/mclaren.webp", width: 304, height: 78, displayHeight: 26 },
   { alt: "Red Bull Racing", src: "/images/logos-equipes/red-bull.webp", width: 331, height: 54, displayHeight: 18 },
-  // aston-martin.png tem fundo branco sólido (vira um bloco preto em monocromático): segue em texto até chegar
-  // um PNG/SVG transparente.
-  { alt: "Aston Martin" },
+  { alt: "Aston Martin", src: "/images/logos-equipes/aston-martin.webp", width: 161, height: 108, displayHeight: 36 },
   { alt: "Williams", src: "/images/logos-equipes/williams.webp", width: 210, height: 108, displayHeight: 36 },
   { alt: "Alpine", src: "/images/logos-equipes/alpine.webp", width: 140, height: 114, displayHeight: 38 },
   { alt: "Haas", src: "/images/logos-equipes/haas.webp", width: 255, height: 84, displayHeight: 28 },
-  // racing-bulls: ainda sem arquivo.
-  { alt: "Racing Bulls" },
+  { alt: "Racing Bulls", src: "/images/logos-equipes/racing-bulls.webp", width: 123, height: 102, displayHeight: 34 },
   { alt: "Audi", src: "/images/logos-equipes/audi.webp", width: 130, height: 120, displayHeight: 40 },
-  { alt: "Cadillac", src: "/images/logos-equipes/cadillac.webp", width: 210, height: 108, displayHeight: 36 },
+  { alt: "Cadillac", src: "/images/logos-equipes/cadillac.webp", width: 213, height: 108, displayHeight: 36 },
 ];
