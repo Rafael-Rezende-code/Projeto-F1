@@ -76,7 +76,7 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 
 ## Pendências (fim da rodada de 13/10/2026)
 
-- **Item 9, aguardando aprovação (nada aplicado):** rótulos laranja de 10px sobre fundo claro ("Os pilotos",
+- **Item 9, aplicado (`#b94f01`):** rótulos laranja de 10px sobre fundo claro ("Os pilotos",
   "Explore a coleção", "A coleção", "Escolha sua equipe", "Mais desejados") de `#e8702a` (3,10:1) para
   `#b94f01` (5,02:1 no branco, 4,60:1 no `#f5f5f3`, mesmo matiz). Rótulos sobre fundo escuro ficam como estão.
 - **Lighthouse mobile (build de produção, local):** Performance 74, Acessibilidade 96, Boas práticas 96,

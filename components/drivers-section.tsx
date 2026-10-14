@@ -131,7 +131,7 @@ export const DriversSection = memo(function DriversSection() {
   return (
     <section id="pilotos" aria-labelledby="pilotos-titulo" className="bg-white px-5 py-20 sm:px-10 sm:py-28">
       <div className="mx-auto max-w-[1400px]">
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#e8702a]">Os pilotos</p>
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Os pilotos</p>
         <h2 id="pilotos-titulo" className="text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl">
           Escolha seu piloto
         </h2>
