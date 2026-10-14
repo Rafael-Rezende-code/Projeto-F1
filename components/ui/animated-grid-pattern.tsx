@@ -89,6 +89,7 @@ export function AnimatedGridPattern({
 
   useEffect(() => {
     if (dimensions.width && dimensions.height) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- componente de terceiro: gera os quadrados depois de medir o tamanho
       setSquares(generateSquares(squareCount))
     }
   }, [dimensions.width, dimensions.height, generateSquares, squareCount])

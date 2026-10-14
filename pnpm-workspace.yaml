@@ -3,3 +3,7 @@ pmOnFail: ignore
 minimumReleaseAgeExclude:
   - '@next/*'
   - next
+
+allowBuilds:
+  # binário nativo já vem como dependência opcional; não precisa rodar o script de instalação
+  unrs-resolver: false

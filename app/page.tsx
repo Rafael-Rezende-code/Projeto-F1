@@ -59,6 +59,7 @@ function TeamMarquee() {
   // No servidor useReducedMotion é null; no cliente já lê a preferência no 1º render.
   // Renderiza o marquee até montar para o HTML do servidor e a hidratação baterem.
   const [mounted, setMounted] = useState(false)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- intencional: o render extra após montar é o que evita o hydration mismatch
   useEffect(() => setMounted(true), [])
 
   return (
