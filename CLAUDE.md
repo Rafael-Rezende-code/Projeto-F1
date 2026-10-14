@@ -23,16 +23,20 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 
 | Elemento | Classe |
 | --- | --- |
-| Cards e imagens em bloco (produto, categoria, equipe, piloto, imagem do Senna) | `rounded-2xl` |
+| Cards e imagens em bloco (produto, categoria, equipe, piloto) | `rounded-2xl` |
 | Botões e campos (CTAs, setas, favorito, "Adicionar à sacola", input e botão da newsletter, aviso da sacola) | `rounded-xl` |
 | Selos e etiquetas pequenas ("NOVO") | `rounded-md` |
 | Contador da sacola (círculo) | `rounded-full` |
 | Seções de largura total (hero, "Mais que uma corrida", "Luzes apagadas", fundos) | retas |
+| Imagens que encostam nas bordas da seção (ex.: imagem do Senna em "Cada detalhe importa") | retas |
 
 Card com imagem ou efeito arredondado leva `overflow-hidden` (e `isolate` quando a imagem tem zoom no hover, para
 o Safari não vazar os cantos). O contorno de foco (`outline`) acompanha o `border-radius` sozinho; não use `ring`
-em elemento sem o mesmo arredondamento. Imagem dentro de seção de largura total ganha margem interna para o
-arredondamento aparecer (ex.: imagem do Senna).
+em elemento sem o mesmo arredondamento. **Imagens que encostam nas bordas da seção ficam retas** (sem margem
+interna e sem arredondamento).
+- Carrossel horizontal: a área de scroll sangra até as bordas da janela (o corte do último card acontece na borda
+  da tela) e o primeiro card fica alinhado ao título via padding/scroll-padding (ver `CAROUSEL_BLEED` em
+  `app/page.tsx`).
 
 ## Estado atual (já integrado)
 
