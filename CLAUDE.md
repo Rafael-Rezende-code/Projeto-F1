@@ -39,7 +39,12 @@ Publicado em https://apex-seven-ruddy.vercel.app. A partir de agora todo o desen
 - GlyphPortal ("VELOCIDADE", campo vermelho): adiado. Falhou no v0. Será refeito depois, com teste no
   navegador, como seção própria antes de "Luzes apagadas".
 - **Licenciamento pendente:** as fotos em `public/images/editorial` são placeholders e precisam de
-  licenciamento antes do lançamento comercial.
+  licenciamento antes do lançamento comercial (antes da venda). Em uso: `abraco-redbull-ferrari` ("Mais que
+  uma corrida", #story), `senna-pneus` ("Cada detalhe importa") e `verstappen-capacete` ("Luzes apagadas",
+  #journal). `senna-sentado` e `senna-champanhe` aguardam uma seção "Diário" de verdade (o #journal atual é
+  a seção "Luzes apagadas"). Dados em `lib/editorial.ts`. Os originais têm só 1170px de largura, em retrato:
+  nas seções de largura total o navegador amplia a foto (1,2× em 1440px, 2,4× em tela retina); para nitidez
+  plena, trocar por originais com ≥ 2880px de largura.
 
 ## Notas técnicas
 
