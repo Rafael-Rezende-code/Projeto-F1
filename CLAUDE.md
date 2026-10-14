@@ -91,6 +91,32 @@ interna e sem arredondamento).
   2850px). **Fotos editoriais de largura total precisam de originais com ≥ 2880px de largura para nitidez em
   retina: considerar isso na compra das licenças.**
 
+## Catálogo (lib/catalog)
+
+- Tipos em `lib/catalog/types.ts` (Product, Category, Team, Driver, filtros). **Preços sempre em centavos**
+  (inteiro); formatação só via `formatPrice` (`lib/format.ts`, `Intl.NumberFormat("pt-BR")`).
+- Interface `CatalogRepository` (`lib/catalog/repository.ts`); as páginas usam só `catalog` de `lib/catalog`
+  (`index.ts`). Implementação atual: `SeedCatalogRepository` lendo `lib/catalog/seed/`.
+- **Seed ilustrativo:** os 66 produtos do seed são de demonstração (`illustrative: true`): os 6 que já estavam na
+  home, 4 por equipe (11 equipes) e 4 por piloto. Fotos só das imagens que o site já usava
+  (`lib/catalog/seed/images.ts`); não acrescente URLs sem conferir licença e `remotePatterns`.
+- Identidade das equipes (cor, logo) continua em `lib/teams.ts`; o seed só a expõe como `Team`. Pilotos vêm de
+  `lib/drivers.ts` (cards da home) + o mapa de equipe em `lib/catalog/seed/drivers.ts`.
+
+### Como trocar o seed por Supabase
+
+1. Criar as tabelas `categories`, `teams`, `drivers`, `products` e `product_variants` (sku único, size, color,
+   stock, product_id) e `product_images` (src, alt, position), espelhando `lib/catalog/types.ts` (preços em
+   centavos, `integer`). Popular a partir do seed (script que lê `lib/catalog/seed/` e faz `insert`).
+2. Instalar `@supabase/supabase-js` e criar `lib/catalog/supabase-repository.ts` com uma classe que implemente
+   `CatalogRepository`: cada método vira uma consulta (filtros de `getProducts` → `.eq`/`.gte`/`.lte`, ordenação →
+   `.order`), mapeando as linhas para os tipos.
+3. Em `lib/catalog/index.ts`, trocar `new SeedCatalogRepository()` pela nova classe. Nenhuma página muda.
+4. Chaves em variáveis de ambiente (`SUPABASE_URL`, `SUPABASE_ANON_KEY`; service role só no servidor). As páginas
+   de catálogo hoje são estáticas (`generateStaticParams`): com banco, usar `revalidate` (ISR) ou revalidação por tag.
+5. Estoque: o checkout (`app/(loja)/checkout/actions.ts`) já revalida preço e estoque pelo repositório no servidor;
+   com banco, a baixa de estoque deve ser feita numa transação/RPC ao confirmar o pagamento.
+
 ## Decisões tomadas sem consulta
 
 Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revisão.
@@ -99,6 +125,9 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   (`#00A19C`, 3,2:1) e Alpine (`#0090FF`, 3,3:1) já passam de 3:1 com branco, então ficaram com a cor original
   (o pedido era o mínimo necessário). Para 3:1 valer pela WCAG, o nome no card passou a ser texto grande (19–20px,
   negrito) em vez do rótulo pequeno do mockup.
+- **Seed (fase 2):** produtos por equipe são camiseta, boné, moletom e jaqueta; por piloto, camiseta, boné, miniatura
+  de capacete 1:5 e pôster (foto do piloto). Estoques determinísticos com alguns tamanhos esgotados, para exercitar
+  a interface. Slugs dos pilotos seguem os de `lib/drivers.ts` (`/pilotos/norris` etc.).
 
 ## Notas técnicas
 
