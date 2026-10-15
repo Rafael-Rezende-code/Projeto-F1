@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- script Node em CommonJS, roda fora do app */
 // Gera as fontes enxutas de app/fonts/ a partir das variáveis originais do Google Fonts (SIL OFL).
 // Uso (fora do projeto, para não instalar dependência):
 //   npm i --no-save subset-font@2
