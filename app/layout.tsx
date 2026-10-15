@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
 import { MobileMenu } from '@/components/mobile-menu'
 import { SiteUIProvider } from '@/components/site-ui'
+import { fontVariables } from '@/lib/fonts'
 import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
@@ -47,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={fontVariables}>
       <body className="antialiased">
         <SiteUIProvider>
           <CartProvider>

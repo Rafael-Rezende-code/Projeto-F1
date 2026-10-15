@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col bg-white tracking-[-0.02em] text-black">
+    <div className="flex min-h-screen flex-col bg-white text-black">
       <SiteHeader />
       <main className="flex flex-1 items-center px-5 py-24 sm:px-10">
         <div className="mx-auto max-w-xl text-center">

@@ -120,7 +120,7 @@ export default async function ProductPage({ params }: Params) {
 
             <div className="mt-10 border-t border-black/10">
               <section aria-labelledby="descricao" className="border-b border-black/10 py-6">
-                <h2 id="descricao" className="text-sm font-medium">Descrição</h2>
+                <h2 id="descricao" className="font-ui text-sm font-medium">Descrição</h2>
                 <p className="mt-3 text-sm leading-7 text-black/65">{product.description}</p>
                 {product.illustrative && <p className="mt-3 text-xs text-black/60">Produto ilustrativo (catálogo de demonstração).</p>}
               </section>

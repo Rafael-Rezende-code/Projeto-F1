@@ -1,17 +1,26 @@
-import localFont from "next/font/local";
+import { Archivo, Geist } from "next/font/google";
 
-// Inter variável (100–900) SÓ para o título cinético "Luzes apagadas." (KineticText varia o peso de 300 a 900).
-// O restante do site continua na fonte do sistema: a tipografia do site é uma decisão pendente (ver CLAUDE.md).
+// TOKENS DE FONTE — o único lugar onde as famílias do site são definidas.
+// Para trocar uma fonte: mude o import e a chamada abaixo (mantenha `variable`); o CSS usa só as variáveis
+// --font-display e --font-sans (app/globals.css), e os ajustes finos (largura, peso, tracking) ficam nos tokens
+// --display-* do globals.css.
 //
-// Por que next/font/local e não next/font/google: nesta versão do Next o next/font/google registra a família com
-// o nome real ("Inter"), e o CSS global pede `font-family: 'Inter'` para todos os elementos; a fonte vazaria para
-// o site inteiro. O next/font/local usa o nome da constante como família (sem colisão).
-// Arquivo: Inter variável, subconjunto latin, do Google Fonts (licença SIL Open Font License 1.1).
-// preload: false → o arquivo só é baixado quando o título aparece (no celular ele fica oculto e não baixa).
-export const kineticFont = localFont({
-  src: "../app/fonts/inter-variable-latin.woff2",
-  weight: "100 900",
+// Títulos: Archivo variável (pesos 100–900 e eixo de largura wdth 62–125). A largura expandida dá a sensação de
+// velocidade; o KineticText de "Luzes apagadas." anima o peso dessa mesma fonte.
+export const fontDisplay = Archivo({
+  subsets: ["latin"],
+  axes: ["wdth"],
+  style: ["normal", "italic"],
   display: "swap",
-  preload: false,
-  variable: "--font-kinetic",
+  variable: "--font-display",
 });
+
+// Textos, interface e preços: Geist variável.
+export const fontSans = Geist({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
+
+/** Classes para o <html>: expõem as variáveis CSS das duas famílias. */
+export const fontVariables = `${fontDisplay.variable} ${fontSans.variable}`;

@@ -1,14 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
-* { font-family: 'Inter', sans-serif; }
-.font-playfair { font-family: 'Playfair Display', serif; }
-/* Título cinético "Luzes apagadas.": Inter variável só nele (lib/fonts.ts). Fora de @layer, como a regra * acima. */
-.font-kinetic, .font-kinetic * { font-family: var(--font-kinetic), sans-serif; }
+/* TIPOGRAFIA — famílias em lib/fonts.ts (next/font); ajustes finos nestes tokens.
+   Regras fora de @layer de propósito: valem por cima das utilities do Tailwind (ex.: font-medium e tracking-[...] que
+   os títulos já tinham), para a escala dos títulos ficar num lugar só. */
+:root {
+  --display-stretch: 116%;   /* eixo wdth da Archivo (100 = normal, 125 = máximo) */
+  --display-weight: 600;     /* médio-forte */
+  --display-tracking: -0.035em;
+  --display-leading: 0.98;
+  --body-tracking: -0.006em;
+}
+/* No celular os títulos grandes ocupam a largura toda: menos expansão para não encostar nas bordas. */
+@media (max-width: 639px) { :root { --display-stretch: 106%; --display-tracking: -0.03em; } }
+html { font-family: var(--font-sans), system-ui, sans-serif; letter-spacing: var(--body-tracking); }
+h1, h2, .font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-stretch: var(--display-stretch);
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: var(--display-leading);
+}
+/* Títulos pequenos de interface (blocos da sacola, checkout, descrição) continuam na fonte de texto. */
+.font-ui { font-family: var(--font-sans), system-ui, sans-serif; font-stretch: normal; letter-spacing: var(--body-tracking); line-height: inherit; }
+/* Acento serifado em itálico (logo "Apex.", "Feita para", primeiro nome dos pilotos). A Playfair nunca carregou: fica a
+   serifa do sistema, como já aparecia. Decisão de fonte de acento pendente. */
+.font-playfair { font-family: serif; }
+/* Título cinético "Luzes apagadas.": a Archivo variável (anima o peso de 300 a 900). */
+.font-kinetic, .font-kinetic * { font-family: var(--font-display), sans-serif; font-stretch: var(--display-stretch); }
+.font-kinetic { font-weight: 300; } /* o KineticText parte do 300; a regra dos títulos acima imporia 600 */
 
 @theme inline {
   --color-sidebar-ring: var(--sidebar-ring);

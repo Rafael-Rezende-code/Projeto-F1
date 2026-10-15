@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 // o sistema está em modo escuro (o globals.css troca color-scheme com prefers-color-scheme).
 export default function LojaLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div id="top" className="flex min-h-screen flex-col bg-white tracking-[-0.02em] text-black [color-scheme:light]">
+    <div id="top" className="flex min-h-screen flex-col bg-white text-black [color-scheme:light]">
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-xl focus:bg-black focus:px-4 focus:py-3 focus:text-sm focus:text-white">
         Pular para o conteúdo
       </a>

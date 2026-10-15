@@ -155,7 +155,7 @@ export function CheckoutForm() {
 
   const sectionHeader = (index: Step) => (
     <div className="flex items-start justify-between gap-4">
-      <h2 ref={(el) => { headingRefs.current[index] = el; }} tabIndex={-1} className="flex items-center gap-3 text-lg font-medium tracking-[-0.03em] outline-none">
+      <h2 ref={(el) => { headingRefs.current[index] = el; }} tabIndex={-1} className="font-ui flex items-center gap-3 text-lg font-medium tracking-[-0.03em] outline-none">
         <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-full text-xs ${index < step ? "bg-black text-white" : index === step ? "bg-[#b94f01] text-white" : "bg-black/10 text-black/60"}`}>
           {index < step ? <Check size={14} /> : index + 1}
         </span>
@@ -348,7 +348,7 @@ export function CheckoutForm() {
 
       {/* Resumo do pedido */}
       <aside aria-labelledby="resumo" className="h-fit rounded-2xl bg-[#f5f5f3] p-6 lg:sticky lg:top-24">
-        <h2 id="resumo" className="text-lg font-medium tracking-[-0.03em]">Resumo</h2>
+        <h2 id="resumo" className="font-ui text-lg font-medium tracking-[-0.03em]">Resumo</h2>
         <ul role="list" className="mt-5 flex flex-col gap-4">
           {items.map((item) => (
             <li key={item.sku} className="flex gap-3">

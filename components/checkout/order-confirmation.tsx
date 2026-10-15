@@ -58,14 +58,14 @@ export function OrderConfirmation({ id }: { id: string }) {
 
         {order.payment.instructions && (
           <div className="mt-8 rounded-2xl border border-black/10 p-5">
-            <h2 className="text-sm font-medium">{PAYMENT_LABELS[order.payment.method]}</h2>
+            <h2 className="font-ui text-sm font-medium">{PAYMENT_LABELS[order.payment.method]}</h2>
             <p className="mt-2 text-sm leading-6 text-black/60">{order.payment.instructions}</p>
           </div>
         )}
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
           <div className="rounded-2xl border border-black/10 p-5 text-sm leading-6">
-            <h2 className="font-medium">Entrega</h2>
+            <h2 className="font-ui font-medium">Entrega</h2>
             <p className="mt-2 text-black/60">
               {order.address.street}, {order.address.number}{order.address.complement ? ` – ${order.address.complement}` : ""}
               <br />
@@ -76,7 +76,7 @@ export function OrderConfirmation({ id }: { id: string }) {
             <p className="mt-2 text-black/60">{order.shipping.label} · {order.shipping.days}</p>
           </div>
           <div className="rounded-2xl border border-black/10 p-5 text-sm leading-6">
-            <h2 className="font-medium">Pagamento</h2>
+            <h2 className="font-ui font-medium">Pagamento</h2>
             <p className="mt-2 text-black/60">{PAYMENT_LABELS[order.payment.method]} ({approved ? "aprovado" : "aguardando pagamento"})</p>
             <p className="text-black/60">Referência: {order.payment.reference}</p>
           </div>
@@ -85,7 +85,7 @@ export function OrderConfirmation({ id }: { id: string }) {
       </div>
 
       <aside aria-labelledby="resumo-pedido" className="h-fit rounded-2xl bg-[#f5f5f3] p-6">
-        <h2 id="resumo-pedido" className="text-lg font-medium tracking-[-0.03em]">Resumo</h2>
+        <h2 id="resumo-pedido" className="font-ui text-lg font-medium tracking-[-0.03em]">Resumo</h2>
         <ul role="list" className="mt-5 flex flex-col gap-4">
           {order.lines.map((line) => (
             <li key={line.sku} className="flex gap-3">

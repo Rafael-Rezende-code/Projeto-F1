@@ -69,15 +69,21 @@ interna e sem arredondamento).
   ancestral pode ter overflow hidden/auto, transform ou filter** (para cortar overflow horizontal, use
   `overflow-x-clip`).
 - Título "Luzes apagadas." (#journal) com `KineticText` (`components/ui/kinetic-text.tsx`): só em desktop com
-  mouse (`lg` + `hover:hover`); no celular/toque fica o `h2` original, sem efeito. Usa a Inter variável 100–900
-  apenas nesse título (`lib/fonts.ts`, `next/font/local`, arquivo em `app/fonts/`, classe `.font-kinetic` no
-  `globals.css`). O `next/font/google` não serve aqui: registra a família como "Inter" e vazaria para o site todo.
+  mouse (`lg` + `hover:hover`); no celular/toque fica o `h2` original, sem efeito. Usa a Archivo variável (classe
+  `.font-kinetic` no `globals.css`, que também fixa o peso inicial 300).
+- **Tipografia (polimento, fase 1):** tokens em `lib/fonts.ts` (next/font/google): **Archivo** variável (peso + eixo
+  de largura `wdth`, normal e itálico) nos títulos (`--font-display`) e **Geist** em textos, interface e preços
+  (`--font-sans`). Ajustes finos em `:root` no `globals.css`: `--display-stretch` 116% (106% abaixo de 640px, para os
+  títulos grandes não encostarem nas bordas), `--display-weight` 600, `--display-tracking` -0,035em, `--display-leading`
+  0,98, `--body-tracking`. A regra de `h1, h2, .font-display` fica **fora de @layer** e vence as utilities antigas dos
+  títulos (`font-medium`, `tracking-[...]`, `leading-[...]`). Títulos pequenos de interface usam `.font-ui`. O acento
+  em serifa itálica (`.font-playfair`: logo, "Feita para", primeiro nome dos pilotos) usa a serifa do sistema, como
+  antes. Comparação com Inter Tight + Inter e Space Grotesk + Geist em `docs/tipografia/` (não aplicadas).
 
 ## Decisões já tomadas
 
 - TechText: descartado por ora. KineticText: só no título "Luzes apagadas." (ver Estado atual).
-- **Inter e Playfair nunca carregaram; site usa fonte do sistema. Decisão de tipografia pendente para rodada
-  própria.** (O `@import` do Google Fonts em `app/globals.css` não chega ao CSS final.)
+- Tipografia definida (ver Estado atual). Os `@import` mortos de Inter e Playfair e a Inter local foram removidos.
 - **Licenciamento pendente:** as fotos em `public/images/editorial` são placeholders e precisam de
   licenciamento antes do lançamento comercial (antes da venda). Em uso: `abraco-redbull-ferrari` ("Mais que
   uma corrida", #story), `senna-pneus` ("Cada detalhe importa") e `verstappen-capacete` ("Luzes apagadas",
@@ -215,6 +221,9 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   vez); comportamento modal reaproveitável em `components/use-modal.ts`. Links em `lib/navigation.ts` (`menuLinks`).
 - **Índices (polimento, fase 0):** `/equipes` (mesma grade da home) e `/pilotos` (mesmos cards da home, via
   `DriverCardList` exportado de `drivers-section.tsx`). Rodapé e breadcrumbs agora apontam para eles.
+- **Tipografia (fase 1):** pesos/largura/tracking dos títulos ajustados a olho (116% de largura no desktop). O itálico
+  "pilotos" do hero passa a ser Archivo itálica; "Feita para" e o logo continuam na serifa itálica do sistema (não havia
+  pedido para trocar o acento). Títulos pequenos de interface (sacola, checkout, "Descrição") ficam na Geist (`.font-ui`).
 - **Card de produto no celular:** preço abaixo do nome (lado a lado só a partir de 640px); a 360px o nome quebrava em 3.
 - **Sacola (fase 4):** o aviso "adicionado à sacola" também informa quando o estoque limita a quantidade. O preço
   guardado no item é o do momento da adição; o checkout recalcula tudo no servidor. Frete grátis a partir de
@@ -268,8 +277,7 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
 
 ## Roteiro (próximos passos, em ordem)
 
-1. **Tipografia:** decidir e carregar as fontes do site (hoje Inter e Playfair não carregam; o site usa a fonte do
-   sistema). Só o título "Luzes apagadas." usa a Inter variável, via `lib/fonts.ts`.
+1. **Fonte de acento:** decidir a serifa itálica (hoje a do sistema) ou trocá-la pela Archivo itálica.
 2. **Refinar os cards de pilotos.**
 3. **Página de produto.**
 4. **Seção "Diário"**, com as fotos `senna-sentado` e `senna-champanhe`.
