@@ -114,8 +114,8 @@ interna e sem arredondamento).
   guia de tamanhos em modal (tabela placeholder `[MEDIDAS A CONFIRMAR]`), favoritar, barra fixa de compra no celular
   acima do dock (aparece quando o botão principal sai da tela) e "Complete o look" (até 4 relacionados, priorizando
   categorias diferentes).
-- **Páginas dos pilotos (polimento, fase 7):** o nome aparece desenhado pelo `Signature` (Spell UI) numa fonte
-  manuscrita **genérica** (Allura, SIL OFL, `public/fonts/allura-regular.ttf`), com o nome em texto `sr-only` no h1.
+- **Páginas dos pilotos (polimento, fase 7; refeito na rodada 2):** o nome aparece "escrito" (`components/driver-signature.tsx`)
+  numa fonte manuscrita **genérica** (Great Vibes, SIL OFL), com o nome em texto `sr-only` no h1.
   **NUNCA imitar o autógrafo real de um piloto** (nem fonte, nem traçado, nem imagem de assinatura): é a assinatura
   dele, com implicações de direito de imagem e de falsificação. Foto do cabeçalho: campo `pagePhoto` em
   `lib/drivers.ts` (`/images/pilotos/paginas/{slug}`, sem extensão). Coloque `public/images/pilotos/paginas/{norris,
@@ -151,8 +151,7 @@ interna e sem arredondamento).
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
-  O Signature tinha a fonte fixa `/LastoriaBoldRegular.otf` (não incluída): virou a prop `fontUrl`, padrão Allura
-  (SIL OFL, `public/fonts/`). Depende de `opentype.js` (só carregado onde o Signature é usado).
+  O Signature foi removido na rodada 2 (ver "Decisões da rodada 2"); a assinatura é `components/driver-signature.tsx`.
 
 ## Decisões já tomadas
 
@@ -342,6 +341,20 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   do título (duas translações sincronizadas; só `transform`). Com `prefers-reduced-motion`, aparece pronta. Contraste do
   branco sobre `#b94f01`: **4,9:1** (mínimo de texto grande 3:1; passa até o 4,5:1 de texto normal), então o tom não
   precisou mudar. O `components/ui/highlighted-text.tsx` (Spell UI) ficou instalado, mas sem uso.
+- **Assinatura (fase 2), diagnóstico:** a intenção original era o Signature da Spell UI com a fonte do demo
+  (`/LastoriaBoldRegular.otf`), que nunca veio no pacote; na rodada anterior ela virou a Allura. Os cortes tinham duas
+  causas: (1) o SVG tinha altura fixa de 100 com `fontSize` 88 e linha de base em 94, sem espaço para descendentes, laços
+  e maiúsculas altas, e a largura vinha só do avanço das letras (cortava o laço final); (2) o opentype.js 2.0 gera
+  coordenadas inválidas (NaN) para várias letras dessas fontes (na Allura: "L", "N", "G"), que sumiam ou viravam
+  manchas, e os espaços apareciam como pontos.
+- **Assinatura, solução:** `components/driver-signature.tsx` mostra o nome como TEXTO na **Great Vibes** (SIL OFL,
+  `next/font`, sem preload), revelado da esquerda para a direita por uma cortina na cor do fundo com borda em degradê
+  (só `transform`, 1,5 s, curva in-out, uma vez ao entrar na tela; com reduced motion aparece pronto). Folga de 0,35em
+  em volta e tamanho pela largura do título (`cqw`), sem cortes nos 4 nomes e nas 5 larguras. Candidatas comparadas
+  (renderizadas no navegador): Allura, Mrs Saint Delafield, Monsieur La Doulaise, Herr Von Muellerhoff, Ballet, Great
+  Vibes e Alex Brush (`docs/tipografia/assinatura-candidatas.jpg`). Great Vibes tem o traço mais fluido e legível, com
+  "N", "V", "H", "B" e "G" bem resolvidos. Removidos o Signature da Spell UI, o opentype.js (~170 KB de JS a menos na
+  página do piloto) e a Allura. Continua valendo: efeito tipográfico genérico, nunca o autógrafo real.
 
 ## Notas técnicas
 

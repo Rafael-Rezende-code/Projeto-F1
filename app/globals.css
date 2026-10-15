@@ -240,3 +240,16 @@ h1, h2, .font-display {
 @media (prefers-reduced-motion: reduce) {
   .hl-cover, .hl-bar { transform: none; transition: none; }
 }
+
+/* Assinatura do piloto (components/driver-signature.tsx). O nome fica parado; uma "cortina" na cor do fundo (--sig-bg),
+   com 2em de degradê na borda esquerda, desliza para a direita e o destampa: parece escrito, sem salto no final.
+   Folga de 0,35em em volta (laços, ascendentes, descendentes); o contêiner recorta só a cortina (overflow: clip). */
+.sig { position: relative; display: inline-block; max-width: 100%; overflow: clip; padding: 0.35em; margin: -0.35em; font-family: var(--font-signature), cursive; font-weight: 400; line-height: 1.25; letter-spacing: 0; }
+.sig-text { display: block; white-space: nowrap; }
+.sig-cover { position: absolute; top: 0; bottom: 0; left: 0; width: calc(100% + 2em); pointer-events: none;
+  background: linear-gradient(to right, transparent 0, var(--sig-bg, #111) 2em); transform: translate3d(-2em, 0, 0);
+  transition: transform 1.5s var(--ease-in-out) 0.2s; }
+.sig[data-in] .sig-cover { transform: translate3d(100%, 0, 0); }
+@media (prefers-reduced-motion: reduce) {
+  .sig-cover { display: none; }
+}

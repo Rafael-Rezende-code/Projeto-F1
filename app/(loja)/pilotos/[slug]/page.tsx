@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { Signature } from "@/components/ui/signature";
+import { DriverSignature } from "@/components/driver-signature";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
@@ -48,13 +48,11 @@ export default async function DriverPage({ params }: Params) {
                 {team.name}
               </Link>
             )}
-            {/* Nome animado com o Signature numa fonte manuscrita GENÉRICA (Allura). Nunca imitar o autógrafo real do
+            {/* Nome animado (DriverSignature) numa fonte manuscrita GENÉRICA (Great Vibes). Nunca imitar o autógrafo real do
                 piloto (ver CLAUDE.md). O nome em texto fica no h1 para leitores de tela e buscadores. */}
-            <h1 className="mt-3">
+            <h1 className="@container mt-3">
               <span className="sr-only">{driver.name}</span>
-              <span aria-hidden="true" className="block">
-                <Signature text={driver.name} color="#ffffff" fontSize={88} duration={1.2} delay={0.2} className="h-auto w-full max-w-[560px]" />
-              </span>
+              <DriverSignature name={driver.name} background={team?.color ?? "#111"} className="text-[clamp(2.25rem,12.5cqw,6rem)]" />
             </h1>
             <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
           </div>
