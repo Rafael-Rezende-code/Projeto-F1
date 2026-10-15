@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
+import { MobileDock } from '@/components/mobile-dock'
 import { MobileMenu } from '@/components/mobile-menu'
 import { SiteUIProvider } from '@/components/site-ui'
 import { fontVariables } from '@/lib/fonts'
@@ -53,6 +54,7 @@ export default function RootLayout({
         <SiteUIProvider>
           <CartProvider>
             {children}
+            <MobileDock />
             <MobileMenu />
           </CartProvider>
         </SiteUIProvider>

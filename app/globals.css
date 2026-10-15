@@ -224,3 +224,8 @@ h1, h2, .font-display {
   transition: opacity var(--motion-reveal) var(--ease-out), transform var(--motion-reveal) var(--ease-out);
   transition-delay: calc(var(--i, 0) * var(--motion-stagger));
 }
+
+/* Dock do celular (components/mobile-dock.tsx): espaço que ele ocupa embaixo (ícones 44 + respiro + área segura).
+   Usado pelo espaçador no fim da página, pelo aviso da sacola e pela barra fixa de compra do produto. */
+:root { --dock-space: 0px; }
+@media (max-width: 767px) { :root { --dock-space: calc(84px + env(safe-area-inset-bottom)); } }

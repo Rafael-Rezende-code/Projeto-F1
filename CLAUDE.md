@@ -92,6 +92,13 @@ interna e sem arredondamento).
   desfoque, borda sutil e texto escuro. `variant="solid"` nas internas: sticky, já com fundo. Esconde ao rolar para
   baixo (depois de 120px) e volta ao rolar para cima; volta ao receber foco (`focus-within` em CSS + `onFocusCapture`).
   Não esconde enquanto um painel trava a rolagem. Sem salto de layout (esconder é só `translateY`).
+- **Dock no celular (polimento, fase 4):** `components/mobile-dock.tsx` com o `MagneticDock` (`components/ui/magnetic-dock.tsx`,
+  código recebido; mudanças: import `motion/react`, `aria-label`/`aria-current` no botão e elevação de 4px do item ativo).
+  Só abaixo de 768px, variante glass, centralizado, acima de `env(safe-area-inset-bottom)`; ícones 44px, sem tooltip,
+  sem efeito magnético (`maxScale` 1). Itens: Início, Buscar (abre a busca), Equipes, Sacola (badge = quantidade; abre
+  a gaveta) e Menu. Escondido em `/checkout` e `/pedido`. `--dock-space` (globals.css) é o espaço que ele ocupa: há um
+  espaçador na cor do rodapé no fim da página, e o aviso da sacola, o bloco de CTA do hero e a barra fixa de compra
+  ficam acima dele.
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.

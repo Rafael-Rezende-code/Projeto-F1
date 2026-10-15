@@ -124,7 +124,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider value={value}>
       {children}
       <CartDrawer />
-      {notice && <div role="status" className="fixed bottom-5 left-1/2 z-[100] max-w-[calc(100vw-40px)] -translate-x-1/2 rounded-xl bg-black px-5 py-3 text-center text-xs text-white shadow-xl">{notice}</div>}
+      {notice && <div role="status" className="fixed bottom-[calc(var(--dock-space)+20px)] left-1/2 z-[100] max-w-[calc(100vw-40px)] -translate-x-1/2 rounded-xl bg-black px-5 py-3 text-center text-xs text-white shadow-xl">{notice}</div>}
     </CartContext.Provider>
   )
 }
