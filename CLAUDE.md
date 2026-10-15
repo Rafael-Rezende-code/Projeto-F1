@@ -332,6 +332,17 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
 - **Cabeçalho da equipe:** bloco `rounded-2xl` na cor da equipe que entra da esquerda (clip-path) ao abrir a
   página; a lista "Outras equipes" usa a linha editorial com o wipe no hover.
 
+## Decisões da rodada 2
+
+Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polimento`), para revisão.
+
+- **Destaque laranja (fase 1):** substituí o HighlightedText da Spell UI por `components/motion/highlight-word.tsx` (usado
+  só pelo `SectionTitle`, prop `highlight`). A palavra grifada agora é **branca** sobre a barra. Para nunca haver branco
+  sobre branco, a barra e a palavra branca formam uma camada só que entra de baixo para cima por cima da palavra na cor
+  do título (duas translações sincronizadas; só `transform`). Com `prefers-reduced-motion`, aparece pronta. Contraste do
+  branco sobre `#b94f01`: **4,9:1** (mínimo de texto grande 3:1; passa até o 4,5:1 de texto normal), então o tom não
+  precisou mudar. O `components/ui/highlighted-text.tsx` (Spell UI) ficou instalado, mas sem uso.
+
 ## Notas técnicas
 
 - Gerenciador: pnpm (versão em `packageManager` do `package.json`; usar via `corepack pnpm` se o `pnpm`

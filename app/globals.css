@@ -229,3 +229,14 @@ h1, h2, .font-display {
    Usado pelo espaçador no fim da página, pelo aviso da sacola e pela barra fixa de compra do produto. */
 :root { --dock-space: 0px; }
 @media (max-width: 767px) { :root { --dock-space: calc(84px + env(safe-area-inset-bottom)); } }
+
+/* Destaque laranja de palavra (components/motion/highlight-word.tsx). Barra + texto branco entram juntos. */
+.hl { position: relative; display: inline-block; white-space: nowrap; }
+.hl-text, .hl-bar { display: block; padding: 0 0.16em; }
+.hl-cover { position: absolute; inset: 0; overflow: hidden; transform: translate3d(0, 101%, 0); }
+.hl-bar { height: 100%; background: var(--highlight-bg, #b94f01); color: #fff; transform: translate3d(0, -101%, 0); }
+.hl-cover, .hl-bar { transition: transform var(--motion-reveal) var(--ease-out) 0.15s; }
+.hl[data-in] .hl-cover, .hl[data-in] .hl-bar { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .hl-cover, .hl-bar { transform: none; transition: none; }
+}
