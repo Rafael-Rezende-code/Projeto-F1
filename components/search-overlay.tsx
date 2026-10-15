@@ -126,7 +126,7 @@ export function SearchOverlay() {
         aria-modal="true"
         aria-label="Buscar"
         inert={!open}
-        className={`absolute inset-x-0 top-0 mx-auto flex max-h-[100dvh] w-full max-w-3xl flex-col bg-white text-black shadow-2xl transition duration-[var(--motion-panel)] ease-[var(--ease-out)] [color-scheme:light] sm:top-8 sm:max-h-[calc(100dvh-4rem)] sm:rounded-2xl ${
+        className={`absolute inset-x-0 top-0 mx-auto flex max-h-[100dvh] w-full max-w-3xl flex-col bg-white text-black shadow-2xl transition-[transform,opacity] duration-[var(--motion-medium)] ease-[var(--ease-out)] [color-scheme:light] sm:top-8 sm:max-h-[calc(100dvh-4rem)] sm:rounded-2xl ${
           open ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
         }`}
       >

@@ -355,6 +355,17 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   Vibes e Alex Brush (`docs/tipografia/assinatura-candidatas.jpg`). Great Vibes tem o traço mais fluido e legível, com
   "N", "V", "H", "B" e "G" bem resolvidos. Removidos o Signature da Spell UI, o opentype.js (~170 KB de JS a menos na
   página do piloto) e a Allura. Continua valendo: efeito tipográfico genérico, nunca o autógrafo real.
+- **Animações (fase 3):** tokens em `lib/motion.ts` e `globals.css` reduzidos a 3 durações (curta 0,2 s, média 0,45 s,
+  longa 0,8 s), 2 curvas (out e in-out) e stagger de 50 ms com teto de 8 itens. Títulos e parágrafos de destaque
+  entram por palavra (`components/motion/reveal-text.tsx` e `section-title.tsx`, só opacity/transform) no lugar do
+  BlurReveal/WordsStagger (blur caro, texto ilegível por ~0,8 s, invisível até o JS); o que já está na tela ao carregar
+  aparece pronto. Cabeçalho anima só uma camada de fundo por opacidade; hover dos cards de equipe por opacidade; faixa
+  do cabeçalho da equipe por transform (antes clip-path); View Transitions com duração média e curva out. Busca e menu
+  pré-carregados no ocioso (e no hover/foco do ícone) e montados fechados: a primeira abertura anima. Com reduced
+  motion, as entradas ficam só com opacidade (sem deslocamento).
+- **Rodada 2 interrompida (limite de uso) depois da fase 3.** Falta: medir fps/quadros da fase 3 no build de produção,
+  fase 4 (itálica real: comparar Instrument Serif, Playfair Display, Fraunces e Newsreader em itálico), fase 5
+  (desempenho: meta produto ≥ 92 e home ≥ 90) e fase 6 (refinamento + docs/proximos-passos.md), além do QA final.
 
 ## Notas técnicas
 

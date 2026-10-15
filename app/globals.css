@@ -193,36 +193,47 @@ h1, h2, .font-display {
 
 /* Loja: cabeçalho da equipe (/equipes/[slug]) entra com a cor da equipe varrendo da esquerda. Sempre animado
    (decisão de produto: animações ligadas mesmo com reduced motion). */
-@keyframes apex-wipe-in {
-  from { clip-path: inset(0 100% 0 0); }
-  to { clip-path: inset(0 0 0 0); }
-}
-.apex-wipe-in { animation: apex-wipe-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+@keyframes apex-wipe-in { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.apex-wipe-in { position: relative; }
+.apex-wipe-in::after { content: ""; position: absolute; inset: 0; z-index: 1; background: #fff; transform-origin: right; pointer-events: none;
+  animation: apex-wipe-in var(--motion-long) var(--ease-in-out) 0.1s both; }
 /* Esqueleto de carregamento (loading.tsx) */
 @keyframes apex-pulse { 50% { opacity: 0.5; } }
 .apex-skeleton { background: #ececea; animation: apex-pulse 1.4s ease-in-out infinite; }
 
 /* MOVIMENTO — espelho em CSS dos tokens de lib/motion.ts (manter os dois iguais). */
 :root {
-  --motion-fast: 0.2s;
-  --motion-base: 0.45s;
-  --motion-reveal: 0.7s;
-  --motion-panel: 0.5s;
-  --motion-slow: 0.9s;
+  --motion-short: 0.2s;
+  --motion-medium: 0.45s;
+  --motion-long: 0.8s;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --motion-rise: 16px;
-  --motion-stagger: 70ms;
+  --motion-stagger: 50ms;
 }
+/* Entrada de texto por palavra (SectionTitle, RevealText): só opacity e transform, atraso limitado (--i ≤ 8).
+   Só esconde o que estava fora da tela ao montar (components/motion/use-reveal.ts): o HTML do servidor aparece pronto. */
+.rw { display: inline-block; }
+[data-reveal-text="pending"] .rw { opacity: 0; transform: translate3d(0, 0.35em, 0); }
+[data-reveal-text="in"] .rw {
+  transition: opacity var(--motion-medium) var(--ease-out), transform var(--motion-long) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * var(--motion-stagger));
+}
+/* Troca de página (View Transitions): mesma curva e duração média. */
+::view-transition-group(*) { animation-duration: var(--motion-medium); animation-timing-function: var(--ease-out); }
+::view-transition-old(*), ::view-transition-new(*) { animation-duration: var(--motion-medium); }
 /* Entrada escalonada dos grids de cards (components/motion/reveal-group.tsx): o grupo só esconde os filhos depois de
    montar e só se ainda estiver fora da tela; ao entrar, cada filho sobe com atraso proporcional ao índice (--i). */
 [data-reveal="pending"] > * { opacity: 0; transform: translate3d(0, var(--motion-rise), 0); }
 [data-reveal="in"] > * {
   opacity: 1;
   transform: none;
-  transition: opacity var(--motion-reveal) var(--ease-out), transform var(--motion-reveal) var(--ease-out);
+  transition: opacity var(--motion-medium) var(--ease-out), transform var(--motion-long) var(--ease-out);
   transition-delay: calc(var(--i, 0) * var(--motion-stagger));
+}
+/* Reduced motion: entradas só com opacidade (sem deslocamento). */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal="pending"] > *, [data-reveal-text="pending"] .rw { transform: none; }
 }
 
 /* Dock do celular (components/mobile-dock.tsx): espaço que ele ocupa embaixo (ícones 44 + respiro + área segura).
@@ -235,7 +246,7 @@ h1, h2, .font-display {
 .hl-text, .hl-bar { display: block; padding: 0 0.16em; }
 .hl-cover { position: absolute; inset: 0; overflow: hidden; transform: translate3d(0, 101%, 0); }
 .hl-bar { height: 100%; background: var(--highlight-bg, #b94f01); color: #fff; transform: translate3d(0, -101%, 0); }
-.hl-cover, .hl-bar { transition: transform var(--motion-reveal) var(--ease-out) 0.15s; }
+.hl-cover, .hl-bar { transition: transform var(--motion-long) var(--ease-out) 0.15s; }
 .hl[data-in] .hl-cover, .hl[data-in] .hl-bar { transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .hl-cover, .hl-bar { transform: none; transition: none; }

@@ -17,7 +17,7 @@ export function TeamCard({ team }: { team: TeamIdentity }) {
         className="group relative isolate flex aspect-[1.25] flex-col sm:aspect-[1.7] items-center justify-center overflow-hidden rounded-2xl text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
         style={{ backgroundColor: team.color }}
       >
-        <span aria-hidden="true" className="absolute inset-0 bg-black/0 transition duration-[var(--motion-fast)] group-hover:bg-black/12" />
+        <span aria-hidden="true" className="absolute inset-0 bg-black/12 opacity-0 transition-opacity duration-[var(--motion-short)] group-hover:opacity-100" />
         {/* eslint-disable-next-line @next/next/no-img-element -- logo pequena e monocromática (mesmo arquivo da faixa) */}
         <img
           src={logo.src}
@@ -25,7 +25,7 @@ export function TeamCard({ team }: { team: TeamIdentity }) {
           width={logo.width}
           height={logo.height}
           loading="lazy"
-          className="relative mb-7 w-auto max-w-[72%] sm:mb-3 object-contain transition duration-[var(--motion-base)] ease-[var(--ease-out)] [filter:brightness(0)_invert(1)] [height:calc(var(--h)*0.6)] group-hover:-translate-y-1 sm:[height:calc(var(--h)*0.75)] lg:[height:var(--h)]"
+          className="relative mb-7 w-auto max-w-[72%] sm:mb-3 object-contain transition-transform duration-[var(--motion-medium)] ease-[var(--ease-out)] [filter:brightness(0)_invert(1)] [height:calc(var(--h)*0.6)] group-hover:-translate-y-1 sm:[height:calc(var(--h)*0.75)] lg:[height:var(--h)]"
           style={{ "--h": `${height}px` } as CSSProperties}
         />
         <span className="sr-only">{team.name}</span>

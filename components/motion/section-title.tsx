@@ -1,25 +1,14 @@
 "use client";
 
-import type { JSX } from "react";
-import { BlurReveal } from "@/components/ui/blur-reveal";
+import { Fragment } from "react";
 import { HighlightWord } from "@/components/motion/highlight-word";
-import { duration, stagger } from "@/lib/motion";
+import { splitWords, Word } from "@/components/motion/reveal-text";
+import { useReveal } from "@/components/motion/use-reveal";
 
-// Título de seção com entrada padrão (BlurReveal: letras saem do desfoque), uma única vez, ao entrar na tela.
-// `highlight` (opcional) marca UMA palavra do título com o destaque laranja (HighlightWord: barra #b94f01 e palavra branca).
-// Regra: HighlightedText em no máximo 3 lugares do site (ver CLAUDE.md).
-const speedReveal = 0.03 / stagger.letters; // BlurReveal: stagger = 0.03 / speedReveal
-const speedSegment = 0.3 / duration.base; // BlurReveal: duração por letra = 0.3 / speedSegment
-
-function Blur({ text }: { text: string }) {
-  if (!text) return null;
-  return (
-    <BlurReveal as="span" inView once speedReveal={speedReveal} speedSegment={speedSegment}>
-      {text}
-    </BlurReveal>
-  );
-}
-
+// Título de seção com a entrada padrão do site: palavras sobem e aparecem em sequência curta, uma vez, ao rolar até
+// ele (só opacity/transform; o que já está na tela ao carregar aparece pronto). Ver lib/motion.ts.
+// `highlight` (opcional) marca UMA palavra com o destaque laranja (HighlightWord: barra #b94f01 e palavra branca).
+// Regra: destaque em no máximo 3 lugares do site (ver CLAUDE.md).
 export function SectionTitle({
   text,
   highlight,
@@ -33,24 +22,31 @@ export function SectionTitle({
   id?: string;
   className?: string;
 }) {
-  const Tag = as as keyof JSX.IntrinsicElements;
-  const at = highlight ? text.indexOf(highlight) : -1;
-  if (at < 0) {
-    return (
-      <Tag id={id} className={className}>
-        <Blur text={text} />
-      </Tag>
-    );
-  }
-  const before = text.slice(0, at);
-  const after = text.slice(at + highlight!.length);
+  const ref = useReveal<HTMLHeadingElement>("revealText");
+  const Tag = as;
+  const words = splitWords(text);
   return (
-    <Tag id={id} className={className}>
-      <Blur text={before.trimEnd()} />
-      {before.endsWith(" ") && " "}
-      <HighlightWord>{highlight!}</HighlightWord>
-      {after.startsWith(" ") && " "}
-      <Blur text={after.trimStart()} />
+    <Tag ref={ref} id={id} className={className}>
+      {words.map(({ word, i }, index) => {
+        // A palavra destacada pode vir com pontuação colada ("corrida."): destaca só a palavra.
+        const at = highlight ? word.indexOf(highlight) : -1;
+        return (
+          <Fragment key={index}>
+            <Word i={i}>
+              {at >= 0 ? (
+                <>
+                  {word.slice(0, at)}
+                  <HighlightWord>{highlight!}</HighlightWord>
+                  {word.slice(at + highlight!.length)}
+                </>
+              ) : (
+                word
+              )}
+            </Word>
+            {index < words.length - 1 && " "}
+          </Fragment>
+        );
+      })}
     </Tag>
   );
 }

@@ -56,10 +56,15 @@ export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid
     <header
       onFocusCapture={() => setHidden(false)}
       data-hidden={hidden || undefined}
-      className={`${overlay ? "fixed inset-x-0" : "sticky"} top-0 z-40 transition-[transform,background-color,border-color,color,backdrop-filter] duration-[var(--motion-base)] ease-[var(--ease-out)] ${
+      className={`${overlay ? "fixed inset-x-0" : "sticky"} top-0 z-40 transition-[transform,color] duration-[var(--motion-medium)] ease-[var(--ease-out)] ${
         hidden ? "-translate-y-full focus-within:translate-y-0" : "translate-y-0"
-      } ${filled ? "border-b border-black/10 bg-white/80 text-black backdrop-blur-xl backdrop-saturate-150" : "border-b border-transparent bg-transparent text-white"}`}
+      } ${filled ? "text-black" : "text-white"}`}
     >
+      {/* Fundo com desfoque e borda numa camada própria: entra por opacidade (sem animar backdrop-filter/background). */}
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-0 -z-10 border-b border-black/10 bg-white/80 backdrop-blur-xl backdrop-saturate-150 transition-opacity duration-[var(--motion-medium)] ease-[var(--ease-out)] ${filled ? "opacity-100" : "opacity-0"}`}
+      />
       <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-10 sm:py-5">
         <Link href="/" className="font-playfair text-3xl italic tracking-[-0.07em]" aria-label={`${BRAND.name}, início`}>
           {BRAND.name}<span className={light ? "text-[#e8702a]" : "text-[#b94f01]"}>{BRAND.mark}</span>

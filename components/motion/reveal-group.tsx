@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ComponentPropsWithoutRef, type ElementType } from "react";
-import { viewport } from "@/lib/motion";
+import { STAGGER_CAP, viewport } from "@/lib/motion";
 
 type Props<T extends ElementType> = { as?: T; /** índice máximo para o atraso (cards além disso entram juntos) */ maxIndex?: number } & ComponentPropsWithoutRef<T>;
 
@@ -9,7 +9,7 @@ type Props<T extends ElementType> = { as?: T; /** índice máximo para o atraso 
 // Leve: só um IntersectionObserver por grade e transições em CSS (globals.css, [data-reveal]); nada por card em JS.
 // O HTML do servidor fica visível; depois de montar, se a grade ainda estiver fora da tela, os cards são escondidos
 // e entram quando ela aparece. Grade já visível ao carregar não anima (evita piscar o que já estava na tela).
-export function RevealGroup<T extends ElementType = "ul">({ as, maxIndex = 7, ...rest }: Props<T>) {
+export function RevealGroup<T extends ElementType = "ul">({ as, maxIndex = STAGGER_CAP, ...rest }: Props<T>) {
   const Tag = (as ?? "ul") as ElementType;
   const ref = useRef<HTMLElement>(null);
 
