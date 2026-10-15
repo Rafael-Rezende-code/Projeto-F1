@@ -1,4 +1,4 @@
-import { Archivo, Geist, Great_Vibes } from "next/font/google";
+import { Archivo, Geist, Great_Vibes, Playfair_Display } from "next/font/google";
 
 // TOKENS DE FONTE — o único lugar onde as famílias do site são definidas.
 // Para trocar uma fonte: mude o import e a chamada abaixo (mantenha `variable`); o CSS usa só as variáveis
@@ -29,6 +29,18 @@ export const fontSans = Geist({
   variable: "--font-sans",
 });
 
+// Acento em serifa itálica (logo, "Feita para", "pilotos" do hero, "Um jeito de viver.", primeiro nome dos pilotos):
+// Playfair Display Italic, a fonte que o design original pedia (classe .font-playfair) e que nunca carregava. Só o
+// itálico 400, subset latino. Sem preload: o fallback ajustado (size-adjust do next/font) evita salto de layout.
+export const fontAccent = Playfair_Display({
+  subsets: ["latin"],
+  weight: "400",
+  style: "italic",
+  display: "swap",
+  preload: false,
+  variable: "--font-accent",
+});
+
 // Assinatura dos pilotos (components/driver-signature.tsx): Great Vibes, manuscrita GENÉRICA (SIL OFL). Nunca imitar o
 // autógrafo real de um piloto. Sem preload: só as páginas de piloto a usam (o arquivo só baixa onde aparece).
 export const fontSignature = Great_Vibes({
@@ -40,4 +52,4 @@ export const fontSignature = Great_Vibes({
 });
 
 /** Classes para o <html>: expõem as variáveis CSS das famílias. */
-export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontSignature.variable}`;
+export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontSignature.variable}`;

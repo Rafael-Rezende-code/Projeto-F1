@@ -363,9 +363,17 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   do cabeçalho da equipe por transform (antes clip-path); View Transitions com duração média e curva out. Busca e menu
   pré-carregados no ocioso (e no hover/foco do ícone) e montados fechados: a primeira abertura anima. Com reduced
   motion, as entradas ficam só com opacidade (sem deslocamento).
-- **Rodada 2 interrompida (limite de uso) depois da fase 3.** Falta: medir fps/quadros da fase 3 no build de produção,
-  fase 4 (itálica real: comparar Instrument Serif, Playfair Display, Fraunces e Newsreader em itálico), fase 5
-  (desempenho: meta produto ≥ 92 e home ≥ 90) e fase 6 (refinamento + docs/proximos-passos.md), além do QA final.
+- **Animações, medido no build de produção:** scroll da home 60 fps (desktop e celular), hover dos cards 60 fps, 0
+  quadros longos (antes, 6). Títulos legíveis em ~0,44 s e completos em ~0,73 s, sem desfoque. A busca é pré-carregada e
+  montada fechada; a primeira abertura anima (opacidade 0 → 1 em ~0,3 s).
+- **Itálica de acento (fase 4):** **Playfair Display Italic** (só o itálico 400, latin, `next/font`, sem preload, fallback com
+  size-adjust), via `--font-accent` nas classes `.font-playfair`/`.font-accent` (peso fixo 400, `font-synthesis: none`).
+  Aplicada no logo, "Feita para", **"pilotos" do hero (que deixa de ser itálico sintético da Archivo)**, "Um jeito de
+  viver.", primeiro nome nos cards de piloto e cartão decorativo. Candidatas comparadas: Instrument Serif, Playfair
+  Display, Fraunces e Newsreader (`docs/tipografia/italica/` e `docs/tipografia/rodada-2/`). Playfair é a fonte que o design
+  original pedia (a classe sempre foi `font-playfair`, mas a fonte nunca carregava) e a mais próxima da serifa itálica
+  elegante do primeiro hero; Instrument Serif é estreita demais, Fraunces tem pouco contraste e Newsreader é "de livro".
+  "Um jeito de viver." passa de negrito sintético (serifa do sistema em 600) para o itálico 400 real.
 
 ## Notas técnicas
 
