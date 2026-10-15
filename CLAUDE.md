@@ -99,6 +99,12 @@ interna e sem arredondamento).
   a gaveta) e Menu. Escondido em `/checkout` e `/pedido`. `--dock-space` (globals.css) é o espaço que ele ocupa: há um
   espaçador na cor do rodapé no fim da página, e o aviso da sacola, o bloco de CTA do hero e a barra fixa de compra
   ficam acima dele.
+- **Busca (polimento, fase 5):** `components/search-overlay.tsx` (sobreposição em tela cheia, montada no layout raiz).
+  Abre com Ctrl/Cmd+K, com o ícone de lupa do cabeçalho e com o item Buscar do dock. Resultados enquanto digita (espera
+  de 140 ms) via server action `app/actions/search.ts`, que usa `catalog.search` (novo método do repositório: todos os
+  termos precisam aparecer em nome, equipe, piloto, categoria ou tags; sem acento/maiúsculas; testes em
+  `lib/catalog/search.test.ts`). Padrão combobox + listbox: setas, Enter abre, Esc fecha. Estado vazio com equipes e
+  pilotos; sem resultado com mensagem no tom do site.
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
@@ -315,11 +321,6 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
    equipes.
 
 ## Pendências (atualizado em 14/10/2026)
-
-- **Rodada de polimento (branch `feat/polimento`) INTERROMPIDA na fase 5 (busca), por bateria.** Feito: fases 0 a 4
-  e, da fase 5, a busca no repositório (`search` em `CatalogRepository`, testes em `lib/catalog/search.test.ts`) e as
-  server actions `app/actions/search.ts`. Falta: componente da sobreposição de busca (`components/search-overlay.tsx`,
-  Ctrl/Cmd+K, ícone no cabeçalho, item Buscar do dock já chama `openSearch`), e as fases 6 a 11.
 
 - **Branch `perf/server-components`:** aguardando teste na prévia da Vercel e aprovação para merge na `main`.
 - **Branch `feat/loja`** (criada a partir da `perf/server-components`): loja completa (fases 1 a 7). Sem merge na

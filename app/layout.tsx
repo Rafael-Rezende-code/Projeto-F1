@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
 import { MobileDock } from '@/components/mobile-dock'
 import { MobileMenu } from '@/components/mobile-menu'
+import { SearchOverlay } from '@/components/search-overlay'
 import { SiteUIProvider } from '@/components/site-ui'
 import { fontVariables } from '@/lib/fonts'
 import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
@@ -56,6 +57,7 @@ export default function RootLayout({
             {children}
             <MobileDock />
             <MobileMenu />
+            <SearchOverlay />
           </CartProvider>
         </SiteUIProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}

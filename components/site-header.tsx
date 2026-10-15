@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CartButton } from "@/components/cart";
 import { MenuButton } from "@/components/mobile-menu";
+import { SearchButton } from "@/components/search-overlay";
 import { headerLinks } from "@/lib/navigation";
 
 // Cabeçalho do site (home e páginas internas).
@@ -70,6 +71,7 @@ export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid
           ))}
         </nav>
         <div className="flex items-center gap-4">
+          <SearchButton className="transition-opacity hover:opacity-60" />
           <CartButton />
           <MenuButton className="md:hidden" />
         </div>
