@@ -55,6 +55,30 @@ export class SeedCatalogRepository implements CatalogRepository {
     return null;
   }
 
+  async search(query: string, limit = 8) {
+    const terms = normalize(query).split(" ").filter(Boolean);
+    if (!terms.length) return { products: [], teams: [], drivers: [], categories: [] };
+    const matches = (text: string) => terms.every((term) => normalize(text).includes(term));
+    const teamName = (slug?: string) => teams.find((team) => team.slug === slug)?.name ?? "";
+    const driverName = (slug?: string) => drivers.find((driver) => driver.slug === slug)?.name ?? "";
+    const categoryName = (slug: string) => categories.find((category) => category.slug === slug)?.name ?? "";
+    // Produto casa se TODOS os termos aparecem no nome, equipe, piloto, categoria ou tags; nome casado primeiro.
+    const scored = this.active()
+      .map((product, index) => {
+        const haystack = [product.name, teamName(product.teamSlug), driverName(product.driverSlug), categoryName(product.categorySlug), ...product.tags].join(" ");
+        if (!matches(haystack)) return null;
+        return { product, index, score: matches(product.name) ? 0 : 1 };
+      })
+      .filter((item): item is { product: Product; index: number; score: number } => item !== null)
+      .sort((a, b) => a.score - b.score || a.index - b.index);
+    return {
+      products: scored.slice(0, limit).map((item) => item.product),
+      teams: teams.filter((team) => matches(team.name)),
+      drivers: drivers.filter((driver) => matches(driver.name) || matches(teamName(driver.teamSlug))),
+      categories: categories.filter((category) => matches(category.name)),
+    };
+  }
+
   async getPriceRange() {
     const prices = this.active().map((product) => product.priceCents);
     return { minCents: Math.min(...prices), maxCents: Math.max(...prices) };
@@ -78,6 +102,16 @@ export class SeedCatalogRepository implements CatalogRepository {
   async getDriverBySlug(slug: string) {
     return drivers.find((driver) => driver.slug === slug) ?? null;
   }
+}
+
+/** Minúsculas, sem acentos e sem pontuação, para comparar buscas. */
+export function normalize(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 export function sortProducts(list: Product[], sort: ProductFilters["sort"] = "relevancia") {

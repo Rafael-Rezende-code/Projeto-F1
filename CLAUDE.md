@@ -316,6 +316,11 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
 
 ## Pendências (atualizado em 14/10/2026)
 
+- **Rodada de polimento (branch `feat/polimento`) INTERROMPIDA na fase 5 (busca), por bateria.** Feito: fases 0 a 4
+  e, da fase 5, a busca no repositório (`search` em `CatalogRepository`, testes em `lib/catalog/search.test.ts`) e as
+  server actions `app/actions/search.ts`. Falta: componente da sobreposição de busca (`components/search-overlay.tsx`,
+  Ctrl/Cmd+K, ícone no cabeçalho, item Buscar do dock já chama `openSearch`), e as fases 6 a 11.
+
 - **Branch `perf/server-components`:** aguardando teste na prévia da Vercel e aprovação para merge na `main`.
 - **Branch `feat/loja`** (criada a partir da `perf/server-components`): loja completa (fases 1 a 7). Sem merge na
   `main`. Depende do responsável: integração de pagamento (Mercado Pago ou Stripe), banco (Supabase) para catálogo e

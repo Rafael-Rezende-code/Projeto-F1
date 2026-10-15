@@ -1,4 +1,4 @@
-import type { Category, Driver, Product, ProductFilters, ProductVariant, Team } from "./types";
+import type { Category, Driver, Product, ProductFilters, ProductVariant, SearchResults, Team } from "./types";
 
 // Interface da camada de dados do catálogo. As páginas só conversam com ela (via lib/catalog/index.ts).
 // Implementação atual: SeedCatalogRepository (arquivos em lib/catalog/seed/). Para trocar por Supabase, ver CLAUDE.md.
@@ -11,6 +11,8 @@ export interface CatalogRepository {
   /** Produto e variante de um SKU (usado pelo checkout para conferir preço e estoque no servidor). */
   getVariantBySku(sku: string): Promise<{ product: Product; variant: ProductVariant } | null>;
   getPriceRange(): Promise<{ minCents: number; maxCents: number }>;
+  /** Busca por nome do produto, equipe, piloto ou categoria (sem diferenciar acentos e maiúsculas). */
+  search(query: string, limit?: number): Promise<SearchResults>;
 
   getCategories(): Promise<Category[]>;
   getCategoryBySlug(slug: string): Promise<Category | null>;

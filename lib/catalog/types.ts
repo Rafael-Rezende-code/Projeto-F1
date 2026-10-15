@@ -67,6 +67,14 @@ export type Driver = {
   imagePosition?: string;
 };
 
+/** Resultado da busca (sobreposição de busca do site). */
+export type SearchResults = {
+  products: Product[];
+  teams: Team[];
+  drivers: Driver[];
+  categories: Category[];
+};
+
 export type ProductSort = "relevancia" | "menor-preco" | "maior-preco" | "novidades";
 
 export type ProductFilters = {
