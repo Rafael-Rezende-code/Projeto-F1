@@ -5,12 +5,13 @@ import { Archivo, Geist } from "next/font/google";
 // --font-display e --font-sans (app/globals.css), e os ajustes finos (largura, peso, tracking) ficam nos tokens
 // --display-* do globals.css.
 //
-// Títulos: Archivo variável (pesos 100–900 e eixo de largura wdth 62–125). A largura expandida dá a sensação de
+// Títulos: Archivo variável (pesos 100–900 e eixo de largura wdth 62–125), só o estilo normal. A largura expandida dá a sensação de
 // velocidade; o KineticText de "Luzes apagadas." anima o peso dessa mesma fonte.
 export const fontDisplay = Archivo({
   subsets: ["latin"],
   axes: ["wdth"],
-  style: ["normal", "italic"],
+  // Só o estilo normal: a itálica (≈88 KB) servia apenas à palavra "pilotos" do hero, que usa itálico sintético.
+  style: ["normal"],
   display: "swap",
   variable: "--font-display",
 });

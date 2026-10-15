@@ -78,7 +78,7 @@ export default async function DriverPage({ params }: Params) {
       <section aria-labelledby="produtos-piloto" className="px-5 pt-16 sm:px-10">
         <div className="mx-auto max-w-[1400px]">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Coleção do piloto</p>
-          <div className="mb-10 flex items-end justify-between gap-6">
+          <div className="mb-10 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             <SectionTitle id="produtos-piloto" text={`Produtos ${driver.name}`} className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
             <Link href={`/produtos?piloto=${driver.slug}`} className="text-sm text-black/60 transition hover:text-black">
               Filtrar no catálogo

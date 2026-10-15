@@ -56,7 +56,7 @@ export default async function TeamPage({ params }: Params) {
         </header>
 
         <section aria-labelledby="produtos-equipe" className="mt-16">
-          <div className="mb-10 flex items-end justify-between gap-6">
+          <div className="mb-10 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             <SectionTitle id="produtos-equipe" text={`Produtos ${team.name}`} className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
             <Link href={`/produtos?equipe=${team.slug}`} className="text-sm text-black/60 transition hover:text-black">
               Filtrar no catálogo

@@ -11,23 +11,15 @@ import { useModal } from "@/components/use-modal";
 import { formatPrice } from "@/lib/format";
 
 // Busca em tela cheia com resultados enquanto digita (produtos, equipes, pilotos, categorias), via server action que
-// usa a camada de repositório do catálogo. Abre com Ctrl/Cmd+K, com o ícone do cabeçalho e com o item Buscar do dock.
+// usa a camada de repositório do catálogo. Carregada sob demanda por components/search-root.tsx (que tem o botão do
+// cabeçalho e o atalho Ctrl/Cmd+K); também abre pelo item Buscar do dock.
 // Teclado: setas sobem/descem nos resultados, Enter abre, Esc fecha (padrão combobox + listbox).
 type Option = { id: string; href: string; label: string };
 type Suggestions = Awaited<ReturnType<typeof searchSuggestions>>;
 const EMPTY: SearchHit = { products: [], teams: [], drivers: [], categories: [] };
 
-export function SearchButton({ className = "" }: { className?: string }) {
-  const { openSearch, panel } = useSiteUI();
-  return (
-    <button type="button" onClick={openSearch} aria-label="Buscar (Ctrl+K)" aria-haspopup="dialog" aria-expanded={panel === "busca"} className={className}>
-      <Search strokeWidth={1.5} />
-    </button>
-  );
-}
-
 export function SearchOverlay() {
-  const { panel, openSearch, closePanel } = useSiteUI();
+  const { panel, closePanel } = useSiteUI();
   const open = panel === "busca";
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -39,18 +31,6 @@ export function SearchOverlay() {
   const [pending, startTransition] = useTransition();
   const listId = useId();
   useModal(open, panelRef, closePanel, "input");
-
-  // Ctrl/Cmd+K abre de qualquer página.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        openSearch();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [openSearch]);
 
   // Sugestões (estado vazio) carregadas na primeira abertura.
   useEffect(() => {

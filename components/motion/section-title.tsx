@@ -48,8 +48,10 @@ export function SectionTitle({
     <Tag id={id} className={className}>
       <Blur text={before.trimEnd()} />
       {before.endsWith(" ") && " "}
-      {/* Barra na cor de destaque e texto branco: sem o mix-blend do original (com laranja, ele inverteria a cor). */}
-      <HighlightedText inView once delay={0.25} className="[&>span:first-child]:bg-[#b94f01] [&>span:last-child]:mix-blend-normal">
+      {/* Barra na cor de destaque (#b94f01). A palavra herda a cor do título (preta no claro, branca no escuro): antes de a
+          barra entrar ela continua legível, e sobre o laranja dá 4,3:1 (preto) ou 4,9:1 (branco), acima do 3:1 de texto
+          grande. Sem o mix-blend do original (com laranja, ele inverteria a cor). */}
+      <HighlightedText inView once delay={0.25} className="[&>span:first-child]:bg-[#b94f01] [&>span:last-child]:text-inherit [&>span:last-child]:mix-blend-normal">
         {highlight}
       </HighlightedText>
       {after.startsWith(" ") && " "}

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CartButton } from "@/components/cart";
 import { MenuButton } from "@/components/mobile-menu";
-import { SearchButton } from "@/components/search-overlay";
+import { SearchButton } from "@/components/search-root";
 import { headerLinks } from "@/lib/navigation";
 
 // Cabeçalho do site (home e páginas internas).
