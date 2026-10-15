@@ -2,8 +2,10 @@
 
 import { memo, useState, type FocusEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { RevealGroup } from "@/components/motion/reveal-group";
+import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { SectionTitle } from "@/components/motion/section-title";
 import { HoverTransition } from "@/components/ui/hover-transition";
 import { driverHoverTransition, drivers, type Driver } from "@/lib/drivers";
@@ -91,6 +93,7 @@ function DriverCard({ driver }: { driver: Driver }) {
 
   return (
     <li className="w-[80%] shrink-0 snap-start sm:w-auto">
+      <SharedTransition name={driverTransitionName(driver.slug)}>
       <div className="relative aspect-[4/5]">
         <HoverTransition
           aria-hidden="true"
@@ -113,7 +116,7 @@ function DriverCard({ driver }: { driver: Driver }) {
           defaultComponent={<DefaultFace driver={driver} />}
           hoverComponent={<HoverFace driver={driver} />}
         />
-        <a
+        <Link
           href={driver.href}
           className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
           onPointerEnter={(event) => event.pointerType === "mouse" && setHovered(true)}
@@ -124,8 +127,9 @@ function DriverCard({ driver }: { driver: Driver }) {
           <span className="sr-only">
             {driver.name}, {driver.team}. Ver coleção
           </span>
-        </a>
+        </Link>
       </div>
+      </SharedTransition>
     </li>
   );
 }

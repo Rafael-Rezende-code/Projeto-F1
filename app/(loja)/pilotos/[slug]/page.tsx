@@ -5,6 +5,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Signature } from "@/components/ui/signature";
+import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
 
@@ -58,6 +59,7 @@ export default async function DriverPage({ params }: Params) {
             <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
           </div>
         </div>
+        <SharedTransition name={driverTransitionName(driver.slug)}>
         <div className="relative min-h-[420px] md:min-h-[560px]">
           <Image
             src={driver.pageImage}
@@ -70,6 +72,7 @@ export default async function DriverPage({ params }: Params) {
             style={{ objectPosition: driver.imagePosition }}
           />
         </div>
+        </SharedTransition>
       </header>
 
       <section aria-labelledby="produtos-piloto" className="px-5 pt-16 sm:px-10">

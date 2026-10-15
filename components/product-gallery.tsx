@@ -3,11 +3,12 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
+import { SharedTransition } from "@/components/motion/view-transition";
 import { useModal } from "@/components/use-modal";
 import type { ProductImage } from "@/lib/catalog/types";
 
 // Galeria da página de produto: imagem principal + miniaturas. Clicar na foto abre a lightbox em tela cheia
-// (setas, teclado ← →, Esc fecha, foco preso). A imagem principal tem view-transition-name para a transição do card.
+// (setas, teclado ← →, Esc fecha, foco preso). A imagem principal recebe a View Transition vinda do card.
 const MAIN_SIZES = "(min-width: 1480px) 680px, (min-width: 1024px) calc((100vw - 80px) * 0.55), calc(100vw - 40px)";
 
 export function ProductGallery({ images, name, transitionName }: { images: ProductImage[]; name: string; transitionName?: string }) {
@@ -20,18 +21,19 @@ export function ProductGallery({ images, name, transitionName }: { images: Produ
 
   return (
     <div className="flex flex-col gap-3">
+      <SharedTransition name={transitionName}>
       <button
         type="button"
         onClick={() => setZoom(true)}
         aria-label={`Ampliar foto: ${current.alt}`}
         className="group relative aspect-[4/5] cursor-zoom-in overflow-hidden rounded-2xl bg-[#e9e8e4] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
-        style={transitionName && active === 0 ? { viewTransitionName: transitionName } : undefined}
       >
         <Image key={current.src} src={current.src} alt={current.alt} fill priority sizes={MAIN_SIZES} quality={85} className="object-cover" />
         <span aria-hidden="true" className="absolute bottom-3 right-3 rounded-xl bg-white/85 p-2 text-black opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
           <Expand size={16} />
         </span>
       </button>
+      </SharedTransition>
       {images.length > 1 && (
         <div className="flex gap-3" role="group" aria-label={`Imagens de ${name}`}>
           {images.map((image, index) => (

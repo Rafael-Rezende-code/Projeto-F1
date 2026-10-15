@@ -121,6 +121,15 @@ interna e sem arredondamento).
   `lib/drivers.ts` (`/images/pilotos/paginas/{slug}`, sem extensão). Coloque `public/images/pilotos/paginas/{norris,
   verstappen,hamilton,bortoleto}.(jpg|png|webp)`; se o arquivo existir, a página usa ele, senão a foto do card. A
   detecção é no build (`lib/catalog/seed/drivers.ts`, `existsSync`): depois de adicionar as fotos, gere o build/deploy.
+- **View Transitions (polimento, fase 9):** `<ViewTransition>` do React canary embutido no Next 16 (sem flag de config),
+  via `components/motion/view-transition.tsx` (`SharedTransition`; sem suporte, só renderiza o conteúdo; tipos em
+  `types/react-canary.d.ts`). Imagem do card de produto → imagem principal da página (`produto-{slug}`); card do
+  piloto → foto do cabeçalho da página (`piloto-{slug}`). **Nomes precisam ser únicos na tela**: o card só liga a
+  transição com `transition` (grades e grade da home; o carrossel "O que o grid veste" não, porque repete produtos da
+  grade). Os cards de piloto passaram a usar `next/link` (navegação SPA, necessária para a transição). Testado no build
+  de produção: a transição começa, anima os elementos compartilhados e termina (~250 ms) sem travar cliques. Em Edge
+  headless com `--disable-frame-rate-limit`/`--disable-gpu-vsync` as View Transitions congelam (até uma trivial): use o
+  headless padrão para testar.
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.

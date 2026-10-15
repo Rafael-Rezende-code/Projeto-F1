@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RotateCcw, Truck } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { productTransitionName } from "@/components/motion/view-transition";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductGrid } from "@/components/product-grid";
 import { ProductPurchase } from "@/components/product-purchase";
@@ -86,7 +87,7 @@ export default async function ProductPage({ params }: Params) {
         />
 
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-16">
-          <ProductGallery images={product.images} name={product.name} />
+          <ProductGallery images={product.images} name={product.name} transitionName={productTransitionName(product.slug)} />
 
           <div className="lg:sticky lg:top-24 lg:self-start">
             <div className="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]">

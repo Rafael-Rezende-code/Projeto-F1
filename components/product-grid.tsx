@@ -11,7 +11,7 @@ export async function ProductGrid({ products, priorityCount = 0 }: { products: P
     <RevealGroup role="list" className="grid grid-cols-2 gap-x-3 gap-y-10 lg:grid-cols-4 lg:gap-x-5">
       {products.map((product, index) => (
         <li key={product.id}>
-          <ProductCard product={product} categoryName={nameOf(product.categorySlug)} sizes={PRODUCT_GRID_SIZES} priority={index < priorityCount} />
+          <ProductCard product={product} categoryName={nameOf(product.categorySlug)} sizes={PRODUCT_GRID_SIZES} priority={index < priorityCount} transition />
         </li>
       ))}
     </RevealGroup>

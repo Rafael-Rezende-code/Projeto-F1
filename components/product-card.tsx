@@ -3,6 +3,7 @@ import Image from "next/image";
 import { AddToCartButton } from "@/components/cart";
 import { FavoriteButton } from "@/components/favorites";
 import { QuickSizes } from "@/components/quick-sizes";
+import { productTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { discountPercent, formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/catalog/types";
 
@@ -21,11 +22,14 @@ export function ProductCard({
   categoryName,
   sizes = PRODUCT_GRID_SIZES,
   priority = false,
+  transition = false,
 }: {
   product: Product;
   categoryName?: string;
   sizes?: string;
   priority?: boolean;
+  /** Liga a View Transition da imagem para a página do produto (só onde o produto aparece uma vez na tela). */
+  transition?: boolean;
 }) {
   const href = `/produtos/${product.slug}`;
   const inStock = product.variants.filter((variant) => variant.stock > 0);
@@ -33,6 +37,7 @@ export function ProductCard({
   const discount = discountPercent(product.priceCents, product.compareAtPriceCents);
   return (
     <article className="group relative">
+      <SharedTransition name={transition ? productTransitionName(product.slug) : undefined}>
       <div className="relative isolate aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4]">
         <Image
           src={product.images[0].src}
@@ -76,6 +81,7 @@ export function ProductCard({
           />
         )}
       </div>
+      </SharedTransition>
       {categoryName && <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-black/60">{categoryName}</p>}
       <div className={`${categoryName ? "mt-1" : "mt-4"} flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3`}>
         <h3 className="min-w-0 text-sm font-medium text-black sm:text-base">
