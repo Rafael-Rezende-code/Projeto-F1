@@ -87,6 +87,11 @@ interna e sem arredondamento).
   `[data-reveal]`, sem JS por card; grade já visível ao carregar não anima). WordsStagger nos parágrafos de "Mais que
   uma corrida." e "Cada detalhe importa.". **HighlightedText em no máximo 3 lugares**: "corrida" (Feita em torno da
   corrida.), "detalhe" (Cada detalhe importa.) e "grid" (O que o grid veste), barra laranja #b94f01 e texto branco.
+- **Cabeçalho inteligente (polimento, fase 3):** `components/site-header.tsx` (client) é o cabeçalho de todas as páginas.
+  `variant="overlay"` na home: fixo e transparente sobre o hero com texto claro; ao rolar ganha fundo branco 80% com
+  desfoque, borda sutil e texto escuro. `variant="solid"` nas internas: sticky, já com fundo. Esconde ao rolar para
+  baixo (depois de 120px) e volta ao rolar para cima; volta ao receber foco (`focus-within` em CSS + `onFocusCapture`).
+  Não esconde enquanto um painel trava a rolagem. Sem salto de layout (esconder é só `translateY`).
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
@@ -130,7 +135,7 @@ interna e sem arredondamento).
   `loading.tsx` com esqueletos (`components/skeletons.tsx`), 404 em `app/not-found.tsx`.
 - Componentes: `ProductCard`/`ProductGrid` (card usado também na home), `TeamCard` (home), `TeamRow` (lista
   editorial), `Breadcrumbs`, `PageIntro`. Links do cabeçalho/rodapé em `lib/navigation.ts`; URL do site em `lib/site.ts`.
-- A home continua com o cabeçalho próprio sobre o hero; o rodapé virou `components/site-footer.tsx` (mesmo visual).
+- O cabeçalho é `components/site-header.tsx` (overlay na home, sólido nas internas); o rodapé virou `components/site-footer.tsx` (mesmo visual).
   `CartProvider` subiu para `app/layout.tsx` (a sacola vale em todas as páginas).
 
 ### Sacola (fase 4)
