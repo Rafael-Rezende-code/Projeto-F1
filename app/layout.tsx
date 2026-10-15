@@ -1,6 +1,8 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
+import { MobileMenu } from '@/components/mobile-menu'
+import { SiteUIProvider } from '@/components/site-ui'
 import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
@@ -47,7 +49,12 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="antialiased">
-        <CartProvider>{children}</CartProvider>
+        <SiteUIProvider>
+          <CartProvider>
+            {children}
+            <MobileMenu />
+          </CartProvider>
+        </SiteUIProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -209,8 +209,13 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   "Ver coleção" do hero continua rolando até a seção de categorias. Cards de pilotos → `/pilotos/[slug]`, categorias →
   `/categorias/[slug]`. Rodapé: categorias e "Novidades" (`/produtos?ordem=novidades`); Equipes e Pilotos → âncoras
   da home (não há página-índice).
-- **Cabeçalho das páginas internas:** versão sólida (fundo branco) do cabeçalho da home, com menu do celular em
-  `<details>` (o botão de menu da home continua sem ação, como no original; sugerido corrigir).
+- **Cabeçalho das páginas internas:** versão sólida (fundo branco) do cabeçalho da home.
+- **Menu mobile (polimento, fase 0):** painel em tela cheia que entra pela direita (`components/mobile-menu.tsx`),
+  aberto pelo botão do cabeçalho (home e internas). Estado global em `components/site-ui.tsx` (menu e busca, um por
+  vez); comportamento modal reaproveitável em `components/use-modal.ts`. Links em `lib/navigation.ts` (`menuLinks`).
+- **Índices (polimento, fase 0):** `/equipes` (mesma grade da home) e `/pilotos` (mesmos cards da home, via
+  `DriverCardList` exportado de `drivers-section.tsx`). Rodapé e breadcrumbs agora apontam para eles.
+- **Card de produto no celular:** preço abaixo do nome (lado a lado só a partir de 640px); a 360px o nome quebrava em 3.
 - **Sacola (fase 4):** o aviso "adicionado à sacola" também informa quando o estoque limita a quantidade. O preço
   guardado no item é o do momento da adição; o checkout recalcula tudo no servidor. Frete grátis a partir de
   R$ 299,00 (valor de exemplo; ajustar em `lib/cart/config.ts`).

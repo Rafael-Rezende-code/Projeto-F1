@@ -30,7 +30,7 @@ export default async function TeamPage({ params }: Params) {
   return (
     <div className="px-5 pb-24 pt-8 sm:px-10 sm:pt-10">
       <div className="mx-auto max-w-[1400px]">
-        <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Equipes", href: "/#teams" }, { label: team.name }]} />
+        <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Equipes", href: "/equipes" }, { label: team.name }]} />
 
         {/* Cabeçalho na linguagem da "lista editorial": linha larga com nome grande e logo à direita. A cor da equipe
             entra da esquerda ao abrir a página (.apex-wipe-in), com texto e logo brancos. */}

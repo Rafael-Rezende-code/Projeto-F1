@@ -60,15 +60,15 @@ export function ProductCard({
         )}
       </div>
       {categoryName && <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-black/60">{categoryName}</p>}
-      <div className={`${categoryName ? "mt-1" : "mt-4"} flex items-start justify-between gap-3`}>
+      <div className={`${categoryName ? "mt-1" : "mt-4"} flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3`}>
         <h3 className="min-w-0 text-sm font-medium text-black sm:text-base">
           <Link href={href} className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-4 focus-visible:after:outline-black">
             {product.name}
           </Link>
         </h3>
-        <p className="shrink-0 text-right text-sm text-black/65">
+        <p className="shrink-0 text-sm text-black/65 sm:text-right">
           {product.compareAtPriceCents && (
-            <span className="block whitespace-nowrap text-xs text-black/60 line-through">
+            <span className="mr-2 whitespace-nowrap text-xs text-black/60 line-through sm:mr-0 sm:block">
               <span className="sr-only">De </span>
               {formatPrice(product.compareAtPriceCents)}
             </span>

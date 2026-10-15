@@ -7,6 +7,23 @@ export const headerLinks: NavLink[] = [
   { label: "Diário", href: "/#journal" },
 ];
 
+// Menu (celular): navegação principal em destaque + atalhos de ajuda.
+export const menuLinks: NavLink[] = [
+  { label: "Início", href: "/" },
+  { label: "Coleção", href: "/produtos" },
+  { label: "Equipes", href: "/equipes" },
+  { label: "Pilotos", href: "/pilotos" },
+  { label: "Novidades", href: "/produtos?ordem=novidades" },
+];
+export const menuSecondaryLinks: NavLink[] = [
+  { label: "Manifesto", href: "/#story" },
+  { label: "Diário", href: "/#journal" },
+  { label: "Sacola", href: "/carrinho" },
+  { label: "Envio", href: "/envio" },
+  { label: "Trocas e devoluções", href: "/trocas-e-devolucoes" },
+  { label: "Contato", href: "/contato" },
+];
+
 export const footerColumns: { heading: string; links: NavLink[] }[] = [
   {
     heading: "Comprar",
@@ -21,8 +38,8 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
   {
     heading: "Explorar",
     links: [
-      { label: "Equipes", href: "/#teams" },
-      { label: "Pilotos", href: "/#pilotos" },
+      { label: "Equipes", href: "/equipes" },
+      { label: "Pilotos", href: "/pilotos" },
       { label: "Circuitos", href: "/#collection" },
       { label: "Cultura F1", href: "/#story" },
       { label: "Sobre a Apex", href: "/sobre" },

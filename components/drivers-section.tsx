@@ -128,6 +128,20 @@ function DriverCard({ driver }: { driver: Driver }) {
   );
 }
 
+// Lista dos cards (carrossel no celular, grade a partir de 640px). Usada na home e em /pilotos.
+export function DriverCardList({ className = "" }: { className?: string }) {
+  return (
+    <ul
+      role="list"
+      className={`-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 py-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4 ${className}`}
+    >
+      {drivers.map((driver) => (
+        <DriverCard key={driver.slug} driver={driver} />
+      ))}
+    </ul>
+  );
+}
+
 // memo: a página re-renderiza a cada frame (spotlight do hero); sem props, a seção não precisa acompanhar.
 export const DriversSection = memo(function DriversSection() {
   return (
@@ -137,14 +151,7 @@ export const DriversSection = memo(function DriversSection() {
         <h2 id="pilotos-titulo" className="text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl">
           Escolha seu piloto
         </h2>
-        <ul
-          role="list"
-          className="-mx-5 mt-12 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 py-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4"
-        >
-          {drivers.map((driver) => (
-            <DriverCard key={driver.slug} driver={driver} />
-          ))}
-        </ul>
+        <DriverCardList className="mt-12" />
       </div>
     </section>
   );

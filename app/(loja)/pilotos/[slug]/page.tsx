@@ -38,7 +38,7 @@ export default async function DriverPage({ params }: Params) {
         <div className="flex flex-col justify-between gap-10 px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
           <Breadcrumbs
             tone="light"
-            items={[{ label: "Início", href: "/" }, { label: "Pilotos", href: "/#pilotos" }, { label: driver.name }]}
+            items={[{ label: "Início", href: "/" }, { label: "Pilotos", href: "/pilotos" }, { label: driver.name }]}
           />
           <div>
             {team && (

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Menu } from "lucide-react";
 import { CartButton } from "@/components/cart";
+import { MenuButton } from "@/components/mobile-menu";
 import { headerLinks } from "@/lib/navigation";
 
 // Cabeçalho das páginas internas: mesmos itens do cabeçalho da home, em versão sólida (fundo branco, texto preto).
-// No celular, o menu abre com <details> (sem JS).
+// No celular, o botão abre o menu em tela cheia (components/mobile-menu.tsx).
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-black/10 bg-white/95 text-black backdrop-blur">
@@ -21,18 +21,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-4">
           <CartButton />
-          <details className="relative md:hidden">
-            <summary className="flex cursor-pointer list-none items-center [&::-webkit-details-marker]:hidden" aria-label="Abrir menu">
-              <Menu strokeWidth={1.5} />
-            </summary>
-            <nav aria-label="Navegação principal" className="absolute right-0 top-10 z-50 flex w-48 flex-col rounded-xl border border-black/10 bg-white p-2 text-sm shadow-xl">
-              {headerLinks.map((link) => (
-                <Link key={link.href} href={link.href} className="rounded-lg px-3 py-2.5 hover:bg-black/5">
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </details>
+          <MenuButton className="md:hidden" />
         </div>
       </div>
     </header>
