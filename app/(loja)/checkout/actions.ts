@@ -1,5 +1,6 @@
 "use server";
 
+import { BRAND } from "@/lib/brand";
 import { catalog } from "@/lib/catalog";
 import { getShippingOption, shippingPrice } from "@/lib/checkout/shipping";
 import { checkoutSchema, fieldErrors } from "@/lib/checkout/schema";
@@ -51,7 +52,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     method: data.payment.method,
     amountCents: totalCents,
     customer: { name: data.contact.name, email: data.contact.email, cpf: onlyDigits(data.contact.cpf) },
-    description: `Pedido ${id} - Apex`,
+    description: `Pedido ${id} - ${BRAND.name}`,
   });
   if (!payment.ok) return { ok: false, message: payment.message };
 

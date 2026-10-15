@@ -130,6 +130,15 @@ interna e sem arredondamento).
   de produção: a transição começa, anima os elementos compartilhados e termina (~250 ms) sem travar cliques. Em Edge
   headless com `--disable-frame-rate-limit`/`--disable-gpu-vsync` as View Transitions congelam (até uma trivial): use o
   headless padrão para testar.
+- **Marca (polimento, fase 10):** nome "Apex" (provisório) centralizado em `lib/brand.ts` (nome, ponto do logo,
+  assinatura, descrição, cores de destaque) e usado no cabeçalho, rodapé, metadata (título padrão e template), JSON-LD,
+  cartão decorativo, páginas institucionais, navegação, `lib/site.ts`/`lib/company.ts` e textos da home. Favicon
+  (`app/icon.tsx`), apple-icon (`app/apple-icon.tsx`) e imagem Open Graph padrão (`app/opengraph-image.tsx`) são gerados
+  por `next/og` a partir do nome (inicial + ponto laranja); trocar por arquivos quando houver logo. Os ícones antigos do
+  v0 em `public/` (`icon*.png`, `icon.svg`, `apple-icon.png`) não são mais usados. Rodapé com o nome em tipografia
+  gigante na largura do container (`components/giant-wordmark.tsx`: SVG que ajusta o viewBox ao texto, vale para qualquer
+  nome). 404 "Você saiu da pista." e estados vazios no mesmo tom (sacola "Nada no grid", favoritos "Garagem vazia",
+  busca "Nada no radar").
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.

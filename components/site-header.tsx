@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND } from "@/lib/brand";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CartButton } from "@/components/cart";
@@ -60,8 +61,8 @@ export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid
       } ${filled ? "border-b border-black/10 bg-white/80 text-black backdrop-blur-xl backdrop-saturate-150" : "border-b border-transparent bg-transparent text-white"}`}
     >
       <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-10 sm:py-5">
-        <Link href="/" className="font-playfair text-3xl italic tracking-[-0.07em]" aria-label="Apex início">
-          Apex<span className={light ? "text-[#e8702a]" : "text-[#b94f01]"}>.</span>
+        <Link href="/" className="font-playfair text-3xl italic tracking-[-0.07em]" aria-label={`${BRAND.name}, início`}>
+          {BRAND.name}<span className={light ? "text-[#e8702a]" : "text-[#b94f01]"}>{BRAND.mark}</span>
         </Link>
         <nav className="hidden items-center gap-10 text-[11px] font-medium uppercase tracking-[0.18em] md:flex" aria-label="Navegação principal">
           {headerLinks.map((link) => (

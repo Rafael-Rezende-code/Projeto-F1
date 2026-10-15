@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import { SectionTitle } from "@/components/motion/section-title";
 import type { Metadata } from "next";
@@ -61,7 +62,7 @@ export default async function ProductPage({ params }: Params) {
     description: product.description,
     sku: product.variants[0]?.sku,
     image: product.images.map((image) => (image.src.startsWith("http") ? image.src : `${SITE_URL}${image.src}`)),
-    brand: { "@type": "Brand", name: team?.name ?? "Apex" },
+    brand: { "@type": "Brand", name: team?.name ?? BRAND.name },
     category: category?.name,
     offers: {
       "@type": "Offer",

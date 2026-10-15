@@ -6,34 +6,19 @@ import { MobileMenu } from '@/components/mobile-menu'
 import { SearchOverlay } from '@/components/search-overlay'
 import { SiteUIProvider } from '@/components/site-ui'
 import { fontVariables } from '@/lib/fonts'
-import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { BRAND, brandTitle } from '@/lib/brand'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: 'Apex — Feita para pilotos', template: '%s | Apex' },
+  title: { default: brandTitle, template: `%s | ${BRAND.name}` },
   description: SITE_DESCRIPTION,
-  // Open Graph básico; páginas de produto/piloto trocam a imagem. Imagem padrão: a do hero.
-  openGraph: { type: 'website', locale: 'pt_BR', siteName: SITE_NAME, images: [{ url: OG_IMAGE, alt: 'Apex — Feita para pilotos' }] },
+  // Open Graph básico; a imagem padrão é gerada a partir do nome da marca (app/opengraph-image.tsx). Produto e piloto
+  // usam a própria foto. Favicon e apple-icon também são gerados (app/icon.tsx, app/apple-icon.tsx).
+  openGraph: { type: 'website', locale: 'pt_BR', siteName: SITE_NAME },
   twitter: { card: 'summary_large_image' },
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
+
 }
 
 export const viewport: Viewport = {

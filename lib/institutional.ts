@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 // Páginas institucionais e legais: SÓ a estrutura (títulos das seções). Todo o texto é placeholder marcado como
 // "[CONTEÚDO A SER REDIGIDO]" e será escrito pelo responsável (não redigir texto jurídico aqui).
 export const PLACEHOLDER = "[CONTEÚDO A SER REDIGIDO]";
@@ -18,7 +19,7 @@ export const institutionalPages: Record<string, InstitutionalPage> = {
     slug: "politica-de-privacidade",
     eyebrow: "Legal",
     title: "Política de Privacidade",
-    description: "Como a Apex trata dados pessoais, em conformidade com a LGPD.",
+    description: `Como a ${BRAND.name} trata dados pessoais, em conformidade com a LGPD.`,
     updatedLabel: true,
     sections: [
       "Quem somos (controlador dos dados)",
@@ -38,7 +39,7 @@ export const institutionalPages: Record<string, InstitutionalPage> = {
     slug: "termos-de-uso",
     eyebrow: "Legal",
     title: "Termos de Uso",
-    description: "Regras de uso do site e das compras na Apex.",
+    description: `Regras de uso do site e das compras na ${BRAND.name}.`,
     updatedLabel: true,
     sections: [
       "Aceitação dos termos",
@@ -78,7 +79,7 @@ export const institutionalPages: Record<string, InstitutionalPage> = {
     slug: "contato",
     eyebrow: "Ajuda",
     title: "Contato",
-    description: "Fale com a Apex.",
+    description: `Fale com a ${BRAND.name}.`,
     sections: ["Canais de atendimento", "Horário de atendimento", "Endereço", "Imprensa e parcerias"],
   },
   faq: {
@@ -99,8 +100,8 @@ export const institutionalPages: Record<string, InstitutionalPage> = {
   },
   sobre: {
     slug: "sobre",
-    eyebrow: "A Apex",
-    title: "Sobre a Apex",
+    eyebrow: `A ${BRAND.name}`,
+    title: `Sobre a ${BRAND.name}`,
     description: "Cultura, roupas e colecionáveis premium de Fórmula 1.",
     sections: ["Quem somos", "Nossa história", "O que vendemos", "Produtos licenciados", "Fale com a gente"],
   },

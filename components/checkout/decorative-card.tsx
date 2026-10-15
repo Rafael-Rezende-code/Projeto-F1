@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND } from "@/lib/brand";
 import { TiltOnHover } from "@/components/motion/tilt-on-hover";
 import type { CardDisplay } from "@/lib/payments/types";
 
@@ -19,7 +20,7 @@ export function DecorativeCard({ holder, display }: { holder: string; display?: 
       >
         <div className="flex items-start justify-between">
           <span className="font-playfair text-2xl italic tracking-[-0.07em]">
-            Apex<span className="text-[#e8702a]">.</span>
+            {BRAND.name}<span className="text-[#e8702a]">{BRAND.mark}</span>
           </span>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">{display?.brand ?? "Cartão"}</span>
         </div>

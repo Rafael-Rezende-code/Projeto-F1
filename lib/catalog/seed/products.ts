@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import type { Product, ProductVariant } from "../types";
 import { IMG } from "./images";
 import { drivers } from "./drivers";
@@ -127,13 +128,13 @@ const featured: Product[] = [
   }),
   product({
     slug: "apex-circuit-tote",
-    name: "Apex Circuit Tote",
+    name: `${BRAND.name} Circuit Tote`,
     description: "Bolsa tote de lona resistente com o traçado de um circuito estampado. Alças reforçadas.",
     priceCents: 16990,
     categorySlug: "acessorios",
     images: [
-      { src: IMG.tote, alt: "Apex Circuit Tote" },
-      { src: IMG.accessories, alt: "Apex Circuit Tote, detalhe" },
+      { src: IMG.tote, alt: `${BRAND.name} Circuit Tote` },
+      { src: IMG.accessories, alt: `${BRAND.name} Circuit Tote, detalhe` },
     ],
     sizes: ["Único"],
     tags: ["bolsa"],

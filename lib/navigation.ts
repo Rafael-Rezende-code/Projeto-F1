@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 // Links do cabeçalho e do rodapé. Âncoras da home usam "/#..." para funcionar também nas páginas internas.
 export type NavLink = { label: string; href: string };
 
@@ -43,7 +44,7 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
       { label: "Pilotos", href: "/pilotos" },
       { label: "Circuitos", href: "/#collection" },
       { label: "Cultura F1", href: "/#story" },
-      { label: "Sobre a Apex", href: "/sobre" },
+      { label: `Sobre a ${BRAND.name}`, href: "/sobre" },
     ],
   },
   {

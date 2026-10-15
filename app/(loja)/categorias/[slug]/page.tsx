@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -16,7 +17,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const category = await catalog.getCategoryBySlug((await params).slug);
   if (!category) return { title: "Categoria não encontrada" };
-  const description = `${category.name}: ${category.description} Produtos de Fórmula 1 na Apex.`;
+  const description = `${category.name}: ${category.description} Produtos de Fórmula 1 na ${BRAND.name}.`;
   return { title: category.name, description, alternates: { canonical: `/categorias/${category.slug}` }, openGraph: { title: category.name, description } };
 }
 

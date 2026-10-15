@@ -1,5 +1,7 @@
+import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import { CirclePlay, Globe } from "lucide-react";
+import { GiantWordmark } from "@/components/giant-wordmark";
 import { company } from "@/lib/company";
 import { footerColumns, legalLinks } from "@/lib/navigation";
 
@@ -10,7 +12,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-[1400px] gap-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Link href="/" className="font-playfair text-4xl italic tracking-[-0.08em]">
-            Apex<span className="text-[#e8702a]">.</span>
+            {BRAND.name}<span className="text-[#e8702a]">{BRAND.mark}</span>
           </Link>
           <p className="mt-5 max-w-[210px] text-sm leading-6 text-white/50">Cultura, roupas e colecionáveis premium de Fórmula 1.</p>
         </div>
@@ -27,6 +29,10 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
+      {/* Nome da marca em tipografia gigante, na largura do container (lib/brand.ts). */}
+      <div className="mx-auto mt-16 max-w-[1400px] text-white/[0.92]">
+        <GiantWordmark />
+      </div>
       {/* Identificação do fornecedor (Decreto 7.962/2013). Dados em lib/company.ts (placeholders até o lançamento). */}
       <address className="mx-auto mt-16 grid max-w-[1400px] gap-x-8 gap-y-2 border-t border-white/10 pt-6 text-xs not-italic leading-5 text-white/50 sm:grid-cols-2 lg:grid-cols-4">
         <span>{company.legalName}</span>
@@ -38,7 +44,7 @@ export function SiteFooter() {
       </address>
       <div className="mx-auto mt-6 flex max-w-[1400px] flex-col justify-between gap-5 border-t border-white/10 pt-6 text-[10px] uppercase tracking-[0.12em] text-white/50 sm:flex-row sm:items-center">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-          <span>© 2026 Apex. Todos os direitos reservados.</span>
+          <span>© 2026 {BRAND.name}. Todos os direitos reservados.</span>
           {legalLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition hover:text-white">
               {link.label}
