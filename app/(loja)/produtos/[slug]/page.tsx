@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SectionTitle } from "@/components/motion/section-title";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RotateCcw, Truck } from "lucide-react";
@@ -150,9 +151,7 @@ export default async function ProductPage({ params }: Params) {
         {related.length > 0 && (
           <section aria-labelledby="relacionados" className="mt-24">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Combina com</p>
-            <h2 id="relacionados" className="mb-10 text-3xl font-medium tracking-[-0.06em] sm:text-4xl">
-              Produtos relacionados
-            </h2>
+            <SectionTitle id="relacionados" text={`Produtos relacionados`} className="mb-10 text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
             <ProductGrid products={related} />
           </section>
         )}

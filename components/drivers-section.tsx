@@ -3,6 +3,8 @@
 import { memo, useState, type FocusEvent } from "react";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { RevealGroup } from "@/components/motion/reveal-group";
+import { SectionTitle } from "@/components/motion/section-title";
 import { HoverTransition } from "@/components/ui/hover-transition";
 import { driverHoverTransition, drivers, type Driver } from "@/lib/drivers";
 
@@ -131,14 +133,14 @@ function DriverCard({ driver }: { driver: Driver }) {
 // Lista dos cards (carrossel no celular, grade a partir de 640px). Usada na home e em /pilotos.
 export function DriverCardList({ className = "" }: { className?: string }) {
   return (
-    <ul
+    <RevealGroup
       role="list"
       className={`-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 py-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4 ${className}`}
     >
       {drivers.map((driver) => (
         <DriverCard key={driver.slug} driver={driver} />
       ))}
-    </ul>
+    </RevealGroup>
   );
 }
 
@@ -148,9 +150,7 @@ export const DriversSection = memo(function DriversSection() {
     <section id="pilotos" aria-labelledby="pilotos-titulo" className="bg-white px-5 pb-12 pt-20 sm:px-10 sm:pb-16 sm:pt-28">
       <div className="mx-auto max-w-[1400px]">
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Os pilotos</p>
-        <h2 id="pilotos-titulo" className="text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl">
-          Escolha seu piloto
-        </h2>
+        <SectionTitle id="pilotos-titulo" text="Escolha seu piloto" className="text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl" />
         <DriverCardList className="mt-12" />
       </div>
     </section>

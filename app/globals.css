@@ -201,3 +201,26 @@ h1, h2, .font-display {
 /* Esqueleto de carregamento (loading.tsx) */
 @keyframes apex-pulse { 50% { opacity: 0.5; } }
 .apex-skeleton { background: #ececea; animation: apex-pulse 1.4s ease-in-out infinite; }
+
+/* MOVIMENTO — espelho em CSS dos tokens de lib/motion.ts (manter os dois iguais). */
+:root {
+  --motion-fast: 0.2s;
+  --motion-base: 0.45s;
+  --motion-reveal: 0.7s;
+  --motion-panel: 0.5s;
+  --motion-slow: 0.9s;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-rise: 16px;
+  --motion-stagger: 70ms;
+}
+/* Entrada escalonada dos grids de cards (components/motion/reveal-group.tsx): o grupo só esconde os filhos depois de
+   montar e só se ainda estiver fora da tela; ao entrar, cada filho sobe com atraso proporcional ao índice (--i). */
+[data-reveal="pending"] > * { opacity: 0; transform: translate3d(0, var(--motion-rise), 0); }
+[data-reveal="in"] > * {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--motion-reveal) var(--ease-out), transform var(--motion-reveal) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * var(--motion-stagger));
+}

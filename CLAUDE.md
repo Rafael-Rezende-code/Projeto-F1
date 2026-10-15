@@ -80,6 +80,19 @@ interna e sem arredondamento).
   em serifa itálica (`.font-playfair`: logo, "Feita para", primeiro nome dos pilotos) usa a serifa do sistema, como
   antes. Comparação com Inter Tight + Inter e Space Grotesk + Geist em `docs/tipografia/` (não aplicadas).
 
+- **Movimento (polimento, fase 2):** tokens em `lib/motion.ts` (durações, curvas, distâncias, stagger) espelhados em
+  variáveis CSS (`--motion-*`, `--ease-*`) no `globals.css` — **use esses tokens em toda animação nova**. Títulos de seção
+  entram com `SectionTitle` (`components/motion/section-title.tsx`, BlurReveal da Spell UI, uma vez ao entrar na tela);
+  grades de cards com `RevealGroup` (`components/motion/reveal-group.tsx`: um IntersectionObserver por grade + CSS
+  `[data-reveal]`, sem JS por card; grade já visível ao carregar não anima). WordsStagger nos parágrafos de "Mais que
+  uma corrida." e "Cada detalhe importa.". **HighlightedText em no máximo 3 lugares**: "corrida" (Feita em torno da
+  corrida.), "detalhe" (Cada detalhe importa.) e "grid" (O que o grid veste), barra laranja #b94f01 e texto branco.
+- **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
+  signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
+  `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
+  O Signature tinha a fonte fixa `/LastoriaBoldRegular.otf` (não incluída): virou a prop `fontUrl`, padrão Allura
+  (SIL OFL, `public/fonts/`). Depende de `opentype.js` (só carregado onde o Signature é usado).
+
 ## Decisões já tomadas
 
 - TechText: descartado por ora. KineticText: só no título "Luzes apagadas." (ver Estado atual).
@@ -224,6 +237,11 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
 - **Tipografia (fase 1):** pesos/largura/tracking dos títulos ajustados a olho (116% de largura no desktop). O itálico
   "pilotos" do hero passa a ser Archivo itálica; "Feita para" e o logo continuam na serifa itálica do sistema (não havia
   pedido para trocar o acento). Títulos pequenos de interface (sacola, checkout, "Descrição") ficam na Geist (`.font-ui`).
+- **Movimento (fase 2):** o terceiro HighlightedText ficou em "grid" ("O que o grid veste"). "Mais que uma corrida." usa
+  BlurReveal direto (título em duas linhas com a segunda em itálico). As entradas escalonadas valem para todas as grades
+  de produto (via `ProductGrid`), categorias, equipes e pilotos. fps medido no build de produção, Edge headless sem
+  limite de quadros: scroll da home ~94 fps (p95 24 ms), hover nos cards ~114 fps. (Com a bateria baixa o navegador
+  trava em 30 fps até em about:blank; medir na tomada.)
 - **Card de produto no celular:** preço abaixo do nome (lado a lado só a partir de 640px); a 360px o nome quebrava em 3.
 - **Sacola (fase 4):** o aviso "adicionado à sacola" também informa quando o estoque limita a quantidade. O preço
   guardado no item é o do momento da adição; o checkout recalcula tudo no servidor. Frete grátis a partir de

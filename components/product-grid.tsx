@@ -1,3 +1,4 @@
+import { RevealGroup } from "@/components/motion/reveal-group";
 import { ProductCard, PRODUCT_GRID_SIZES } from "@/components/product-card";
 import { catalog } from "@/lib/catalog";
 import type { Product } from "@/lib/catalog/types";
@@ -7,12 +8,12 @@ export async function ProductGrid({ products, priorityCount = 0 }: { products: P
   const categories = await catalog.getCategories();
   const nameOf = (slug: string) => categories.find((category) => category.slug === slug)?.name;
   return (
-    <ul role="list" className="grid grid-cols-2 gap-x-3 gap-y-10 lg:grid-cols-4 lg:gap-x-5">
+    <RevealGroup role="list" className="grid grid-cols-2 gap-x-3 gap-y-10 lg:grid-cols-4 lg:gap-x-5">
       {products.map((product, index) => (
         <li key={product.id}>
           <ProductCard product={product} categoryName={nameOf(product.categorySlug)} sizes={PRODUCT_GRID_SIZES} priority={index < priorityCount} />
         </li>
       ))}
-    </ul>
+    </RevealGroup>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SectionTitle } from "@/components/motion/section-title";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -56,9 +57,7 @@ export default async function TeamPage({ params }: Params) {
 
         <section aria-labelledby="produtos-equipe" className="mt-16">
           <div className="mb-10 flex items-end justify-between gap-6">
-            <h2 id="produtos-equipe" className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl">
-              Produtos {team.name}
-            </h2>
+            <SectionTitle id="produtos-equipe" text={`Produtos ${team.name}`} className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
             <Link href={`/produtos?equipe=${team.slug}`} className="text-sm text-black/60 transition hover:text-black">
               Filtrar no catálogo
             </Link>
@@ -68,9 +67,7 @@ export default async function TeamPage({ params }: Params) {
 
         <nav aria-labelledby="outras-equipes" className="mt-24">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Escolha sua equipe</p>
-          <h2 id="outras-equipes" className="mb-6 text-3xl font-medium tracking-[-0.06em] sm:text-4xl">
-            Outras equipes
-          </h2>
+          <SectionTitle id="outras-equipes" text={`Outras equipes`} className="mb-6 text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
           <ul role="list" className="grid gap-x-8 md:grid-cols-2">
             {teams.map((other) => (
               <li key={other.slug}>

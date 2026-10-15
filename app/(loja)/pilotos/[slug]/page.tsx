@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SectionTitle } from "@/components/motion/section-title";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -71,9 +72,7 @@ export default async function DriverPage({ params }: Params) {
         <div className="mx-auto max-w-[1400px]">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Coleção do piloto</p>
           <div className="mb-10 flex items-end justify-between gap-6">
-            <h2 id="produtos-piloto" className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl">
-              Produtos {driver.name}
-            </h2>
+            <SectionTitle id="produtos-piloto" text={`Produtos ${driver.name}`} className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
             <Link href={`/produtos?piloto=${driver.slug}`} className="text-sm text-black/60 transition hover:text-black">
               Filtrar no catálogo
             </Link>
