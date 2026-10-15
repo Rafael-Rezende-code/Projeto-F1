@@ -105,6 +105,15 @@ interna e sem arredondamento).
   termos precisam aparecer em nome, equipe, piloto, categoria ou tags; sem acento/maiúsculas; testes em
   `lib/catalog/search.test.ts`). Padrão combobox + listbox: setas, Enter abre, Esc fecha. Estado vazio com equipes e
   pilotos; sem resultado com mensagem no tom do site.
+- **Cards e página de produto (polimento, fase 6):** card de equipe sem o nome repetido (fica `sr-only`), logo maior,
+  card mais baixo (proporção 1,7) e rótulo "VER COLEÇÃO →" numa pílula escura (contraste ≥ 5,6:1); no desktop, TiltCard
+  (8°, scale 1,03, brilho) via `components/motion/tilt-on-hover.tsx` (só com hover + ponteiro fino). Card de produto:
+  segunda foto no hover (no seed, placeholder marcado `illustrative`), favoritar (`components/favorites.tsx`,
+  localStorage `apex:favoritos:v1` + `useSyncExternalStore`; página `/favoritos`) e chips de tamanho para compra
+  rápida no hover do desktop (`components/quick-sizes.tsx`). Página de produto: lightbox nas fotos (setas, ← →, Esc),
+  guia de tamanhos em modal (tabela placeholder `[MEDIDAS A CONFIRMAR]`), favoritar, barra fixa de compra no celular
+  acima do dock (aparece quando o botão principal sai da tela) e "Complete o look" (até 4 relacionados, priorizando
+  categorias diferentes).
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
@@ -260,6 +269,8 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   de produto (via `ProductGrid`), categorias, equipes e pilotos. fps medido no build de produção, Edge headless sem
   limite de quadros: scroll da home ~94 fps (p95 24 ms), hover nos cards ~114 fps. (Com a bateria baixa o navegador
   trava em 30 fps até em about:blank; medir na tomada.)
+- **Fase 6:** no toque, o coração do card fica sempre visível (no desktop aparece no hover). A segunda foto do card
+  carrega junto (lazy, só quando o card entra na tela). Pôsteres ganharam uma 2ª imagem placeholder.
 - **Card de produto no celular:** preço abaixo do nome (lado a lado só a partir de 640px); a 360px o nome quebrava em 3.
 - **Sacola (fase 4):** o aviso "adicionado à sacola" também informa quando o estoque limita a quantidade. O preço
   guardado no item é o do momento da adição; o checkout recalcula tudo no servidor. Frete grátis a partir de

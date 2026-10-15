@@ -37,6 +37,8 @@ function product(base: Base): Product {
   const code = `APX-${String(counter).padStart(3, "0")}`;
   return {
     ...rest,
+    // A partir da 2ª, as imagens são placeholders reaproveitados (usados na troca de foto no hover do card).
+    images: rest.images.map((image, index) => (index > 0 ? { ...image, illustrative: true } : image)),
     id: code,
     variants: variants(code, counter, sizes),
     status: "active",
@@ -265,7 +267,10 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
       categorySlug: "colecionaveis",
       teamSlug: driver.teamSlug,
       driverSlug: driver.slug,
-      images: [{ src: driver.image, alt: `Pôster ${driver.name}` }],
+      images: [
+        { src: driver.image, alt: `Pôster ${driver.name}` },
+        { src: IMG.collectibles, alt: `Pôster ${driver.name}, ambiente` },
+      ],
       sizes: ["Único"],
       tags: ["poster", driver.slug],
       isNew: false,

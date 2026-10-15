@@ -14,6 +14,7 @@ export const menuLinks: NavLink[] = [
   { label: "Equipes", href: "/equipes" },
   { label: "Pilotos", href: "/pilotos" },
   { label: "Novidades", href: "/produtos?ordem=novidades" },
+  { label: "Favoritos", href: "/favoritos" },
 ];
 export const menuSecondaryLinks: NavLink[] = [
   { label: "Manifesto", href: "/#story" },

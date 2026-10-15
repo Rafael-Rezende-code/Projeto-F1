@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { useCart } from "@/components/cart";
+import { FavoriteButton } from "@/components/favorites";
+import { SizeGuide } from "@/components/size-guide";
+import { formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/catalog/types";
 
 // Seletor de tamanho (rádios), quantidade e "Adicionar à sacola". Tamanho esgotado fica desabilitado.
 // A quantidade nunca passa do estoque da variante escolhida.
+// No celular, quando o botão principal sai da tela, aparece uma barra fixa de compra logo acima do dock.
 export function ProductPurchase({ product }: { product: Product }) {
   const { addItem } = useCart();
   const available = product.variants.filter((variant) => variant.stock > 0);
@@ -17,6 +21,17 @@ export function ProductPurchase({ product }: { product: Product }) {
   const variant = product.variants.find((item) => item.sku === sku) ?? null;
   const max = variant?.stock ?? 1;
   const soldOut = available.length === 0;
+  const mainRef = useRef<HTMLDivElement>(null);
+  const sizesRef = useRef<HTMLFieldSetElement>(null);
+  const [showBar, setShowBar] = useState(false);
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => setShowBar(!entry.isIntersecting && entry.boundingClientRect.top < 0));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const choose = (next: string) => {
     setSku(next);
@@ -28,6 +43,8 @@ export function ProductPurchase({ product }: { product: Product }) {
   const add = () => {
     if (!variant) {
       setError("Escolha um tamanho.");
+      sizesRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      sizesRef.current?.querySelector<HTMLInputElement>("input:not([disabled])")?.focus({ preventScroll: true });
       return;
     }
     addItem(product, variant, quantity);
@@ -36,7 +53,7 @@ export function ProductPurchase({ product }: { product: Product }) {
   return (
     <div className="flex flex-col gap-6">
       {!single && (
-        <fieldset>
+        <fieldset ref={sizesRef}>
           <legend className="mb-3 flex w-full items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-black/60">
             Tamanho
             {variant && <span className="normal-case tracking-normal text-black/60">{variant.stock <= 3 ? `Restam ${variant.stock}` : "Em estoque"}</span>}
@@ -68,10 +85,13 @@ export function ProductPurchase({ product }: { product: Product }) {
               {error}
             </p>
           )}
+          <div className="mt-3">
+            <SizeGuide />
+          </div>
         </fieldset>
       )}
 
-      <div className="flex items-stretch gap-3">
+      <div ref={mainRef} className="flex items-stretch gap-3">
         <div className="flex items-center rounded-xl border border-black/20" role="group" aria-label="Quantidade">
           <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1 || soldOut} aria-label="Diminuir quantidade" className="flex h-12 w-11 items-center justify-center rounded-l-xl transition hover:bg-black/5 disabled:opacity-30">
             <Minus size={16} />
@@ -91,7 +111,26 @@ export function ProductPurchase({ product }: { product: Product }) {
         >
           {soldOut ? "Esgotado" : "Adicionar à sacola"}
         </button>
+        <FavoriteButton slug={product.slug} name={product.name} className="flex w-12 shrink-0 items-center justify-center rounded-xl border border-black/20 transition hover:border-black" />
       </div>
+
+      {/* Barra fixa de compra (celular), acima do dock (--dock-space). Só existe quando o botão principal saiu da tela. */}
+      {showBar && !soldOut && (
+        <div className="fixed inset-x-0 bottom-[var(--dock-space)] z-[70] border-t border-black/10 bg-white/95 px-5 py-3 backdrop-blur md:hidden">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{product.name}</p>
+              <p className="text-xs text-black/60">
+                {formatPrice(product.priceCents)}
+                {variant && !single ? ` · Tam. ${variant.size}` : ""}
+              </p>
+            </div>
+            <button type="button" onClick={add} className="shrink-0 rounded-xl bg-[#b94f01] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#9f4300]">
+              {variant ? "Adicionar" : "Escolher tamanho"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

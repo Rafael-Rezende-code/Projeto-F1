@@ -41,8 +41,15 @@ export default async function ProductPage({ params }: Params) {
     catalog.getCategoryBySlug(product.categorySlug),
     product.teamSlug ? catalog.getTeamBySlug(product.teamSlug) : null,
     product.driverSlug ? catalog.getDriverBySlug(product.driverSlug) : null,
-    catalog.getRelatedProducts(product, 4),
+    catalog.getRelatedProducts(product, 12),
   ]);
+  // "Complete o look": até 4 relacionados priorizando categorias diferentes da do produto (uma peça de cada tipo).
+  const look = [
+    ...related.filter((item, index, list) => item.categorySlug !== product.categorySlug && list.findIndex((other) => other.categorySlug === item.categorySlug) === index),
+    ...related,
+  ]
+    .filter((item, index, list) => list.findIndex((other) => other.id === item.id) === index)
+    .slice(0, 4);
   const discount = discountPercent(product.priceCents, product.compareAtPriceCents);
   const inStock = product.variants.some((variant) => variant.stock > 0);
 
@@ -66,7 +73,7 @@ export default async function ProductPage({ params }: Params) {
   };
 
   return (
-    <div className="px-5 pb-24 pt-8 sm:px-10 sm:pt-10">
+    <div className="px-5 pb-40 pt-8 sm:px-10 sm:pt-10 md:pb-24">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <div className="mx-auto max-w-[1400px]">
         <Breadcrumbs
@@ -148,11 +155,11 @@ export default async function ProductPage({ params }: Params) {
           </div>
         </div>
 
-        {related.length > 0 && (
-          <section aria-labelledby="relacionados" className="mt-24">
+        {look.length > 0 && (
+          <section aria-labelledby="complete-o-look" className="mt-24">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Combina com</p>
-            <SectionTitle id="relacionados" text={`Produtos relacionados`} className="mb-10 text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
-            <ProductGrid products={related} />
+            <SectionTitle id="complete-o-look" text="Complete o look" className="mb-10 text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
+            <ProductGrid products={look} />
           </section>
         )}
       </div>

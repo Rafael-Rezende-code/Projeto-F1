@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Heart } from "lucide-react";
 import { AddToCartButton } from "@/components/cart";
+import { FavoriteButton } from "@/components/favorites";
+import { QuickSizes } from "@/components/quick-sizes";
 import { discountPercent, formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/catalog/types";
 
@@ -42,21 +43,37 @@ export function ProductCard({
           priority={priority}
           className="object-cover transition duration-700 group-hover:scale-105"
         />
+        {/* Segunda foto no hover (desktop): troca suave por cima da primeira. */}
+        {product.images[1] && (
+          <Image
+            src={product.images[1].src}
+            alt=""
+            fill
+            sizes={sizes}
+            quality={QUALITY}
+            className="object-cover opacity-0 transition duration-700 group-hover:scale-105 [@media(hover:hover)]:group-hover:opacity-100"
+          />
+        )}
         <div className="absolute left-3 top-3 flex gap-2">
           {product.isNew && <span className="rounded-md bg-[#b94f01] px-2 py-1 text-[9px] font-semibold tracking-[0.16em] text-white">NOVO</span>}
           {discount > 0 && <span className="rounded-md bg-black px-2 py-1 text-[9px] font-semibold tracking-[0.16em] text-white">-{discount}%</span>}
         </div>
-        <button aria-label={`Adicionar ${product.name} aos favoritos`} className="absolute right-3 top-3 z-10 rounded-xl bg-white/85 p-2 text-black opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100">
-          <Heart size={16} strokeWidth={1.5} />
-        </button>
+        {/* Favoritar: sempre visível no toque; no desktop aparece no hover/foco (ou quando já é favorito). */}
+        <FavoriteButton
+          slug={product.slug}
+          name={product.name}
+          className="absolute right-3 top-3 z-10 rounded-xl bg-white/85 p-2 text-black transition focus-visible:opacity-100 aria-pressed:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
+        />
         {inStock.length === 0 ? (
           <span className="absolute bottom-3 left-3 z-10 rounded-md bg-white/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-black">Esgotado</span>
         ) : single ? (
           <AddToCartButton product={product} className={quickClass} />
         ) : (
-          <Link href={href} tabIndex={-1} aria-hidden="true" className={quickClass}>
-            Escolher tamanho
-          </Link>
+          // Chips de tamanho (compra rápida) só onde há hover; no toque, o card leva à página do produto.
+          <QuickSizes
+            product={product}
+            className="absolute bottom-3 left-3 right-3 z-10 hidden translate-y-3 gap-1.5 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 focus-within:translate-y-0 focus-within:opacity-100 [@media(hover:hover)]:flex"
+          />
         )}
       </div>
       {categoryName && <p className="mt-4 text-[10px] uppercase tracking-[0.16em] text-black/60">{categoryName}</p>}

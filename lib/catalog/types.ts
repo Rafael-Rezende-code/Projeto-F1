@@ -7,6 +7,8 @@ export type ProductStatus = "active" | "draft" | "archived";
 export type ProductImage = {
   src: string;
   alt: string;
+  /** Imagem de demonstração reaproveitada (placeholder), não é foto real do produto. */
+  illustrative?: boolean;
 };
 
 export type ProductVariant = {
