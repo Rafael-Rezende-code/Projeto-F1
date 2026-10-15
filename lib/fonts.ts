@@ -1,31 +1,37 @@
-import { Archivo, Geist, Great_Vibes, Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
+import { Great_Vibes, Playfair_Display } from "next/font/google";
 
 // TOKENS DE FONTE — o único lugar onde as famílias do site são definidas.
 // Para trocar uma fonte: mude o import e a chamada abaixo (mantenha `variable`); o CSS usa só as variáveis
 // --font-display e --font-sans (app/globals.css), e os ajustes finos (largura, peso, tracking) ficam nos tokens
 // --display-* do globals.css.
 //
-// Títulos: Archivo variável (pesos 100–900 e eixo de largura wdth 62–125), só o estilo normal. A largura expandida dá a sensação de
-// velocidade; o KineticText de "Luzes apagadas." anima o peso dessa mesma fonte.
-export const fontDisplay = Archivo({
-  subsets: ["latin"],
-  axes: ["wdth"],
-  // Só o estilo normal: a itálica (≈88 KB) servia apenas à palavra "pilotos" do hero, que usa itálico sintético.
-  style: ["normal"],
+// Títulos e textos usam arquivos ENXUTOS gerados a partir das variáveis do Google Fonts (SIL OFL; licenças em app/fonts/):
+// só os glifos do português + sinais usados e só a faixa de eixos que o site usa (scripts/fonts/subset.cjs).
+// Archivo: 88 KB → 46 KB; Geist: 29 KB → 18 KB (desempenho, rodada 2). Caractere fora da lista cai no fallback.
+//
+// Títulos: Archivo variável, largura (wdth) 106–125 e peso 300–900. A largura expandida dá a sensação de velocidade
+// (116% no desktop, 106% no celular, 125% no nome gigante do rodapé); o KineticText anima o peso (300–900).
+// Sem preload: os títulos grandes ficam abaixo do hero; entra com swap e fallback ajustado (sem salto perceptível).
+export const fontDisplay = localFont({
+  src: "../app/fonts/archivo-wdth106-125-wght300-900.woff2",
+  weight: "300 900",
+  style: "normal",
   display: "swap",
-  // Sem preload: os títulos grandes ficam abaixo do hero, e o arquivo (≈88 KB) disputava banda com o LCP. Entra com
-  // swap (fallback ajustado pelo next/font, sem salto perceptível).
   preload: false,
+  declarations: [{ prop: "font-stretch", value: "106% 125%" }],
+  adjustFontFallback: "Arial",
   variable: "--font-display",
 });
 
-// Textos, interface e preços: Geist variável.
-export const fontSans = Geist({
-  subsets: ["latin"],
+// Textos, interface e preços: Geist variável, peso 400–700. Sem preload (não disputa banda com a imagem do LCP).
+export const fontSans = localFont({
+  src: "../app/fonts/geist-wght400-700.woff2",
+  weight: "400 700",
+  style: "normal",
   display: "swap",
-  // Sem preload: o texto aparece na hora com o fallback ajustado e troca para a Geist quando ela chega; com preload, a
-  // fonte disputava banda com a imagem do LCP (medido no Lighthouse mobile).
   preload: false,
+  adjustFontFallback: "Arial",
   variable: "--font-sans",
 });
 

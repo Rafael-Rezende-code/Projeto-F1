@@ -71,14 +71,14 @@ interna e sem arredondamento).
 - Título "Luzes apagadas." (#journal) com `KineticText` (`components/ui/kinetic-text.tsx`): só em desktop com
   mouse (`lg` + `hover:hover`); no celular/toque fica o `h2` original, sem efeito. Usa a Archivo variável (classe
   `.font-kinetic` no `globals.css`, que também fixa o peso inicial 300).
-- **Tipografia (polimento, fase 1):** tokens em `lib/fonts.ts` (next/font/google): **Archivo** variável (peso + eixo
-  de largura `wdth`, normal e itálico) nos títulos (`--font-display`) e **Geist** em textos, interface e preços
-  (`--font-sans`). Ajustes finos em `:root` no `globals.css`: `--display-stretch` 116% (106% abaixo de 640px, para os
+- **Tipografia (polimento, fase 1; atualizada na rodada 2):** tokens em `lib/fonts.ts`: **Archivo** variável (arquivo local
+  enxuto: largura 106–125, peso 300–900, gerado por `scripts/fonts/subset.cjs`) nos títulos (`--font-display`) e **Geist** em textos, interface e preços
+  (`--font-sans`, local enxuta: peso 400–700). Ajustes finos em `:root` no `globals.css`: `--display-stretch` 116% (106% abaixo de 640px, para os
   títulos grandes não encostarem nas bordas), `--display-weight` 600, `--display-tracking` -0,035em, `--display-leading`
   0,98, `--body-tracking`. A regra de `h1, h2, .font-display` fica **fora de @layer** e vence as utilities antigas dos
   títulos (`font-medium`, `tracking-[...]`, `leading-[...]`). Títulos pequenos de interface usam `.font-ui`. O acento
-  em serifa itálica (`.font-playfair`: logo, "Feita para", primeiro nome dos pilotos) usa a serifa do sistema, como
-  antes. Comparação com Inter Tight + Inter e Space Grotesk + Geist em `docs/tipografia/` (não aplicadas).
+  em serifa itálica (`.font-playfair`/`.font-accent`) é a **Playfair Display Italic** real (ver "Decisões da rodada 2").
+  Comparação com Inter Tight + Inter e Space Grotesk + Geist em `docs/tipografia/` (não aplicadas).
 
 - **Movimento (polimento, fase 2):** tokens em `lib/motion.ts` (durações, curvas, distâncias, stagger) espelhados em
   variáveis CSS (`--motion-*`, `--ease-*`) no `globals.css` — **use esses tokens em toda animação nova**. Títulos de seção
@@ -374,6 +374,14 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   original pedia (a classe sempre foi `font-playfair`, mas a fonte nunca carregava) e a mais próxima da serifa itálica
   elegante do primeiro hero; Instrument Serif é estreita demais, Fraunces tem pouco contraste e Newsreader é "de livro".
   "Um jeito de viver." passa de negrito sintético (serifa do sistema em 600) para o itálico 400 real.
+- **Desempenho (fase 5):** Archivo e Geist passaram a ser arquivos locais ENXUTOS (`app/fonts/`, gerados por
+  `scripts/fonts/subset.cjs` com o `subset-font`/HarfBuzz, fora do projeto): só glifos do português + sinais usados e só a
+  faixa de eixos usada (Archivo largura 106–125 e peso 300–900: 88 KB → 46 KB; Geist peso 400–700: 29 KB → 18 KB). Nenhuma
+  mudança visual. Caractere novo fora da lista cai no fallback: acrescentar em `EXTRA` e gerar de novo. Lighthouse mobile
+  (build de produção, 3 execuções, mesma máquina): home 82/83/92 → **90**/95/82 (mediana 90); produto 98/83/82 →
+  86/**99**/99 (mediana 99). A simulação do Lighthouse oscila entre dois modos (FCP ~1,0 s ou ~1,7–2,0 s) sem mudança no
+  observado (~0,2 s); por isso vale olhar a mediana. Acessibilidade 100, Boas práticas 96 (404 local do
+  `/_vercel/insights`), SEO 100. Fixar a largura da Archivo (ex.: 112%) daria 27 KB, mas mudaria o desenho: não aplicado.
 
 ## Notas técnicas
 
@@ -411,11 +419,10 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 
 ## Roteiro (próximos passos, em ordem)
 
-1. **Fonte de acento:** decidir a serifa itálica (hoje a do sistema) ou trocá-la pela Archivo itálica.
-2. **Refinar os cards de pilotos.**
-3. **Página de produto.**
-4. **Seção "Diário"**, com as fotos `senna-sentado` e `senna-champanhe`.
-5. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos e das
+1. **Refinar os cards de pilotos.**
+2. **Página de produto.**
+3. **Seção "Diário"**, com as fotos `senna-sentado` e `senna-champanhe`.
+4. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos e das
    equipes.
 
 ## Pendências (atualizado em 14/10/2026)
