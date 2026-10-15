@@ -139,6 +139,15 @@ interna e sem arredondamento).
   gigante na largura do container (`components/giant-wordmark.tsx`: SVG que ajusta o viewBox ao texto, vale para qualquer
   nome). 404 "Você saiu da pista." e estados vazios no mesmo tom (sacola "Nada no grid", favoritos "Garagem vazia",
   busca "Nada no radar").
+- **QA e desempenho (polimento, fase 11):** e2e (`e2e/compra.spec.ts` e `e2e/busca-e-dock.spec.ts`) passa em desktop e
+  celular, também contra o build de produção (`E2E_BASE_URL=http://localhost:3001`). Revisão em 1440, 1280, 820, 390 e
+  360px sem scroll horizontal. fps no build de produção (limite de 60): scroll da home 59, hover dos cards 60.
+  Lighthouse mobile (mediana de 3, mesma máquina e mesmo dia): home 85 (base `feat/loja` 87), produto 85 (base 96);
+  Acessibilidade 100, Boas práticas 96, SEO 100 nas duas. A diferença vem quase toda das fontes web (Archivo variável com
+  eixo de largura ≈ 88 KB + Geist ≈ 29 KB entram na cadeia crítica pelo CSS; a base usava as fontes do sistema porque
+  Inter/Playfair nunca carregavam). Já aplicado para reduzir: Archivo sem itálica (−88 KB), Archivo e Geist sem
+  preload, busca e menu carregados só ao abrir, dock carregado fora do caminho crítico (`components/lazy-shell.tsx`).
+  Próximo passo possível: subconjunto menor da Archivo (só os glifos usados) ou instância estática na largura usada.
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
@@ -301,6 +310,11 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
   trava em 30 fps até em about:blank; medir na tomada.)
 - **Fase 6:** no toque, o coração do card fica sempre visível (no desktop aparece no hover). A segunda foto do card
   carrega junto (lazy, só quando o card entra na tela). Pôsteres ganharam uma 2ª imagem placeholder.
+- **Desempenho (fase 11):** para recuperar parte do Lighthouse, as duas fontes ficaram sem preload, a itálica da
+  Archivo saiu (o "pilotos" do hero usa itálico sintético) e busca/menu/dock carregam fora do JS inicial. A busca abre
+  sem animação de entrada na primeira vez (o módulo chega já aberto).
+- **HighlightedText:** a palavra herda a cor do título em vez de branco fixo (antes da barra entrar ela ficava branca
+  sobre branco). Sobre o laranja: 4,3:1 com preto e 4,9:1 com branco (texto grande, mínimo 3:1).
 - **Card de produto no celular:** preço abaixo do nome (lado a lado só a partir de 640px); a 360px o nome quebrava em 3.
 - **Sacola (fase 4):** o aviso "adicionado à sacola" também informa quando o estoque limita a quantidade. O preço
   guardado no item é o do momento da adição; o checkout recalcula tudo no servidor. Frete grátis a partir de

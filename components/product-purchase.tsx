@@ -107,7 +107,7 @@ export function ProductPurchase({ product }: { product: Product }) {
           type="button"
           onClick={add}
           disabled={soldOut}
-          className="flex-1 rounded-xl bg-[#b94f01] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#9f4300] disabled:cursor-not-allowed disabled:bg-black/20"
+          className="flex-1 whitespace-nowrap rounded-xl bg-[#b94f01] px-3 py-3 text-sm font-medium text-white sm:px-6 transition hover:bg-[#9f4300] disabled:cursor-not-allowed disabled:bg-black/20"
         >
           {soldOut ? "Esgotado" : "Adicionar à sacola"}
         </button>

@@ -13,6 +13,9 @@ export const fontDisplay = Archivo({
   // Só o estilo normal: a itálica (≈88 KB) servia apenas à palavra "pilotos" do hero, que usa itálico sintético.
   style: ["normal"],
   display: "swap",
+  // Sem preload: os títulos grandes ficam abaixo do hero, e o arquivo (≈88 KB) disputava banda com o LCP. Entra com
+  // swap (fallback ajustado pelo next/font, sem salto perceptível).
+  preload: false,
   variable: "--font-display",
 });
 
@@ -20,6 +23,9 @@ export const fontDisplay = Archivo({
 export const fontSans = Geist({
   subsets: ["latin"],
   display: "swap",
+  // Sem preload: o texto aparece na hora com o fallback ajustado e troca para a Geist quando ela chega; com preload, a
+  // fonte disputava banda com a imagem do LCP (medido no Lighthouse mobile).
+  preload: false,
   variable: "--font-sans",
 });
 

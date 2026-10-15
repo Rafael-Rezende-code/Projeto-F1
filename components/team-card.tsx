@@ -14,7 +14,7 @@ export function TeamCard({ team }: { team: TeamIdentity }) {
     <TiltOnHover className="rounded-2xl">
       <Link
         href={`/equipes/${team.slug}`}
-        className="group relative isolate flex aspect-[1.7] flex-col items-center justify-center overflow-hidden rounded-2xl text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+        className="group relative isolate flex aspect-[1.25] flex-col sm:aspect-[1.7] items-center justify-center overflow-hidden rounded-2xl text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
         style={{ backgroundColor: team.color }}
       >
         <span aria-hidden="true" className="absolute inset-0 bg-black/0 transition duration-[var(--motion-fast)] group-hover:bg-black/12" />
@@ -25,7 +25,7 @@ export function TeamCard({ team }: { team: TeamIdentity }) {
           width={logo.width}
           height={logo.height}
           loading="lazy"
-          className="relative mb-3 w-auto max-w-[72%] object-contain transition duration-[var(--motion-base)] ease-[var(--ease-out)] [filter:brightness(0)_invert(1)] [height:calc(var(--h)*0.6)] group-hover:-translate-y-1 sm:[height:calc(var(--h)*0.75)] lg:[height:var(--h)]"
+          className="relative mb-7 w-auto max-w-[72%] sm:mb-3 object-contain transition duration-[var(--motion-base)] ease-[var(--ease-out)] [filter:brightness(0)_invert(1)] [height:calc(var(--h)*0.6)] group-hover:-translate-y-1 sm:[height:calc(var(--h)*0.75)] lg:[height:var(--h)]"
           style={{ "--h": `${height}px` } as CSSProperties}
         />
         <span className="sr-only">{team.name}</span>

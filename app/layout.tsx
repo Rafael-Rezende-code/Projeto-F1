@@ -1,8 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
-import { MobileDock } from '@/components/mobile-dock'
-import { MobileMenu } from '@/components/mobile-menu'
+import { LazyShell } from '@/components/lazy-shell'
 import { SearchRoot } from '@/components/search-root'
 import { SiteUIProvider } from '@/components/site-ui'
 import { fontVariables } from '@/lib/fonts'
@@ -40,8 +39,7 @@ export default function RootLayout({
         <SiteUIProvider>
           <CartProvider>
             {children}
-            <MobileDock />
-            <MobileMenu />
+            <LazyShell />
             <SearchRoot />
           </CartProvider>
         </SiteUIProvider>

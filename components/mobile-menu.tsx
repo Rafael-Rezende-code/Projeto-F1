@@ -3,20 +3,10 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useSiteUI } from "@/components/site-ui";
 import { useModal } from "@/components/use-modal";
 import { menuLinks, menuSecondaryLinks } from "@/lib/navigation";
-
-// Botão de menu (cabeçalho, só no celular). `tone` acompanha o cabeçalho: claro sobre o hero, escuro nas internas.
-export function MenuButton({ className = "" }: { className?: string }) {
-  const { openMenu, panel } = useSiteUI();
-  return (
-    <button type="button" onClick={openMenu} aria-label="Abrir menu" aria-haspopup="dialog" aria-expanded={panel === "menu"} aria-controls="menu-principal" className={className}>
-      <Menu strokeWidth={1.5} />
-    </button>
-  );
-}
 
 // Menu em tela cheia (celular). Diálogo modal: foco preso, Esc e o X fecham, e qualquer link fecha ao navegar.
 export function MobileMenu() {

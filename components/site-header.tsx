@@ -4,7 +4,7 @@ import { BRAND } from "@/lib/brand";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CartButton } from "@/components/cart";
-import { MenuButton } from "@/components/mobile-menu";
+import { MenuButton } from "@/components/menu-button";
 import { SearchButton } from "@/components/search-root";
 import { headerLinks } from "@/lib/navigation";
 
