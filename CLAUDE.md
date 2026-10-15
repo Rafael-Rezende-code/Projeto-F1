@@ -193,6 +193,11 @@ interna e sem arredondamento).
   transação e ler `/pedido/[id]` do banco (com verificação de dono do pedido).
 - O campo de cartão **não existe** de propósito: os dados do cartão devem ser coletados pelo componente do provedor
   (PCI). Nada de número de cartão passa pelo nosso servidor.
+- **Cartão decorativo (polimento, fase 8):** ao escolher "Cartão", aparece `components/checkout/decorative-card.tsx` (TiltCard
+  no desktop) com a marca da loja e o nome do titular vindo do passo de contato. **Ele NUNCA exibe nem recebe número,
+  validade ou CVV digitados no nosso formulário**: esses dados só existem no componente do provedor. Está pronto para
+  mostrar bandeira e últimos 4 dígitos quando o provedor os informar (`CardDisplay` em `lib/payments/types.ts`); no
+  modo simulado, `•••• •••• •••• ••••`.
 
 ### Pagamento (lib/payments) — o que falta para integrar
 

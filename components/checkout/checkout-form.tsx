@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { useCart } from "@/components/cart";
+import { DecorativeCard } from "@/components/checkout/decorative-card";
 import { placeOrder } from "@/app/(loja)/checkout/actions";
 import { ORDER_STORAGE_PREFIX, PAYMENT_LABELS } from "@/lib/checkout/order";
 import { addressSchema, contactSchema, fieldErrors, paymentSchema, shippingSchema } from "@/lib/checkout/schema";
@@ -310,6 +311,11 @@ export function CheckoutForm() {
                   ))}
                 </div>
               </fieldset>
+              {form.method === "cartao" && (
+                <div className="mt-6">
+                  <DecorativeCard holder={form.name} />
+                </div>
+              )}
               <p className="mt-4 rounded-xl bg-[#f5f5f3] p-4 text-xs leading-5 text-black/65">
                 {form.method === "cartao"
                   ? "Pagamento simulado: os dados do cartão serão pedidos pelo provedor de pagamento quando ele for integrado. Nenhum número de cartão é digitado ou guardado aqui."
