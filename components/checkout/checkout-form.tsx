@@ -150,7 +150,7 @@ export function CheckoutForm() {
       <div className="mx-auto max-w-md rounded-2xl bg-[#f5f5f3] px-6 py-16 text-center">
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Sacola vazia</p>
         <h2 className="mt-3 text-2xl font-medium tracking-[-0.05em]">Não há o que finalizar.</h2>
-        <Link href="/produtos" className="mt-6 inline-flex rounded-xl bg-black px-6 py-3 text-xs font-medium text-white transition hover:bg-[#b94f01]">Ver a coleção</Link>
+        <Link href="/produtos" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-black px-6 py-3 text-sm font-medium text-white transition hover:bg-[#b94f01]">Ver a coleção</Link>
       </div>
     );
 

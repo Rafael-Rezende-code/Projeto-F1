@@ -144,7 +144,7 @@ export function SearchOverlay() {
             aria-controls={listId}
             aria-activedescendant={options.length ? `${listId}-${options[active]?.id}` : undefined}
             aria-autocomplete="list"
-            className="min-w-0 flex-1 bg-transparent text-lg outline-none placeholder:text-black/40 [&::-webkit-search-cancel-button]:hidden"
+            className="min-w-0 flex-1 bg-transparent text-base outline-none sm:text-lg placeholder:text-black/40 [&::-webkit-search-cancel-button]:hidden"
           />
           {pending && <Loader2 size={18} className="animate-spin text-black/50" aria-hidden="true" />}
           <kbd className="hidden rounded-md border border-black/15 px-1.5 py-0.5 text-[10px] text-black/60 sm:inline">Esc</kbd>
@@ -174,6 +174,14 @@ export function SearchOverlay() {
                 {suggestions?.drivers.map((driver) => (
                   <Link key={driver.slug} href={`/pilotos/${driver.slug}`} onClick={close} className="rounded-xl border border-black/15 px-3 py-2 text-sm transition hover:border-black">
                     {driver.name}
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/60">Categorias</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {suggestions?.categories.map((category) => (
+                  <Link key={category.slug} href={`/categorias/${category.slug}`} onClick={close} className="rounded-xl border border-black/15 px-3 py-2 text-sm transition hover:border-black">
+                    {category.name}
                   </Link>
                 ))}
               </div>

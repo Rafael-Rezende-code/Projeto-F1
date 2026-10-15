@@ -22,7 +22,7 @@ export function CartContents({ variant, onNavigate }: { variant: 'drawer' | 'pag
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Sacola vazia</p>
         <p className="mt-3 text-2xl font-medium tracking-[-0.05em]">Nada no grid por enquanto.</p>
         <p className="mt-3 max-w-xs text-sm leading-6 text-black/60">Escolha sua equipe ou seu piloto e monte o kit do próximo GP.</p>
-        <Link href="/produtos" onClick={onNavigate} className="mt-6 rounded-xl bg-black px-6 py-3 text-xs font-medium text-white transition hover:bg-[#b94f01]">
+        <Link href="/produtos" onClick={onNavigate} className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-black px-6 py-3 text-sm font-medium text-white transition hover:bg-[#b94f01]">
           Ver a coleção
         </Link>
       </div>

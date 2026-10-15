@@ -32,9 +32,10 @@ export async function searchCatalog(query: string): Promise<SearchHit> {
 
 /** Sugestões do estado vazio: todas as equipes e pilotos. */
 export async function searchSuggestions() {
-  const [teams, drivers] = await Promise.all([catalog.getTeams(), catalog.getDrivers()]);
+  const [teams, drivers, categories] = await Promise.all([catalog.getTeams(), catalog.getDrivers(), catalog.getCategories()]);
   return {
     teams: teams.map((team) => ({ slug: team.slug, name: team.name, color: team.color })),
     drivers: drivers.map((driver) => ({ slug: driver.slug, name: driver.name })),
+    categories: categories.map((category) => ({ slug: category.slug, name: category.name })),
   };
 }

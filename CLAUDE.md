@@ -382,6 +382,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   86/**99**/99 (mediana 99). A simulação do Lighthouse oscila entre dois modos (FCP ~1,0 s ou ~1,7–2,0 s) sem mudança no
   observado (~0,2 s); por isso vale olhar a mediana. Acessibilidade 100, Boas práticas 96 (404 local do
   `/_vercel/insights`), SEO 100. Fixar a largura da Archivo (ex.: 112%) daria 27 KB, mas mudaria o desenho: não aplicado.
+- **Refinamento (fase 6):** 18 melhorias listadas em `docs/proximos-passos.md` (prints em `docs/refino/`); aplicadas as
+  5 de maior impacto e menor risco: gradiente inferior no hero **acima do spotlight** (a camada do spotlight é z-30 e, sem
+  máscara antes do primeiro movimento do mouse, cobre tudo abaixo, inclusive o gradiente original z-20); campo da busca
+  com 16px no celular (placeholder não corta; sem zoom do iOS); categorias na busca vazia; "Ver a coleção" dos estados
+  vazios com 44px de alvo; "Filtrar no catálogo" com seta. Não mexi em paleta, estrutura, textos de CTA nem na pílula
+  "VER COLEÇÃO" das equipes. Os alertas da varredura em "Luzes apagadas." e "Lewis Hamilton" são falsos positivos
+  (conferidos por medição e print).
 
 ## Notas técnicas
 

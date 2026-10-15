@@ -32,7 +32,7 @@ export function FavoritesList() {
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Garagem vazia</p>
         <h2 className="mt-3 text-2xl font-medium">Nenhum favorito no grid ainda.</h2>
         <p className="mt-3 text-sm leading-6 text-black/60">Toque no coração de uma peça para guardá-la aqui e voltar quando quiser.</p>
-        <Link href="/produtos" className="mt-6 inline-flex rounded-xl bg-black px-6 py-3 text-xs font-medium text-white transition hover:bg-[#b94f01]">
+        <Link href="/produtos" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-black px-6 py-3 text-sm font-medium text-white transition hover:bg-[#b94f01]">
           Ver a coleção
         </Link>
       </div>
