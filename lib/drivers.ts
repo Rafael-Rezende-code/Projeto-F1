@@ -12,6 +12,12 @@ export type Driver = {
   accent?: string;
   phrase: string;
   image: string;
+  /**
+   * Foto do cabeçalho da página do piloto (/pilotos/[slug]), SEM extensão, relativa a /public. Se existir
+   * public{pagePhoto}.jpg, .png ou .webp (nessa ordem), ela é usada; senão, a foto do card (`image`).
+   * Detectado no build (lib/catalog/seed/drivers.ts): depois de adicionar o arquivo, gere o build/deploy de novo.
+   */
+  pagePhoto: string;
   /** object-position da foto no card 4:5, para enquadrar rosto e capacete. */
   imagePosition?: string;
   href: string;
@@ -40,6 +46,7 @@ export const drivers: Driver[] = [
     textColor: "#111111",
     phrase: "Papaya até a última volta.",
     image: "/images/pilotos/norris.jpeg",
+    pagePhoto: "/images/pilotos/paginas/norris",
     imagePosition: "50% 30%",
     href: "/pilotos/norris",
     effect: "ripple",
@@ -53,6 +60,7 @@ export const drivers: Driver[] = [
     textColor: "#FFFFFF",
     phrase: "Implacável, volta após volta.",
     image: "/images/pilotos/verstappen.png",
+    pagePhoto: "/images/pilotos/paginas/verstappen",
     imagePosition: "50% 30%",
     href: "/pilotos/verstappen",
     effect: "strips",
@@ -66,6 +74,7 @@ export const drivers: Driver[] = [
     textColor: "#FFFFFF",
     phrase: "Uma lenda vestida de vermelho.",
     image: "/images/pilotos/hamilton.png",
+    pagePhoto: "/images/pilotos/paginas/hamilton",
     imagePosition: "50% 30%",
     href: "/pilotos/hamilton",
     effect: "curtain",
@@ -84,6 +93,7 @@ export const drivers: Driver[] = [
     accent: "#A7A9AC",
     phrase: "O Brasil de volta ao grid.",
     image: "/images/pilotos/bortoleto.png",
+    pagePhoto: "/images/pilotos/paginas/bortoleto",
     imagePosition: "50% 30%",
     href: "/pilotos/bortoleto",
     effect: "wipe",

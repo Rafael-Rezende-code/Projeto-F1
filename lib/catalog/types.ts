@@ -67,6 +67,8 @@ export type Driver = {
   phrase: string;
   image: string;
   imagePosition?: string;
+  /** Foto do cabeçalho da página do piloto (arquivo novo em /images/pilotos/paginas/ ou, sem ele, a do card). */
+  pageImage: string;
 };
 
 /** Resultado da busca (sobreposição de busca do site). */

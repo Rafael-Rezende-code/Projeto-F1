@@ -114,6 +114,13 @@ interna e sem arredondamento).
   guia de tamanhos em modal (tabela placeholder `[MEDIDAS A CONFIRMAR]`), favoritar, barra fixa de compra no celular
   acima do dock (aparece quando o botão principal sai da tela) e "Complete o look" (até 4 relacionados, priorizando
   categorias diferentes).
+- **Páginas dos pilotos (polimento, fase 7):** o nome aparece desenhado pelo `Signature` (Spell UI) numa fonte
+  manuscrita **genérica** (Allura, SIL OFL, `public/fonts/allura-regular.ttf`), com o nome em texto `sr-only` no h1.
+  **NUNCA imitar o autógrafo real de um piloto** (nem fonte, nem traçado, nem imagem de assinatura): é a assinatura
+  dele, com implicações de direito de imagem e de falsificação. Foto do cabeçalho: campo `pagePhoto` em
+  `lib/drivers.ts` (`/images/pilotos/paginas/{slug}`, sem extensão). Coloque `public/images/pilotos/paginas/{norris,
+  verstappen,hamilton,bortoleto}.(jpg|png|webp)`; se o arquivo existir, a página usa ele, senão a foto do card. A
+  detecção é no build (`lib/catalog/seed/drivers.ts`, `existsSync`): depois de adicionar as fotos, gere o build/deploy.
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
