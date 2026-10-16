@@ -71,15 +71,24 @@ export function ProductPurchase({ product }: { product: Product }) {
                   key={item.sku}
                   className={`relative flex h-12 min-w-14 items-center justify-center rounded-xl border px-4 text-sm transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black ${
                     out
-                      ? "cursor-not-allowed border-black/10 text-black/30 line-through"
+                      ? "cursor-not-allowed flex-col gap-0.5 border-black/10 bg-black/[0.02] text-black/40"
                       : selected
                         ? "cursor-pointer border-black bg-black text-white"
                         : "cursor-pointer border-black/20 hover:border-black"
                   }`}
                 >
                   <input type="radio" name="tamanho" value={item.sku} checked={selected} disabled={out} onChange={() => choose(item.sku)} className="sr-only" />
-                  {item.size}
-                  {out && <span className="sr-only"> (esgotado)</span>}
+                  {out ? (
+                    <>
+                      <span className="leading-none line-through">{item.size}</span>
+                      {/* Visível: "esgotado" em texto (não só o risco). black/60 = contraste mínimo do site. */}
+                      <span className="text-[9px] font-semibold uppercase leading-none tracking-[0.08em] text-black/60">
+                        <span className="sr-only">, </span>esgotado
+                      </span>
+                    </>
+                  ) : (
+                    item.size
+                  )}
                 </label>
               );
             })}
