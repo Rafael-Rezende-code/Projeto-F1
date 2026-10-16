@@ -8,6 +8,8 @@ import type { GlyphPortalStyle } from "@/components/ui/glyph-portal";
 // O placeholder reserva a altura do primeiro quadro (100svh) com o mesmo fundo, sem salto de layout.
 // Reduced motion: o próprio componente fica estático e mostra o conteúdo direto (exceção registrada no CLAUDE.md).
 // Nenhum ancestral pode ter overflow hidden/auto, transform ou filter: quebraria o position: sticky.
+// O seletor "Escolha uma letra" (telas de toque) fica escondido por CSS (.velocidade-portal no globals.css), sem mexer
+// no componente: a letra de entrada é a que ele escolhe sozinho (a de maior área de tinta).
 const GlyphPortal = dynamic(() => import("@/components/ui/glyph-portal"), {
   ssr: false,
   loading: () => <div aria-hidden="true" className="h-svh bg-[#f5f5f3]" />,
@@ -35,7 +37,7 @@ const field = (
 
 export function VelocidadePortal() {
   return (
-    <GlyphPortal word="VELOCIDADE" enterLabel="Entrar" scrollLength={2.2} style={portalStyle} background={field}>
+    <GlyphPortal word="VELOCIDADE" enterLabel="Entrar" scrollLength={2.2} style={portalStyle} background={field} className="velocidade-portal">
       <div>
         <h2 data-gp-default-title>Cada décimo conta.</h2>
         <p data-gp-default-copy>Peças feitas para quem sente a corrida antes mesmo da largada.</p>

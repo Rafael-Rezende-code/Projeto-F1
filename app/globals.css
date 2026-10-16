@@ -251,6 +251,10 @@ h1, h2, .font-display {
 :root { --dock-space: 0px; }
 @media (max-width: 767px) { :root { --dock-space: calc(84px + env(safe-area-inset-bottom)); } }
 
+/* Seção VELOCIDADE (components/velocidade-portal.tsx): esconde o seletor de letra que o GlyphPortal mostra em telas de
+   toque. !important: a regra interna do componente vem num <style> próprio, com o mesmo peso. */
+.velocidade-portal [data-gp-touch-picker] { display: none !important; }
+
 /* Destaque laranja de palavra (components/motion/highlight-word.tsx). Barra + texto branco entram juntos.
    Ao terminar (data-done), o laranja passa para a palavra ESTÁTICA e a cortina some: a camada composta da animação
    (translate3d) é amostrada em posição fracionária com zoom de 90/125/150% e deixava um fio escuro na borda da barra. */
