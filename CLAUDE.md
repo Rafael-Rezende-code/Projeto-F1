@@ -425,6 +425,30 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   1,7 s, sem mudança no observado). Próximo passo provável: reduzir a imagem do hero/LCP no celular (ver
   `docs/proximos-passos.md`). Nada visível foi cortado para ganhar pontos.
 
+## Melhorias aprovadas (feat/pilotos)
+
+- **Barra fixa de compra (celular):** só aparece depois que o botão principal SAI POR CIMA da tela. O
+  IntersectionObserver usa `rootMargin` de 100000px embaixo: o botão conta como "dentro" na tela e abaixo dela, então o
+  estado só muda ao cruzar a borda de cima (com a área normal, um salto direto para o topo deixava a barra presa).
+- **Tamanho esgotado:** tamanho riscado + "ESGOTADO" visível (9px, `black/60`), além do texto para leitor de tela.
+- **"Mais desejados"** (`components/most-wanted.tsx`, server): 4 primeiras peças do carrossel da home, abaixo da sacola
+  vazia (/carrinho) e dos favoritos vazios; os componentes de cliente recebem pronto pela prop `empty`.
+- **Produto em telas grandes (xl):** preço 36px, parcelamento 14px, tamanhos 56px de altura, botões 56px.
+- **Rodapé no celular:** grupos de links em acordeão (`components/footer-column.tsx`, botão com `aria-expanded`; os
+  links ficam no HTML); dados da empresa e links legais sempre visíveis. A partir de 640px, como antes.
+- **Busca → "Ver todos os resultados":** leva a `/produtos?q=termo`. A listagem ganhou o filtro `q` (mesma regra da
+  busca, em `SeedCatalogRepository`; chip "Busca: “termo”" removível; mantido ao trocar os outros filtros).
+- **404 no celular:** o "404" vazado fica centrado atrás do título.
+- **Faixa de equipes:** Mercedes 36 → 44px e Cadillac 45 → 56px de altura óptica (`lib/f1-teams.ts`).
+- **Grade de equipes no celular:** com quantidade ímpar, o último card (Cadillac) ocupa a linha inteira, mais baixo
+  (proporção 2,6; prop `wideOnMobile` do `TeamCard`).
+- **VELOCIDADE:** o seletor "Escolha uma letra" (telas de toque) fica escondido por CSS externo (`.velocidade-portal`
+  no globals.css), sem mexer no GlyphPortal; a letra de entrada é a que ele escolhe sozinho.
+- **Varredura de layout no projeto:** `corepack pnpm qa:varredura` (`scripts/qa/varredura.mjs`, Playwright + Edge):
+  scroll horizontal, elementos que vazam, títulos cortados (só o que aparece: ignora sr-only, display:none e painéis
+  `inert`; mede SVGs como a assinatura) e erros de console. Por padrão, contra :3001 nas 5 larguras.
+- Prints de cada item em `docs/pilotos/`.
+
 ## Notas técnicas
 
 - Gerenciador: pnpm (versão em `packageManager` do `package.json`; usar via `corepack pnpm` se o `pnpm`

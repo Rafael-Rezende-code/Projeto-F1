@@ -4,7 +4,18 @@ Passada feita em 15/10/2026 no build de produção, nas larguras 1440, 1280, 820
 equipes, piloto (Hamilton), produto (Scuderia Racing Jacket), favoritos, busca, sacola, checkout e 404.
 Sem scroll horizontal e sem erros no console em nenhuma combinação. Prints em `docs/refino/`.
 
-## Implementadas nesta rodada (alto impacto, baixo risco)
+## Situação em 16/10/2026 (branch feat/pilotos)
+
+Aprovadas pelo dono e aplicadas: 6 (barra fixa), 7 (esgotado), 9 (Mais desejados), 11 (produto em telas grandes),
+12 (rodapé em acordeões), 13 (404), 14 (logos), 15 (Ver todos os resultados), 16 (Cadillac em largura total),
+17 (seletor da VELOCIDADE) e 18 (script de varredura, agora em `scripts/qa/varredura.mjs`). A 10 (retrato do piloto
+no celular) foi resolvida pelas fotos novas (altura controlada) e a 19 (hero menor no celular) na feat/ajustes.
+Pendente: 8 (texto do hero no celular; o dono pediu para não mexer no texto do hero).
+
+Notado nesta rodada (não aplicado): nos cards de equipe estreitos (tablet, ~820px), as logos de várias linhas
+(Cadillac, Williams, Revolut) encostam na pílula "VER COLEÇÃO".
+
+## Implementadas na rodada 2 (alto impacto, baixo risco)
 
 1. **Hero: legibilidade dos textos sobre a foto.** Gradiente inferior (preto 70% → transparente no celular, 55% no
    desktop) acima da camada do spotlight (que, antes do primeiro movimento do mouse, cobre tudo abaixo de z-30, inclusive
