@@ -247,6 +247,17 @@ export function SearchOverlay() {
                 )}
             </div>
           )}
+
+          {/* Todos os produtos com o termo, na listagem (mesma regra da busca). */}
+          {trimmed && searched === trimmed && shown.products.length > 0 && (
+            <Link
+              href={`/produtos?q=${encodeURIComponent(trimmed)}`}
+              onClick={close}
+              className="mx-3 mt-6 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-black/15 px-4 py-3 text-sm font-medium transition hover:border-black"
+            >
+              Ver todos os resultados <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import type { ProductFilters, ProductSort } from "./types";
 
-// Filtros do catálogo refletidos na URL (/produtos?categoria=...&equipe=...&piloto=...&preco=...&ordem=...).
+// Filtros do catálogo refletidos na URL (/produtos?q=...&categoria=...&equipe=...&piloto=...&preco=...&ordem=...).
+// q: texto da busca ("Ver todos os resultados" da busca do site).
 export const PRICE_RANGES = [
   { value: "ate-200", label: "Até R$ 200", min: undefined, max: 20000 },
   { value: "200-400", label: "R$ 200 a R$ 400", min: 20000, max: 40000 },
@@ -25,12 +26,14 @@ export function parseCatalogParams(params: CatalogSearchParams) {
   const piloto = one(params.piloto);
   const preco = PRICE_RANGES.find((range) => range.value === one(params.preco))?.value;
   const ordem = SORT_OPTIONS.find((option) => option.value === one(params.ordem))?.value ?? "relevancia";
-  return { categoria, equipe, piloto, preco, ordem };
+  const q = one(params.q)?.trim().slice(0, 80) || undefined;
+  return { q, categoria, equipe, piloto, preco, ordem };
 }
 
 export function toProductFilters(parsed: ReturnType<typeof parseCatalogParams>): ProductFilters {
   const range = PRICE_RANGES.find((item) => item.value === parsed.preco);
   return {
+    query: parsed.q,
     category: parsed.categoria,
     team: parsed.equipe,
     driver: parsed.piloto,

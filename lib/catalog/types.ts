@@ -92,5 +92,7 @@ export type ProductFilters = {
   maxPriceCents?: number;
   sort?: ProductSort;
   isNew?: boolean;
+  /** Texto livre (mesma regra da busca: todos os termos em nome, equipe, piloto, categoria ou tags) */
+  query?: string;
   limit?: number;
 };

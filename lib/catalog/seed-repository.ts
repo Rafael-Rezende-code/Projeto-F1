@@ -17,10 +17,19 @@ export class SeedCatalogRepository implements CatalogRepository {
         (!filters.driver || product.driverSlug === filters.driver) &&
         (filters.minPriceCents === undefined || product.priceCents >= filters.minPriceCents) &&
         (filters.maxPriceCents === undefined || product.priceCents <= filters.maxPriceCents) &&
-        (!filters.isNew || product.isNew),
+        (!filters.isNew || product.isNew) &&
+        (!filters.query || this.matchesQuery(product, filters.query)),
     );
     list = sortProducts(list, filters.sort);
     return filters.limit ? list.slice(0, filters.limit) : list;
+  }
+
+  // Mesma regra da busca: todos os termos aparecem no nome, equipe, piloto, categoria ou tags (sem acento/maiúsculas).
+  private matchesQuery(product: Product, query: string) {
+    const terms = normalize(query).split(" ").filter(Boolean);
+    if (!terms.length) return true;
+    const haystack = normalize([product.name, teams.find((t) => t.slug === product.teamSlug)?.name ?? "", drivers.find((d) => d.slug === product.driverSlug)?.name ?? "", categories.find((c) => c.slug === product.categorySlug)?.name ?? "", ...product.tags].join(" "));
+    return terms.every((term) => haystack.includes(term));
   }
 
   async getProductBySlug(slug: string) {

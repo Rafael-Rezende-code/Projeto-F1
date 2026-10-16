@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/produtos" },
 };
 
-type ChipKey = "categoria" | "equipe" | "piloto" | "preco";
+type ChipKey = "q" | "categoria" | "equipe" | "piloto" | "preco";
 
 export default async function ProdutosPage({ searchParams }: { searchParams: Promise<CatalogSearchParams> }) {
   const current = parseCatalogParams(await searchParams);
@@ -27,6 +27,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
 
   // Filtros ativos viram "chips" removíveis.
   const chips: { key: ChipKey; label: string }[] = [];
+  if (current.q) chips.push({ key: "q", label: `Busca: “${current.q}”` });
   if (current.categoria) chips.push({ key: "categoria", label: categories.find((c) => c.slug === current.categoria)?.name ?? current.categoria });
   if (current.equipe) chips.push({ key: "equipe", label: teams.find((t) => t.slug === current.equipe)?.name ?? current.equipe });
   if (current.piloto) chips.push({ key: "piloto", label: drivers.find((d) => d.slug === current.piloto)?.name ?? current.piloto });
@@ -63,7 +64,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
             ))}
             {chips.length > 0 && (
               <Link
-                href={catalogHref({ ordem: current.ordem, categoria: undefined, equipe: undefined, piloto: undefined, preco: undefined })}
+                href={catalogHref({ ordem: current.ordem, q: undefined, categoria: undefined, equipe: undefined, piloto: undefined, preco: undefined })}
                 className="text-xs text-black/60 underline underline-offset-4 hover:text-black"
               >
                 Limpar filtros

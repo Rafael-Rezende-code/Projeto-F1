@@ -14,7 +14,7 @@ export function CatalogFilters({
   teams,
   drivers,
 }: {
-  current: { categoria?: string; equipe?: string; piloto?: string; preco?: string; ordem: string };
+  current: { q?: string; categoria?: string; equipe?: string; piloto?: string; preco?: string; ordem: string };
   categories: Option[];
   teams: Option[];
   drivers: Option[];
@@ -66,6 +66,8 @@ export function CatalogFilters({
       className="grid grid-cols-2 gap-3 lg:grid-cols-5"
       aria-label="Filtrar e ordenar produtos"
     >
+      {/* mantém a busca ao trocar os outros filtros */}
+      {current.q && <input type="hidden" name="q" value={current.q} />}
       {select("categoria", "Categoria", current.categoria, categories, "Todas")}
       {select("equipe", "Equipe", current.equipe, teams, "Todas")}
       {select("piloto", "Piloto", current.piloto, drivers, "Todos")}
