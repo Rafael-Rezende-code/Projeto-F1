@@ -1,5 +1,3 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import type { Driver } from "../types";
 import { drivers as cards } from "@/lib/drivers";
 
@@ -11,14 +9,6 @@ const teamOf: Record<string, string> = {
   bortoleto: "audi",
 };
 
-// Usa a foto própria da página do piloto se o arquivo existir em public/ (jpg, png ou webp); senão, a do card.
-function pageImage(base: string, fallback: string) {
-  for (const ext of ["jpg", "png", "webp"]) {
-    if (existsSync(join(process.cwd(), "public", `${base}.${ext}`))) return `${base}.${ext}`;
-  }
-  return fallback;
-}
-
 export const drivers: Driver[] = cards.map((card) => ({
   slug: card.slug,
   name: card.name,
@@ -26,5 +16,6 @@ export const drivers: Driver[] = cards.map((card) => ({
   phrase: card.phrase,
   image: card.image,
   imagePosition: card.imagePosition,
-  pageImage: pageImage(card.pagePhoto, card.image),
+  photoMain: card.photoMain,
+  photoSecondary: card.photoSecondary,
 }));

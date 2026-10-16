@@ -1,5 +1,7 @@
 import type { HoverTransitionDirection, HoverTransitionEffect } from "@/components/ui/hover-transition";
 
+export type DriverPhoto = { src: string; width: number; height: number; position: string };
+
 export type Driver = {
   slug: string;
   name: string;
@@ -13,11 +15,12 @@ export type Driver = {
   phrase: string;
   image: string;
   /**
-   * Foto do cabeçalho da página do piloto (/pilotos/[slug]), SEM extensão, relativa a /public. Se existir
-   * public{pagePhoto}.jpg, .png ou .webp (nessa ordem), ela é usada; senão, a foto do card (`image`).
-   * Detectado no build (lib/catalog/seed/drivers.ts): depois de adicionar o arquivo, gere o build/deploy de novo.
+   * Fotos da página do piloto (/pilotos/[slug]), em public/images/pilotos/paginas/. Largura e altura reais do arquivo
+   * (decidem o layout do topo: vertical = dividido, horizontal = largura total) e o enquadramento (object-position).
+   * principal: topo da página; secundária: bloco editorial do meio.
    */
-  pagePhoto: string;
+  photoMain: DriverPhoto;
+  photoSecondary: DriverPhoto;
   /** object-position da foto no card 4:5, para enquadrar rosto e capacete. */
   imagePosition?: string;
   href: string;
@@ -46,7 +49,8 @@ export const drivers: Driver[] = [
     textColor: "#111111",
     phrase: "Papaya até a última volta.",
     image: "/images/pilotos/norris.jpeg",
-    pagePhoto: "/images/pilotos/paginas/norris",
+    photoMain: { src: "/images/pilotos/paginas/norris-principal.jpg", width: 1170, height: 1425, position: "50% 22%" },
+    photoSecondary: { src: "/images/pilotos/paginas/norris-secundaria.jpg", width: 1169, height: 1586, position: "50% 35%" },
     imagePosition: "50% 30%",
     href: "/pilotos/norris",
     effect: "ripple",
@@ -60,7 +64,8 @@ export const drivers: Driver[] = [
     textColor: "#FFFFFF",
     phrase: "Implacável, volta após volta.",
     image: "/images/pilotos/verstappen.png",
-    pagePhoto: "/images/pilotos/paginas/verstappen",
+    photoMain: { src: "/images/pilotos/paginas/verstappen-principal.jpg", width: 1170, height: 1446, position: "50% 18%" },
+    photoSecondary: { src: "/images/pilotos/paginas/verstappen-secundaria.jpg", width: 1170, height: 1452, position: "50% 45%" },
     imagePosition: "50% 30%",
     href: "/pilotos/verstappen",
     effect: "strips",
@@ -74,7 +79,8 @@ export const drivers: Driver[] = [
     textColor: "#FFFFFF",
     phrase: "Uma lenda vestida de vermelho.",
     image: "/images/pilotos/hamilton.png",
-    pagePhoto: "/images/pilotos/paginas/hamilton",
+    photoMain: { src: "/images/pilotos/paginas/hamilton-principal.jpg", width: 1169, height: 1435, position: "50% 40%" },
+    photoSecondary: { src: "/images/pilotos/paginas/hamilton-secundaria.jpg", width: 1170, height: 1470, position: "50% 25%" },
     imagePosition: "50% 30%",
     href: "/pilotos/hamilton",
     effect: "curtain",
@@ -93,7 +99,8 @@ export const drivers: Driver[] = [
     accent: "#A7A9AC",
     phrase: "O Brasil de volta ao grid.",
     image: "/images/pilotos/bortoleto.png",
-    pagePhoto: "/images/pilotos/paginas/bortoleto",
+    photoMain: { src: "/images/pilotos/paginas/bortoleto-principal.jpg", width: 1169, height: 1433, position: "50% 30%" },
+    photoSecondary: { src: "/images/pilotos/paginas/bortoleto-secundaria.jpg", width: 1170, height: 1553, position: "50% 40%" },
     imagePosition: "50% 30%",
     href: "/pilotos/bortoleto",
     effect: "wipe",

@@ -133,10 +133,16 @@ interna e sem arredondamento).
   componente, marcadas "APEX": `fontUrl`, `stagger`, viewBox pela caixa real dos glifos (sem cortes) e `still`. Custo:
   opentype.js (~50 KB gzip) + a fonte, só na página do piloto. Nome em texto `sr-only` no h1.
   **NUNCA imitar o autógrafo real de um piloto** (nem fonte, nem traçado, nem imagem de assinatura): é a assinatura
-  dele, com implicações de direito de imagem e de falsificação. Foto do cabeçalho: campo `pagePhoto` em
-  `lib/drivers.ts` (`/images/pilotos/paginas/{slug}`, sem extensão). Coloque `public/images/pilotos/paginas/{norris,
-  verstappen,hamilton,bortoleto}.(jpg|png|webp)`; se o arquivo existir, a página usa ele, senão a foto do card. A
-  detecção é no build (`lib/catalog/seed/drivers.ts`, `existsSync`): depois de adicionar as fotos, gere o build/deploy.
+  dele, com implicações de direito de imagem e de falsificação. **Fotos da página (feat/pilotos):**
+  `photoMain` e `photoSecondary` em `lib/drivers.ts` (`{ src, width, height, position }`), arquivos
+  `public/images/pilotos/paginas/{slug}-principal.jpg` e `-secundaria.jpg` (todas verticais, ~1170px de largura; vieram
+  como `.PNG` mas são JPEG, e foram renomeadas para minúsculas, `.jpg` e o slug do piloto). Topo: a orientação decide o
+  layout (vertical: dividido, foto na metade direita com altura até 88svh/860px; horizontal: largura total); no celular
+  o nome vem antes e o retrato tem altura controlada (até 62svh/520px). Sem gradiente nem fade sobre a foto. Meio: bloco
+  editorial com a secundária (`rounded-2xl`, dentro do container) e "[TEXTO SOBRE O PILOTO]" (placeholder), com a cor
+  da equipe como detalhe (fio e marcador). Depois, os produtos. next/image q90; `position` ajusta o enquadramento de
+  cada foto. O fallback antigo (foto do card quando faltava o arquivo, detectado no build) foi removido. Ao trocar
+  uma foto, atualize largura e altura em `lib/drivers.ts`.
 - **View Transitions (polimento, fase 9):** `<ViewTransition>` do React canary embutido no Next 16 (sem flag de config),
   via `components/motion/view-transition.tsx` (`SharedTransition`; sem suporte, só renderiza o conteúdo; tipos em
   `types/react-canary.d.ts`). Imagem do card de produto → imagem principal da página (`produto-{slug}`); card do

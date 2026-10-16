@@ -59,6 +59,8 @@ export type Team = {
   logo: { src: string; width: number; height: number; displayHeight: number };
 };
 
+export type DriverPhoto = { src: string; width: number; height: number; position: string };
+
 export type Driver = {
   slug: string;
   name: string;
@@ -67,8 +69,9 @@ export type Driver = {
   phrase: string;
   image: string;
   imagePosition?: string;
-  /** Foto do cabeçalho da página do piloto (arquivo novo em /images/pilotos/paginas/ ou, sem ele, a do card). */
-  pageImage: string;
+  /** Fotos da página do piloto (lib/drivers.ts): principal no topo, secundária no bloco editorial. */
+  photoMain: DriverPhoto;
+  photoSecondary: DriverPhoto;
 };
 
 /** Resultado da busca (sobreposição de busca do site). */

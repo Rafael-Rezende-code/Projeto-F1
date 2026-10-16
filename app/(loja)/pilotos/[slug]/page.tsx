@@ -33,45 +33,88 @@ export default async function DriverPage({ params }: Params) {
   if (!driver) notFound();
   const [team, products] = await Promise.all([catalog.getTeamBySlug(driver.teamSlug), catalog.getProducts({ driver: driver.slug })]);
 
+  const main = driver.photoMain;
+  const second = driver.photoSecondary;
+  const wide = main.width > main.height; // horizontal: largura total; vertical: layout dividido
+  const teamColor = team?.color ?? "#111";
+
+  // Nome e equipe (bloco na cor da equipe). O nome em texto fica no h1 para leitores de tela e buscadores; a
+  // assinatura animada (DriverSignature) usa uma fonte manuscrita GENÉRICA: nunca imitar o autógrafo real (CLAUDE.md).
+  const identity = (
+    <div className="flex flex-col justify-between gap-10 px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
+      <Breadcrumbs
+        tone="light"
+        items={[{ label: "Início", href: "/" }, { label: "Pilotos", href: "/pilotos" }, { label: driver.name }]}
+      />
+      <div>
+        {team && (
+          <Link href={`/equipes/${team.slug}`} className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 hover:text-white">
+            {team.name}
+          </Link>
+        )}
+        <h1 className="@container mt-3">
+          <span className="sr-only">{driver.name}</span>
+          <DriverSignature name={driver.name} className={wide ? "text-[clamp(2.25rem,8cqw,6rem)]" : "text-[clamp(2.25rem,12.5cqw,6rem)]"} />
+        </h1>
+        <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
+      </div>
+    </div>
+  );
+
+  // Foto principal: nítida, sem gradiente nem fade. Encosta nas bordas do bloco: fica reta.
+  // Vertical: metade da largura no desktop (altura limitada à tela); no celular vem DEPOIS do nome, com altura
+  // controlada (até 62svh / 520px). Horizontal: largura total, proporção da própria foto (até 80svh).
+  const photo = (
+    <SharedTransition name={driverTransitionName(driver.slug)} crossfade={false}>
+      <div className={wide ? "relative aspect-[3/2] max-h-[80svh] w-full" : "relative h-[min(62svh,520px)] md:h-[min(88svh,860px)]"}>
+        <Image
+          src={main.src}
+          alt={driver.name}
+          fill
+          priority
+          sizes={wide ? "100vw" : "(min-width: 768px) 50vw, 100vw"}
+          quality={90}
+          className="object-cover"
+          style={{ objectPosition: main.position }}
+        />
+      </div>
+    </SharedTransition>
+  );
+
   return (
     <div className="pb-24">
-      {/* Cabeçalho na cor da equipe com a foto do piloto. A foto encosta nas bordas do bloco: fica reta. */}
-      <header className="grid text-white md:grid-cols-2" style={{ backgroundColor: team?.color ?? "#111" }}>
-        <div className="flex flex-col justify-between gap-10 px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
-          <Breadcrumbs
-            tone="light"
-            items={[{ label: "Início", href: "/" }, { label: "Pilotos", href: "/pilotos" }, { label: driver.name }]}
-          />
-          <div>
+      <header className={`text-white ${wide ? "" : "grid md:grid-cols-2"}`} style={{ backgroundColor: teamColor }}>
+        {identity}
+        {photo}
+      </header>
+
+      {/* Bloco editorial: foto secundária (dentro do container: rounded-2xl) e texto. A cor da equipe aparece como
+          detalhe (fio e marcador), não como cor de texto: algumas cores não têm contraste suficiente sobre o branco. */}
+      <section aria-label={`Sobre ${driver.name}`} className="px-5 pt-16 sm:px-10 sm:pt-24">
+        <div className="mx-auto grid max-w-[1400px] items-center gap-10 md:grid-cols-2 md:gap-16">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4]">
+            <Image
+              src={second.src}
+              alt=""
+              fill
+              sizes="(min-width: 1480px) 680px, (min-width: 768px) calc(50vw - 72px), calc(100vw - 40px)"
+              quality={90}
+              className="object-cover"
+              style={{ objectPosition: second.position }}
+            />
+          </div>
+          <div className="max-w-md">
+            <span aria-hidden="true" className="block h-1 w-12 rounded-full" style={{ backgroundColor: teamColor }} />
             {team && (
-              <Link href={`/equipes/${team.slug}`} className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 hover:text-white">
+              <p className="mt-6 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-black/60">
+                <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: teamColor }} />
                 {team.name}
-              </Link>
+              </p>
             )}
-            {/* Nome animado (DriverSignature) numa fonte manuscrita GENÉRICA (Great Vibes). Nunca imitar o autógrafo real do
-                piloto (ver CLAUDE.md). O nome em texto fica no h1 para leitores de tela e buscadores. */}
-            <h1 className="@container mt-3">
-              <span className="sr-only">{driver.name}</span>
-              <DriverSignature name={driver.name} className="text-[clamp(2.25rem,12.5cqw,6rem)]" />
-            </h1>
-            <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
+            <p className="mt-4 text-lg leading-8 text-black/80">[TEXTO SOBRE O PILOTO]</p>
           </div>
         </div>
-        <SharedTransition name={driverTransitionName(driver.slug)} crossfade={false}>
-        <div className="relative min-h-[420px] md:min-h-[560px]">
-          <Image
-            src={driver.pageImage}
-            alt={driver.name}
-            fill
-            priority
-            sizes="(min-width: 768px) 50vw, 100vw"
-            quality={90}
-            className="object-cover"
-            style={{ objectPosition: driver.imagePosition }}
-          />
-        </div>
-        </SharedTransition>
-      </header>
+      </section>
 
       <section aria-labelledby="produtos-piloto" className="px-5 pt-16 sm:px-10">
         <div className="mx-auto max-w-[1400px]">
