@@ -1,6 +1,7 @@
 import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import { CirclePlay, Globe } from "lucide-react";
+import { FooterColumn } from "@/components/footer-column";
 import { company } from "@/lib/company";
 import { footerColumns, legalLinks } from "@/lib/navigation";
 
@@ -8,24 +9,18 @@ import { footerColumns, legalLinks } from "@/lib/navigation";
 export function SiteFooter() {
   return (
     <footer className="bg-[#080808] px-5 py-16 text-white sm:px-10 sm:py-20">
-      <div className="mx-auto grid max-w-[1400px] gap-12 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Celular: grupos de links em acordeão (FooterColumn); dados da empresa sempre visíveis, abaixo. */}
+      <div className="mx-auto grid max-w-[1400px] sm:grid-cols-2 sm:gap-12 lg:grid-cols-4">
         <div>
           <Link href="/" className="font-playfair text-4xl italic tracking-[-0.08em]">
             {BRAND.name}<span className="text-[#e8702a]">{BRAND.mark}</span>
           </Link>
           <p className="mt-5 max-w-[210px] text-sm leading-6 text-white/50">Cultura, roupas e colecionáveis premium de Fórmula 1.</p>
         </div>
+        {/* espaço entre a marca e os acordeões no celular */}
+        <div aria-hidden="true" className="h-8 sm:hidden" />
         {footerColumns.map((column) => (
-          <div key={column.heading}>
-            <h3 className="mb-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">{column.heading}</h3>
-            <div className="flex flex-col gap-3 text-sm text-white/70">
-              {column.links.map((link) => (
-                <Link href={link.href} key={link.label} className="transition hover:text-white">
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
+          <FooterColumn key={column.heading} heading={column.heading} links={column.links} />
         ))}
       </div>
       {/* Identificação do fornecedor (Decreto 7.962/2013). Dados em lib/company.ts (placeholders até o lançamento). */}
