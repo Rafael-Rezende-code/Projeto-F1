@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Minus, Plus, Trash2 } from 'lucide-react'
@@ -9,7 +10,8 @@ import { freeShippingRemaining } from '@/lib/cart/reducer'
 import { formatPrice } from '@/lib/format'
 
 // Conteúdo da sacola, usado na gaveta (variant="drawer") e na página /carrinho (variant="page").
-export function CartContents({ variant, onNavigate }: { variant: 'drawer' | 'page'; onNavigate?: () => void }) {
+// `empty`: conteúdo extra abaixo da sacola vazia (na página: "Mais desejados", components/most-wanted.tsx).
+export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer' | 'page'; onNavigate?: () => void; empty?: ReactNode }) {
   const { items, subtotalCents, setQuantity, removeItem, ready } = useCart()
   const remaining = freeShippingRemaining(subtotalCents)
   const progress = Math.min(100, Math.round((subtotalCents / FREE_SHIPPING_THRESHOLD_CENTS) * 100))
@@ -18,6 +20,7 @@ export function CartContents({ variant, onNavigate }: { variant: 'drawer' | 'pag
 
   if (items.length === 0) {
     return (
+      <>
       <div className={`flex flex-col items-center text-center ${variant === 'page' ? 'rounded-2xl bg-[#f5f5f3] px-6 py-20' : 'px-2 py-16'}`}>
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Sacola vazia</p>
         <p className="mt-3 text-2xl font-medium tracking-[-0.05em]">Nada no grid por enquanto.</p>
@@ -26,6 +29,8 @@ export function CartContents({ variant, onNavigate }: { variant: 'drawer' | 'pag
           Ver a coleção
         </Link>
       </div>
+      {empty}
+      </>
     )
   }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { CartContents } from "@/components/cart-contents";
+import { MostWanted } from "@/components/most-wanted";
 import { PageIntro } from "@/components/page-intro";
 
 export const metadata: Metadata = { title: "Sacola", robots: { index: false } };
@@ -13,7 +14,7 @@ export default function CarrinhoPage() {
         <div className="mb-10 mt-8">
           <PageIntro eyebrow="Sua compra" title="Sacola" />
         </div>
-        <CartContents variant="page" />
+        <CartContents variant="page" empty={<MostWanted />} />
       </div>
     </div>
   );

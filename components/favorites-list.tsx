@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { getFavoriteProducts } from "@/app/actions/favorites";
 import { useFavorites } from "@/components/favorites";
@@ -10,7 +10,8 @@ import { ProductGridSkeleton } from "@/components/skeletons";
 type Item = Awaited<ReturnType<typeof getFavoriteProducts>>[number];
 
 // Lista de /favoritos: lê os slugs salvos no navegador e busca os produtos no servidor.
-export function FavoritesList() {
+// `empty`: conteúdo extra abaixo do estado vazio ("Mais desejados", components/most-wanted.tsx).
+export function FavoritesList({ empty }: { empty?: ReactNode }) {
   const { favorites } = useFavorites();
   const [items, setItems] = useState<Item[] | null>(null);
   const key = favorites.join(",");
@@ -28,6 +29,7 @@ export function FavoritesList() {
   const visible = items.filter((item) => favorites.includes(item.product.slug));
   if (visible.length === 0)
     return (
+      <>
       <div className="mx-auto max-w-md rounded-2xl bg-[#f5f5f3] px-6 py-16 text-center">
         <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Garagem vazia</p>
         <h2 className="mt-3 text-2xl font-medium">Nenhum favorito no grid ainda.</h2>
@@ -36,6 +38,8 @@ export function FavoritesList() {
           Ver a coleção
         </Link>
       </div>
+      {empty}
+      </>
     );
   return (
     <ul role="list" className="grid grid-cols-2 gap-x-3 gap-y-10 lg:grid-cols-4 lg:gap-x-5">
