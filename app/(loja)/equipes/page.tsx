@@ -18,13 +18,16 @@ export default function EquipesPage() {
         <div className="mt-8">
           <PageIntro eyebrow="Escolha sua equipe" title="Com quem você corre?" body="Roupas e colecionáveis inspirados nas equipes que definem o grid." />
         </div>
-        {/* Mesma grade da home: 4 + 4 + 3 centralizado; 2 por linha no celular. */}
+        {/* Mesma grade da home: 4 + 4 + 3 centralizado; 2 por linha no celular, a última (sozinha) em largura total. */}
         <ul role="list" className="mt-12 flex flex-wrap justify-center gap-3">
-          {teams.map((team) => (
-            <li key={team.slug} className="w-[calc(50%-6px)] sm:w-[calc(25%-9px)]">
-              <TeamCard team={team} />
-            </li>
-          ))}
+          {teams.map((team, index) => {
+            const wide = teams.length % 2 === 1 && index === teams.length - 1;
+            return (
+              <li key={team.slug} className={`${wide ? "w-full" : "w-[calc(50%-6px)]"} sm:w-[calc(25%-9px)]`}>
+                <TeamCard team={team} wideOnMobile={wide} />
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

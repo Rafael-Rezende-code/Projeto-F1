@@ -7,14 +7,16 @@ import type { TeamIdentity } from "@/lib/teams";
 // O nome não se repete abaixo da logo (a logo já diz o nome); fica como texto acessível (sr-only).
 // Hover: a cor escurece levemente e a logo sobe 4px; no desktop o card inclina (TiltCard ~8°, scale 1.03, brilho).
 // Leva a /equipes/[slug].
-export function TeamCard({ team }: { team: TeamIdentity }) {
+// `wideOnMobile`: card sozinho na última linha da grade de 2 colunas do celular (quantidade ímpar): ocupa a linha
+// inteira, mais baixo (proporção 2,6) para não virar um bloco enorme. A partir de 640px, igual aos outros.
+export function TeamCard({ team, wideOnMobile = false }: { team: TeamIdentity; wideOnMobile?: boolean }) {
   const { logo } = team;
   const height = (logo.displayHeight ?? 32) * 1.45;
   return (
     <TiltOnHover className="rounded-2xl">
       <Link
         href={`/equipes/${team.slug}`}
-        className="group relative isolate flex aspect-[1.25] flex-col sm:aspect-[1.7] items-center justify-center overflow-hidden rounded-2xl text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+        className={`group relative isolate flex ${wideOnMobile ? "aspect-[2.6]" : "aspect-[1.25]"} flex-col sm:aspect-[1.7] items-center justify-center overflow-hidden rounded-2xl text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black`}
         style={{ backgroundColor: team.color }}
       >
         <span aria-hidden="true" className="absolute inset-0 bg-black/12 opacity-0 transition-opacity duration-[var(--motion-short)] group-hover:opacity-100" />
