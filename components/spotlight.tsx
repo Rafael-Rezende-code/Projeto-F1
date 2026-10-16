@@ -22,6 +22,11 @@ const SPOTLIGHT_MASK = `radial-gradient(circle ${SPOTLIGHT_R}px at var(--spot-x)
 export function Spotlight({ image, base }: { image: string; base: string }) {
   const layerRef = useRef<HTMLDivElement>(null)
   const [baseReady, setBaseReady] = useState(false)
+  // Fonte do hero (ver HERO_FONT_SCRIPT em lib/hero.ts): o script inline não roda em navegação interna (SPA).
+  useEffect(() => {
+    // Na carga inicial o script inline cuida disso (depois do primeiro quadro com conteúdo); aqui só em navegação interna.
+    if (!(window as Window & { __heroFont?: number }).__heroFont) document.documentElement.style.setProperty('--hero-font', 'var(--font-hero)')
+  }, [])
   useEffect(() => {
     let done = false
     const show = () => { if (!done) { done = true; setBaseReady(true) } }

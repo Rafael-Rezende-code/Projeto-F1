@@ -32,7 +32,11 @@ h1, h2, .font-display {
 /* HERO: TIPOGRAFIA PRÓPRIA — não alterar. É a da feat/loja (como aparecia no dev e no v0): textos em Inter (400/500,
    lib/fonts.ts) com tracking -0.02em; "Feita para" em Playfair Display Italic 400; "pilotos" no itálico sintético da
    Inter. O resto do site segue a tipografia nova (regra h1, h2 acima). */
-.hero-type { font-family: var(--font-hero), sans-serif; letter-spacing: -0.02em; }
+/* A Inter do hero entra DEPOIS do primeiro quadro: até lá o texto usa "fontHero Fallback" (Arial com as métricas da
+   Inter, gerada pelo next/font: mesma largura e altura, sem deslocamento de layout). O script inline do hero
+   (HERO_FONT_SCRIPT em lib/hero.ts) define --hero-font no <html> dois quadros depois; aí o navegador baixa a Inter e
+   troca. O nome "fontHero Fallback" vem do next/font (export fontHero em lib/fonts.ts): se renomear, atualize aqui. */
+.hero-type { font-family: var(--hero-font, 'fontHero Fallback'), sans-serif; letter-spacing: -0.02em; }
 .hero-type h1 { font-family: inherit; font-stretch: normal; font-weight: inherit; letter-spacing: inherit; line-height: 0.95; }
 .hero-type .hero-serif { font-family: var(--font-accent), serif; font-weight: 400; }
 /* Título cinético "Luzes apagadas.": a Archivo variável (anima o peso de 300 a 900). */
