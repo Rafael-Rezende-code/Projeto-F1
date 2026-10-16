@@ -93,11 +93,14 @@ interna e sem arredondamento).
   `[data-reveal]`, sem JS por card; grade já visível ao carregar não anima). WordsStagger nos parágrafos de "Mais que
   uma corrida." e "Cada detalhe importa.". **HighlightedText em no máximo 3 lugares**: "corrida" (Feita em torno da
   corrida.), "detalhe" (Cada detalhe importa.) e "grid" (O que o grid veste), barra laranja #b94f01 e texto branco.
-- **Cabeçalho inteligente (polimento, fase 3):** `components/site-header.tsx` (client) é o cabeçalho de todas as páginas.
-  `variant="overlay"` na home: fixo e transparente sobre o hero com texto claro; ao rolar ganha fundo branco 80% com
-  desfoque, borda sutil e texto escuro. `variant="solid"` nas internas: sticky, já com fundo. Esconde ao rolar para
-  baixo (depois de 120px) e volta ao rolar para cima; volta ao receber foco (`focus-within` em CSS + `onFocusCapture`).
-  Não esconde enquanto um painel trava a rolagem. Sem salto de layout (esconder é só `translateY`).
+- **Cabeçalho (polimento, fase 3; refeito em feat/ajustes):** `components/site-header.tsx` (client) é o cabeçalho de todas
+  as páginas. **Desktop (md+):** cartão branco SÓLIDO flutuante (12px do topo, 16px das laterais, `rounded-2xl`, borda
+  `black/10`, sombra suave), igual sobre o hero (`variant="overlay"`, fixo) e nas internas (`variant="solid"`, sticky no
+  fluxo: não cobre o topo). Esconde ao rolar para baixo (depois de 120px) e volta ao rolar para cima ou ao receber foco
+  (`focus-within` + `onFocusCapture`); não esconde enquanto um painel trava a rolagem; esconder é só `translateY`.
+  **Celular (< 768px):** só a marca, pequena e centralizada, NÃO fixa (rola com a página): branca sobre o hero na home,
+  preta no fluxo nas internas. Busca, sacola e menu ficam só no dock (`menu-button.tsx` foi removido). Prints em
+  `docs/ajustes/cabecalho.jpg`.
 - **Dock no celular (polimento, fase 4):** `components/mobile-dock.tsx` com o `MagneticDock` (`components/ui/magnetic-dock.tsx`,
   código recebido; mudanças: import `motion/react`, `aria-label`/`aria-current` no botão e elevação de 4px do item ativo).
   Só abaixo de 768px, variante glass, centralizado, acima de `env(safe-area-inset-bottom)`; ícones 44px, sem tooltip,

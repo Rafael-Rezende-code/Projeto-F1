@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // Fluxo completo: home → equipe → produto → tamanho → sacola → checkout simulado → confirmação.
-test("compra de ponta a ponta (pedido simulado)", async ({ page }) => {
+test("compra de ponta a ponta (pedido simulado)", async ({ page, isMobile }) => {
   // ViaCEP simulado: o teste não depende da rede externa.
   await page.route("https://viacep.com.br/ws/**", (route) =>
     route.fulfill({ json: { cep: "01310-100", logradouro: "Avenida Paulista", bairro: "Bela Vista", localidade: "São Paulo", uf: "SP" } }),
@@ -26,8 +26,9 @@ test("compra de ponta a ponta (pedido simulado)", async ({ page }) => {
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("foi adicionado à sacola");
 
-  // Sacola (gaveta) → página do carrinho
-  await page.getByRole("button", { name: /Sacola de compras, 1 item/ }).click();
+  // Sacola (gaveta) → página do carrinho. No celular a sacola fica só no dock (o cabeçalho tem só a marca).
+  if (isMobile) await page.getByRole("navigation", { name: "Atalhos" }).getByRole("button", { name: /^Sacola/ }).click();
+  else await page.getByRole("button", { name: /Sacola de compras, 1 item/ }).click();
   const drawer = page.getByRole("dialog", { name: /Sacola/ });
   await expect(drawer.getByText("Camiseta McLaren 2026")).toBeVisible();
   await drawer.getByRole("link", { name: "Ver sacola completa" }).click();

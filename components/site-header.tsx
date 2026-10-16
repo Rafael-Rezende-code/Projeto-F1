@@ -4,23 +4,20 @@ import { BRAND } from "@/lib/brand";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CartButton } from "@/components/cart";
-import { MenuButton } from "@/components/menu-button";
 import { SearchButton } from "@/components/search-root";
 import { headerLinks } from "@/lib/navigation";
 
 // Cabeçalho do site (home e páginas internas).
-// - variant "overlay" (home): fixo e transparente sobre o hero, com texto claro; ao rolar ganha fundo com desfoque,
-//   borda sutil e texto escuro.
-// - variant "solid" (internas): sticky, já começa com fundo.
-// Nos dois: esconde ao rolar para baixo e reaparece ao rolar para cima; reaparece também ao receber foco (teclado).
-// Sem salto de layout: o overlay é fixo (o hero já fica por baixo) e o solid ocupa o mesmo espaço o tempo todo
-// (esconder é só translateY). O scroll é lido num requestAnimationFrame e só muda estado quando algo muda.
-const SCROLLED_AT = 12;
+// - Desktop (md+): cartão branco SÓLIDO flutuante (12px do topo, 16px das laterais, rounded-2xl, borda sutil e sombra),
+//   igual sobre o hero e nas internas. Na home é fixo sobre o hero; nas internas é sticky e ocupa espaço no fluxo (não
+//   cobre o topo da página). Esconde ao rolar para baixo e reaparece ao rolar para cima ou ao receber foco (teclado).
+// - Celular (< 768px): só a marca, pequena e centralizada, NÃO fixa (rola com a página): sobre o hero na home (branca)
+//   e no fluxo nas internas. Busca, sacola e menu ficam só no dock (components/mobile-dock.tsx).
+// Sem salto de layout: esconder é só translateY. O scroll é lido num requestAnimationFrame e só muda estado quando muda.
 const HIDE_AFTER = 120;
 const DELTA = 6;
 
 export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid" }) {
-  const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const last = useRef(0);
   const ticking = useRef(false);
@@ -29,14 +26,13 @@ export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid
     const update = () => {
       ticking.current = false;
       const y = window.scrollY;
-      setScrolled(y > SCROLLED_AT);
       const delta = y - last.current;
       if (Math.abs(delta) >= DELTA) {
         // Não esconde enquanto um painel (menu, sacola, busca) trava a rolagem da página.
         if (document.body.style.overflow !== "hidden") setHidden(delta > 0 && y > HIDE_AFTER);
         last.current = y;
       }
-      if (y <= SCROLLED_AT) setHidden(false);
+      if (y <= HIDE_AFTER) setHidden(false);
     };
     const onScroll = () => {
       if (ticking.current) return;
@@ -49,25 +45,22 @@ export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid
   }, []);
 
   const overlay = variant === "overlay";
-  const light = overlay && !scrolled; // texto claro sobre o hero
-  const filled = !overlay || scrolled;
 
   return (
     <header
       onFocusCapture={() => setHidden(false)}
       data-hidden={hidden || undefined}
-      className={`${overlay ? "fixed inset-x-0" : "sticky"} top-0 z-40 transition-[transform,color] duration-[var(--motion-medium)] ease-[var(--ease-out)] ${
-        hidden ? "-translate-y-full focus-within:translate-y-0" : "translate-y-0"
-      } ${filled ? "text-black" : "text-white"}`}
+      className={`${overlay ? "absolute inset-x-0 md:fixed" : "relative md:sticky"} top-0 z-40 md:pointer-events-none md:px-4 md:pt-3 md:transition-transform md:duration-[var(--motion-medium)] md:ease-[var(--ease-out)] ${
+        hidden ? "md:-translate-y-[calc(100%+16px)] md:focus-within:translate-y-0" : ""
+      }`}
     >
-      {/* Fundo com desfoque e borda numa camada própria: entra por opacidade (sem animar backdrop-filter/background). */}
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-0 -z-10 border-b border-black/10 bg-white/80 backdrop-blur-xl backdrop-saturate-150 transition-opacity duration-[var(--motion-medium)] ease-[var(--ease-out)] ${filled ? "opacity-100" : "opacity-0"}`}
-      />
-      <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-10 sm:py-5">
-        <Link href="/" className="font-playfair text-3xl italic tracking-[-0.07em]" aria-label={`${BRAND.name}, início`}>
-          {BRAND.name}<span className={light ? "text-[#e8702a]" : "text-[#b94f01]"}>{BRAND.mark}</span>
+      <div
+        className={`mx-auto flex max-w-[1400px] items-center justify-center px-5 py-4 md:pointer-events-auto md:justify-between md:rounded-2xl md:border md:border-black/10 md:bg-white md:px-7 md:py-3.5 md:text-black md:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.18)] ${
+          overlay ? "text-white" : "border-b border-black/10 text-black"
+        }`}
+      >
+        <Link href="/" className="font-playfair text-2xl italic tracking-[-0.07em] md:text-3xl" aria-label={`${BRAND.name}, início`}>
+          {BRAND.name}<span className={overlay ? "text-[#e8702a] md:text-[#b94f01]" : "text-[#b94f01]"}>{BRAND.mark}</span>
         </Link>
         <nav className="hidden items-center gap-10 text-[11px] font-medium uppercase tracking-[0.18em] md:flex" aria-label="Navegação principal">
           {headerLinks.map((link) => (
@@ -76,10 +69,9 @@ export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="hidden items-center gap-4 md:flex">
           <SearchButton className="transition-opacity hover:opacity-60" />
           <CartButton />
-          <MenuButton className="md:hidden" />
         </div>
       </div>
     </header>
