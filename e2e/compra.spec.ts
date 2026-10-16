@@ -65,6 +65,7 @@ test("compra de ponta a ponta (pedido simulado)", async ({ page }) => {
   // Confirmação
   await expect(page).toHaveURL(/\/pedido\/APX-/);
   await expect(page.getByRole("heading", { level: 1, name: "Pedido confirmado." })).toBeVisible();
-  await expect(page.getByText("Camiseta McLaren 2026")).toBeVisible();
+  // exact: o aviso "... foi adicionado à sacola" pode ainda estar na tela quando o fluxo é rápido (build de produção)
+  await expect(page.getByText("Camiseta McLaren 2026", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("apex:sacola:v1"))).toBe("[]");
 });

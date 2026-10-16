@@ -389,6 +389,11 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   vazios com 44px de alvo; "Filtrar no catálogo" com seta. Não mexi em paleta, estrutura, textos de CTA nem na pílula
   "VER COLEÇÃO" das equipes. Os alertas da varredura em "Luzes apagadas." e "Lewis Hamilton" são falsos positivos
   (conferidos por medição e print).
+- **Medição final (15/10/2026, build de produção, 6 execuções cada):** home 85/92/84/88/83/93 (mediana ~87; 92–93 no
+  modo rápido da simulação, 83–88 no lento), produto 92/92/85/84/92/96 (mediana 92). Acessibilidade 100, Boas práticas 96,
+  SEO 100, CLS 0 em todas. **A meta de 90 na home não ficou garantida:** depende do modo da simulação (FCP 1,0 s ou
+  1,7 s, sem mudança no observado). Próximo passo provável: reduzir a imagem do hero/LCP no celular (ver
+  `docs/proximos-passos.md`). Nada visível foi cortado para ganhar pontos.
 
 ## Notas técnicas
 

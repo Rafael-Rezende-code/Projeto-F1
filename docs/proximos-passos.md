@@ -32,4 +32,5 @@ Sem scroll horizontal e sem erros no console em nenhuma combinação. Prints em 
 | 15 | Busca: link "Ver todos os resultados" para a listagem filtrada. | Médio | Médio | Exige filtro de texto em `/produtos` (`?q=`). |
 | 16 | Equipes (celular): a Cadillac fica sozinha centralizada na última linha. Avaliar card de largura total. | Baixo | Baixo | Grade aprovada: só com aval do dono. |
 | 17 | GlyphPortal: o seletor "Escolha uma letra" do componente aparece no estado estático. | Baixo | Médio | Componente de terceiro (não alterar a lógica); só via CSS externo. |
+| 19 | Desempenho da home: mediana ~87 no Lighthouse mobile (meta 90). Servir o hero do celular menor (AVIF via next/image ou image-set) para baixar o LCP no modo lento. | Alto | Médio | O hero usa background-image + spotlight: testar sem mudar o visual. |
 | 18 | Varredura automática: "Luzes apagadas." (1440/1280) e "Lewis Hamilton" (390/360) aparecem como títulos encostados na borda, mas são falsos positivos (o `h2` oculto do celular e a folga da assinatura). Ajustar o script. | Baixo | Baixo | Conferido por medição e print. |
