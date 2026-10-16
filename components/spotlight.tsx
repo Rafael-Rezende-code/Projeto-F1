@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import Image from 'next/image'
+import { useEffect, useRef, useState } from 'react'
+import { HERO_QUALITY, HERO_SIZES } from '@/lib/hero'
 
 const SPOTLIGHT_R = 260
 
@@ -9,9 +11,26 @@ const SPOTLIGHT_MASK = `radial-gradient(circle ${SPOTLIGHT_R}px at var(--spot-x)
 
 // Camada de "raio-x" do hero. O loop escreve --spot-x/--spot-y e a máscara direto na div (ref, sem setState).
 // O loop só roda com o hero (o elemento pai desta camada) na tela. Antes do primeiro movimento do mouse a camada
-// fica sem máscara (comportamento original do v0).
-export function Spotlight({ image }: { image: string }) {
+// fica sem máscara (comportamento original do v0): por isso esta é a foto que aparece no carregamento (vem no
+// HTML, carga imediata, sem preload: o LCP da home é o parágrafo do hero).
+// A imagem é um next/image (AVIF/WebP no tamanho da tela; era um PNG de 2,4 MB) com o mesmo enquadramento do antigo
+// bg-cover/bg-center (object-cover); a máscara fica na div.
+// `base` (a foto de baixo) só aparece quando a máscara entra (mouse ou toque): ela é montada no ocioso depois do load,
+// ou no primeiro movimento, o que vier antes. Assim não disputa banda com o CSS, as fontes e a foto visível no
+// carregamento (era o que mais pesava no Lighthouse do celular). Visual igual: antes do primeiro movimento ela fica
+// inteira por baixo desta camada.
+export function Spotlight({ image, base }: { image: string; base: string }) {
   const layerRef = useRef<HTMLDivElement>(null)
+  const [baseReady, setBaseReady] = useState(false)
+  useEffect(() => {
+    let done = false
+    const show = () => { if (!done) { done = true; setBaseReady(true) } }
+    const idle = () => (typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(show, { timeout: 2000 }) : setTimeout(show, 1200))
+    if (document.readyState === 'complete') idle()
+    else window.addEventListener('load', idle, { once: true })
+    window.addEventListener('mousemove', show, { once: true })
+    return () => { window.removeEventListener('load', idle); window.removeEventListener('mousemove', show) }
+  }, [])
   useEffect(() => {
     const layer = layerRef.current
     const hero = layer?.parentElement
@@ -37,5 +56,16 @@ export function Spotlight({ image }: { image: string }) {
     window.addEventListener('mousemove', handleMouseMove)
     return () => { window.removeEventListener('mousemove', handleMouseMove); observer.disconnect(); stop() }
   }, [])
-  return <div ref={layerRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-30 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${image})`, maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }} />
+  return (
+    <>
+    {baseReady && (
+      <div className="absolute inset-0 z-10">
+        <Image src={base} alt="" fill loading="eager" fetchPriority="low" sizes={HERO_SIZES} quality={HERO_QUALITY} className="object-cover" />
+      </div>
+    )}
+    <div ref={layerRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-30" style={{ maskSize: '100% 100%', WebkitMaskSize: '100% 100%' }}>
+      <Image src={image} alt="" fill loading="eager" sizes={HERO_SIZES} quality={HERO_QUALITY} className="object-cover" />
+    </div>
+    </>
+  )
 }

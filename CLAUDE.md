@@ -448,6 +448,19 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `--spot-x`/`--spot-y`, escritas direto na div via ref dentro do `requestAnimationFrame`, **sem setState**
   (a página não re-renderiza a cada frame). O loop pausa quando o hero sai da tela (IntersectionObserver).
   Antes do primeiro movimento do mouse a camada fica sem máscara (comportamento original do v0).
+- **Imagens do hero (feat/ajustes):** eram dois PNGs do Vercel Blob em `background-image` (2,2 MB + 2,4 MB em qualquer
+  tela). Agora são `next/image` (`fill` + `object-cover`, o mesmo enquadramento de `bg-cover bg-center`) em AVIF/WebP q90,
+  com `sizes` que considera o recorte da foto 3:2 na altura da tela (`HERO_SIZES` em `lib/hero.ts`: 150vh em telas mais
+  estreitas que 3:2, senão 100vw). Resolução cheia: ~93 + ~108 KB (−96%); celular de DPR 1: ~65 + ~75 KB. A foto visível
+  no carregamento (camada do spotlight) vem no HTML, sem preload; a de baixo (só aparece quando a máscara entra) é montada
+  no ocioso depois do `load` ou no primeiro `mousemove`. Comparação pixel a pixel com a versão antiga: igual (diferença
+  média de 2–3 em 255, só compressão). As constantes ficam em `lib/` porque `spotlight.tsx` é `'use client'` (constante
+  importada de módulo client num server component vira referência de cliente).
+- **Lighthouse mobile da home (feat/ajustes, 5 execuções):** 78/89/82/84/90, mediana 84 (fim da rodada 2: ~87). Os bytes
+  antes do primeiro quadro caíram de 5,4 MB para ~0,8 MB, mas o simulador pesa as FONTES nesse trecho, e a Inter do hero
+  (item 2 dos ajustes, tipografia original) entrou com +34 KB (subconjunto enxuto; eram 48 KB). Sem a Inter, o modo lento
+  da simulação volta ao FCP de ~1,66 s. Opção para recuperar, com aval do dono: carregar as fontes do hero depois do
+  primeiro quadro (o texto aparece na fonte de fallback ajustada e troca; CLS segue 0).
 
 ## Roteiro (próximos passos, em ordem)
 

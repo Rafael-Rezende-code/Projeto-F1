@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
 
 // TOKENS DE FONTE — o único lugar onde as famílias do site são definidas.
 // Para trocar uma fonte: mude o import e a chamada abaixo (mantenha `variable`); o CSS usa só as variáveis
@@ -50,14 +50,17 @@ export const fontAccent = Playfair_Display({
 // Assinatura dos pilotos: Great Vibes (SIL OFL) lida pelo opentype.js do Signature (public/fonts/greatvibes-latin.woff,
 // subconjunto latino em WOFF; o opentype.js não lê WOFF2). Não passa pelo next/font.
 
-// HERO: tipografia própria, a da feat/loja (não alterar). Inter 400/500 só no hero (classe .hero-type no globals.css);
-// o "pilotos" usa o itálico sintético da Inter, como no original (lá só os pesos normais carregavam). Sem preload: a
-// imagem do hero é o LCP. O next/font registra a família com o nome "Inter", que só o .hero-type usa.
-export const fontHero = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500"],
+// HERO: tipografia própria, a da feat/loja (não alterar). Inter só no hero (classe .hero-type no globals.css); o
+// "pilotos" usa o itálico sintético da Inter, como no original (lá só os pesos normais carregavam). Arquivo local ENXUTO
+// (scripts/fonts/subset.cjs): glifos do português, peso 400–500 e tamanho óptico fixo em 14 (o padrão que o Google
+// Fonts servia na feat/loja, quando só o eixo de peso era pedido). 48 KB → 34 KB. Sem preload.
+export const fontHero = localFont({
+  src: "../app/fonts/inter-wght400-500.woff2",
+  weight: "400 500",
+  style: "normal",
   display: "swap",
   preload: false,
+  adjustFontFallback: "Arial",
   variable: "--font-hero",
 });
 

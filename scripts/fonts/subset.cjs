@@ -4,9 +4,11 @@
 //   npm i --no-save subset-font@2
 //   curl -L -o Archivo-var.ttf "https://github.com/google/fonts/raw/main/ofl/archivo/Archivo%5Bwdth,wght%5D.ttf"
 //   curl -L -o Geist-var.ttf   "https://github.com/google/fonts/raw/main/ofl/geist/Geist%5Bwght%5D.ttf"
+//   curl -L -o Inter-var.ttf   "https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf"
 //   node scripts/fonts/subset.cjs <pasta-com-os-ttf>
 // O que faz: subconjunto de glifos (ASCII + acentos do português + sinais usados no site) e limite dos eixos variáveis
-// ao que o site usa (Archivo: largura 106–125, peso 300–900; Geist: peso 400–700). Archivo 88 KB → ~45 KB; Geist 29 → 18 KB.
+// ao que o site usa (Archivo: largura 106–125, peso 300–900; Geist: peso 400–700; Inter, só no hero: peso 400–500 e
+// tamanho óptico 14). Archivo 88 KB → ~45 KB; Geist 29 → 18 KB; Inter 48 → 34 KB.
 // Se um texto novo usar um caractere fora da lista, ele cai na fonte de fallback: acrescente-o em EXTRA e gere de novo.
 const path = require("path");
 const fs = require("fs");
@@ -21,6 +23,7 @@ text += EXTRA;
   const jobs = [
     ["Archivo-var.ttf", "archivo-wdth106-125-wght300-900.woff2", { wdth: { min: 106, max: 125 }, wght: { min: 300, max: 900 } }],
     ["Geist-var.ttf", "geist-wght400-700.woff2", { wght: { min: 400, max: 700 } }],
+    ["Inter-var.ttf", "inter-wght400-500.woff2", { wght: { min: 400, max: 500 }, opsz: 14 }],
   ];
   for (const [src, dest, axes] of jobs) {
     const buf = await subsetFont(fs.readFileSync(path.join(dir, src)), text, { targetFormat: "woff2", variationAxes: axes });
