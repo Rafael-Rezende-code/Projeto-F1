@@ -28,7 +28,11 @@ export function ProductPurchase({ product }: { product: Product }) {
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => setShowBar(!entry.isIntersecting && entry.boundingClientRect.top < 0));
+    // Barra fixa (celular) só depois que o botão principal SAI POR CIMA da tela. A área observada se estende muito para
+    // baixo: o botão conta como "dentro" enquanto estiver na tela ou abaixo dela, e o estado só muda ao cruzar a borda de
+    // cima. (Com a área normal, um salto direto de baixo para o topo, por âncora ou botão de topo, não mudava o estado e
+    // a barra ficava presa na tela.)
+    const observer = new IntersectionObserver(([entry]) => setShowBar(!entry.isIntersecting), { rootMargin: "0px 0px 100000px 0px" });
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
