@@ -503,7 +503,9 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   inseridas no `<head>` por script são ignoradas por ele. CLS 0.
   Lighthouse mobile da home, mesmas condições e mesma hora (5 execuções): antes 81/83/84/89/84 (mediana 84, FCP ~1,96 s)
   → depois 86/91/88/85/96 (**mediana 88**, FCP ~1,06 s). **Medição:** desligue o dev server e use um Edge headless recém-
-  aberto; com o dev server recompilando, o mesmo build caiu para ~72 (TBT ~900 ms).
+  aberto; com o dev server recompilando, o mesmo build caiu para ~72 (TBT ~900 ms). Build final da feat/pilotos (com o
+  `<style>` no head e as melhorias do item 4): 85/94/84/85/95, mediana 85; a simulação alterna entre dois modos (LCP
+  ~2,9 s ou ~4,3 s), então séries de 5 variam ±3 pontos. Acessibilidade 100, Boas práticas 96, SEO 100, CLS 0.
 
 ## Roteiro (próximos passos, em ordem)
 
