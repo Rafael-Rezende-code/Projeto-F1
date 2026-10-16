@@ -6,7 +6,14 @@ export type PaymentRequest = {
   orderId: string;
   method: PaymentMethod;
   amountCents: number;
-  customer: { name: string; email: string; cpf: string };
+  /**
+   * CPF: hoje só o BOLETO pede (boleto registrado exige o CPF do pagador; ver CPF_REQUIRED_METHODS em
+   * lib/checkout/schema.ts). Pix e cartão não pedem CPF no nosso checkout.
+   * O provedor real pode exigir CPF em outros meios (ex.: antifraude do cartão no Mercado Pago, ou Pix com
+   * identificação do pagador). Nesse caso, acrescente o meio em CPF_REQUIRED_METHODS: o campo passa a aparecer SÓ para
+   * o meio que exigir (na etapa de pagamento), com máscara e validação, e a action envia o CPF aqui.
+   */
+  customer: { name: string; email: string; cpf?: string };
   description: string;
 };
 

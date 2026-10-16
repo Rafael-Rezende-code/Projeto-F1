@@ -223,10 +223,13 @@ interna e sem arredondamento).
 
 ### Checkout (fase 5) — pedidos SIMULADOS
 
-- `/checkout` (`components/checkout/checkout-form.tsx`): etapas Contato (nome, e-mail, telefone, CPF com máscara e
-  dígitos verificadores), Endereço (CEP com máscara e busca no ViaCEP pelo cliente, com timeout de 6 s; falha ou CEP
+- `/checkout` (`components/checkout/checkout-form.tsx`): etapas Contato (nome, e-mail e telefone; **sem CPF**), Endereço (CEP com máscara e busca no ViaCEP pelo cliente, com timeout de 6 s; falha ou CEP
   inexistente → preenchimento manual), Entrega (opções simuladas em `lib/checkout/shipping.ts`; a Econômica é grátis
   acima do limite de frete grátis) e Pagamento (Pix, cartão, boleto) com aceite obrigatório dos Termos e da Política.
+  **CPF só no boleto** (boleto registrado exige o CPF do pagador): o campo aparece na etapa de pagamento ao escolher
+  Boleto, com máscara e dígitos verificadores; Pix e cartão não pedem. Regra em `CPF_REQUIRED_METHODS`
+  (`lib/checkout/schema.ts`), validada no cliente e no servidor (testes em `lib/checkout/schema.test.ts` e no e2e). Se o
+  provedor real exigir CPF em outro meio (antifraude), basta incluir o meio na lista (ver `lib/payments/types.ts`).
 - Validação com zod (`lib/checkout/schema.ts`) por etapa no cliente e do pedido inteiro no servidor, na server action
   `app/(loja)/checkout/actions.ts` (`placeOrder`), que **recalcula preço, estoque, frete e total pelo catálogo** (não
   confia no cliente). Máscaras/validadores em `lib/validators/br.ts` (com testes).

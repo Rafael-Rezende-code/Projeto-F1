@@ -36,14 +36,11 @@ test("compra de ponta a ponta (pedido simulado)", async ({ page, isMobile }) => 
   await page.getByRole("link", { name: "Finalizar compra" }).click();
   await expect(page).toHaveURL(/\/checkout$/);
 
-  // Contato
+  // Contato (sem CPF: ele só é pedido no boleto)
   await page.getByLabel("Nome completo").fill("Teste da Silva");
   await page.getByLabel("E-mail").fill("teste@exemplo.com");
   await page.getByLabel("Telefone").fill("11912345678");
-  await page.getByLabel("CPF").fill("52998224724");
-  await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page.getByText("CPF inválido. Confira os números.")).toBeVisible();
-  await page.getByLabel("CPF").fill("52998224725");
+  await expect(page.getByLabel("CPF")).toHaveCount(0);
   await page.getByRole("button", { name: "Continuar" }).click();
 
   // Endereço (ViaCEP preenche rua, bairro, cidade e UF)
@@ -56,16 +53,27 @@ test("compra de ponta a ponta (pedido simulado)", async ({ page, isMobile }) => 
   await page.getByText("Expressa").click();
   await page.getByRole("button", { name: "Continuar" }).click();
 
-  // Pagamento: aceite obrigatório
+  // Pagamento: aceite obrigatório; Pix e cartão sem CPF
   await page.getByText("Cartão de crédito").click();
+  await expect(page.getByLabel("CPF")).toHaveCount(0);
   await page.getByRole("button", { name: /Confirmar pedido/ }).click();
   await expect(page.getByText("É preciso aceitar os Termos de Uso e a Política de Privacidade.")).toBeVisible();
   await page.getByRole("checkbox").check();
+
+  // Boleto: CPF obrigatório, com validação dos dígitos
+  await page.getByText("Boleto", { exact: true }).click();
+  await page.getByRole("button", { name: /Confirmar pedido/ }).click();
+  await expect(page.getByText("Informe o CPF para emitir o boleto.")).toBeVisible();
+  await page.getByLabel("CPF").fill("52998224724");
+  await page.getByRole("button", { name: /Confirmar pedido/ }).click();
+  await expect(page.getByText("CPF inválido. Confira os números.")).toBeVisible();
+  await page.getByLabel("CPF").fill("52998224725");
+  await expect(page.getByLabel("CPF")).toHaveValue("529.982.247-25");
   await page.getByRole("button", { name: /Confirmar pedido/ }).click();
 
   // Confirmação
   await expect(page).toHaveURL(/\/pedido\/APX-/);
-  await expect(page.getByRole("heading", { level: 1, name: "Pedido confirmado." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Pedido recebido." })).toBeVisible(); // boleto: pagamento pendente
   // exact: o aviso "... foi adicionado à sacola" pode ainda estar na tela quando o fluxo é rápido (build de produção)
   await expect(page.getByText("Camiseta McLaren 2026", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("apex:sacola:v1"))).toBe("[]");

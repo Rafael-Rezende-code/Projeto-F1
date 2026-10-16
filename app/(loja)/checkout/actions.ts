@@ -3,7 +3,7 @@
 import { BRAND } from "@/lib/brand";
 import { catalog } from "@/lib/catalog";
 import { getShippingOption, shippingPrice } from "@/lib/checkout/shipping";
-import { checkoutSchema, fieldErrors } from "@/lib/checkout/schema";
+import { checkoutSchema, CPF_REQUIRED_METHODS, fieldErrors } from "@/lib/checkout/schema";
 import { newOrderId, type Order, type OrderLine } from "@/lib/checkout/order";
 import { getPaymentProvider } from "@/lib/payments";
 import { onlyDigits } from "@/lib/validators/br";
@@ -51,7 +51,8 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     orderId: id,
     method: data.payment.method,
     amountCents: totalCents,
-    customer: { name: data.contact.name, email: data.contact.email, cpf: onlyDigits(data.contact.cpf) },
+    // CPF só vai ao provedor quando o meio exige (hoje, boleto); o schema já validou.
+    customer: { name: data.contact.name, email: data.contact.email, cpf: CPF_REQUIRED_METHODS.includes(data.payment.method) && data.payment.cpf ? onlyDigits(data.payment.cpf) : undefined },
     description: `Pedido ${id} - ${BRAND.name}`,
   });
   if (!payment.ok) return { ok: false, message: payment.message };

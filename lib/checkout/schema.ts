@@ -10,7 +10,6 @@ export const contactSchema = z.object({
     .refine((value) => value.includes(" "), "Informe nome e sobrenome."),
   email: z.email("Informe um e-mail válido."),
   phone: z.string().refine(isValidPhone, "Informe um telefone com DDD."),
-  cpf: z.string().refine(isValidCpf, "CPF inválido. Confira os números."),
 });
 
 export const addressSchema = z.object({
@@ -28,10 +27,21 @@ export const shippingSchema = z.object({
 });
 
 export const PAYMENT_METHODS = ["pix", "cartao", "boleto"] as const;
-export const paymentSchema = z.object({
-  method: z.enum(PAYMENT_METHODS, { error: "Escolha a forma de pagamento." }),
-  acceptTerms: z.literal(true, { error: "É preciso aceitar os Termos de Uso e a Política de Privacidade." }),
-});
+/** Meios que exigem CPF (o boleto registrado exige o CPF do pagador). Pix e cartão não pedem CPF aqui. */
+export const CPF_REQUIRED_METHODS: readonly (typeof PAYMENT_METHODS)[number][] = ["boleto"];
+export const paymentSchema = z
+  .object({
+    method: z.enum(PAYMENT_METHODS, { error: "Escolha a forma de pagamento." }),
+    // CPF só para os meios em CPF_REQUIRED_METHODS (validado abaixo); nos outros é ignorado.
+    cpf: z.string().optional(),
+    acceptTerms: z.literal(true, { error: "É preciso aceitar os Termos de Uso e a Política de Privacidade." }),
+  })
+  .superRefine((value, ctx) => {
+    if (!CPF_REQUIRED_METHODS.includes(value.method)) return;
+    if (!value.cpf || !isValidCpf(value.cpf)) {
+      ctx.addIssue({ code: "custom", path: ["cpf"], message: value.cpf ? "CPF inválido. Confira os números." : "Informe o CPF para emitir o boleto." });
+    }
+  });
 
 export const orderItemSchema = z.object({ sku: z.string().min(1), quantity: z.number().int().min(1).max(99) });
 

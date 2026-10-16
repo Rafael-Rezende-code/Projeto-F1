@@ -9,7 +9,7 @@ import { useCart } from "@/components/cart";
 import { DecorativeCard } from "@/components/checkout/decorative-card";
 import { placeOrder } from "@/app/(loja)/checkout/actions";
 import { ORDER_STORAGE_PREFIX, PAYMENT_LABELS } from "@/lib/checkout/order";
-import { addressSchema, contactSchema, fieldErrors, paymentSchema, shippingSchema } from "@/lib/checkout/schema";
+import { addressSchema, contactSchema, CPF_REQUIRED_METHODS, fieldErrors, paymentSchema, shippingSchema } from "@/lib/checkout/schema";
 import { SHIPPING_OPTIONS, shippingPrice } from "@/lib/checkout/shipping";
 import { formatPrice } from "@/lib/format";
 import { maskCep, maskCpf, maskPhone, onlyDigits, UFS } from "@/lib/validators/br";
@@ -45,6 +45,7 @@ export function CheckoutForm() {
   const { items, subtotalCents, ready, clear } = useCart();
   const [step, setStep] = useState<Step>(0);
   const [form, setForm] = useState<Form>(EMPTY);
+  const needsCpf = (CPF_REQUIRED_METHODS as readonly string[]).includes(form.method);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [cepStatus, setCepStatus] = useState<{ tone: "info" | "error"; text: string } | null>(null);
   const [submitError, setSubmitError] = useState("");
@@ -96,10 +97,10 @@ export function CheckoutForm() {
   const validateStep = (target: Step) => {
     const schema = [contactSchema, addressSchema, shippingSchema, paymentSchema][target];
     const values = [
-      { name: form.name, email: form.email, phone: form.phone, cpf: form.cpf },
+      { name: form.name, email: form.email, phone: form.phone },
       { cep: form.cep, street: form.street, number: form.number, complement: form.complement || undefined, district: form.district, city: form.city, state: form.state },
       { shippingId: form.shippingId },
-      { method: form.method, acceptTerms: form.acceptTerms },
+      { method: form.method, cpf: needsCpf ? form.cpf : undefined, acceptTerms: form.acceptTerms },
     ][target];
     const result = schema.safeParse(values);
     if (result.success) return true;
@@ -123,10 +124,10 @@ export function CheckoutForm() {
     setSubmitError("");
     startTransition(async () => {
       const result = await placeOrder({
-        contact: { name: form.name, email: form.email, phone: form.phone, cpf: form.cpf },
+        contact: { name: form.name, email: form.email, phone: form.phone },
         address: { cep: form.cep, street: form.street, number: form.number, complement: form.complement || undefined, district: form.district, city: form.city, state: form.state },
         shipping: { shippingId: form.shippingId },
-        payment: { method: form.method, acceptTerms: form.acceptTerms },
+        payment: { method: form.method, cpf: needsCpf ? form.cpf : undefined, acceptTerms: form.acceptTerms },
         items: items.map((item) => ({ sku: item.sku, quantity: item.quantity })),
       });
       if (!result.ok) {
@@ -193,9 +194,6 @@ export function CheckoutForm() {
               </Field>
               <Field label="Telefone" error={errors.phone}>
                 {(p) => <input {...p} type="tel" autoComplete="tel-national" inputMode="tel" placeholder="(11) 91234-5678" value={form.phone} onChange={(e) => set("phone", maskPhone(e.target.value))} className={inputClass(!!errors.phone)} />}
-              </Field>
-              <Field label="CPF" error={errors.cpf} hint="Necessário para a nota fiscal.">
-                {(p) => <input {...p} inputMode="numeric" placeholder="000.000.000-00" value={form.cpf} onChange={(e) => set("cpf", maskCpf(e.target.value))} className={inputClass(!!errors.cpf)} />}
               </Field>
               <div className="sm:col-span-2">{continueButton()}</div>
             </div>
@@ -314,6 +312,14 @@ export function CheckoutForm() {
               {form.method === "cartao" && (
                 <div className="mt-6">
                   <DecorativeCard holder={form.name} />
+                </div>
+              )}
+              {/* CPF só no boleto (o boleto registrado exige o CPF do pagador). Pix e cartão não pedem. */}
+              {needsCpf && (
+                <div className="mt-6 max-w-sm">
+                  <Field label="CPF" error={errors.cpf} hint="Obrigatório para emitir o boleto registrado.">
+                    {(p) => <input {...p} inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={form.cpf} onChange={(e) => set("cpf", maskCpf(e.target.value))} className={inputClass(!!errors.cpf)} />}
+                  </Field>
                 </div>
               )}
               <p className="mt-4 rounded-xl bg-[#f5f5f3] p-4 text-xs leading-5 text-black/65">
