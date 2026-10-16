@@ -456,7 +456,8 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   no ocioso depois do `load` ou no primeiro `mousemove`. Comparação pixel a pixel com a versão antiga: igual (diferença
   média de 2–3 em 255, só compressão). As constantes ficam em `lib/` porque `spotlight.tsx` é `'use client'` (constante
   importada de módulo client num server component vira referência de cliente).
-- **Lighthouse mobile da home (feat/ajustes, 5 execuções):** 78/89/82/84/90, mediana 84 (fim da rodada 2: ~87). Os bytes
+- **Lighthouse mobile da home (feat/ajustes, build final, 5 execuções):** 86/81/90/83/83, mediana 83 (fim da rodada 2:
+  ~87). Acessibilidade 100, Boas práticas 96, SEO 100, CLS 0. Os bytes
   antes do primeiro quadro caíram de 5,4 MB para ~0,8 MB, mas o simulador pesa as FONTES nesse trecho, e a Inter do hero
   (item 2 dos ajustes, tipografia original) entrou com +34 KB (subconjunto enxuto; eram 48 KB). Sem a Inter, o modo lento
   da simulação volta ao FCP de ~1,66 s. Opção para recuperar, com aval do dono: carregar as fontes do hero depois do
