@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { Great_Vibes, Inter, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 
 // TOKENS DE FONTE — o único lugar onde as famílias do site são definidas.
 // Para trocar uma fonte: mude o import e a chamada abaixo (mantenha `variable`); o CSS usa só as variáveis
@@ -47,15 +47,8 @@ export const fontAccent = Playfair_Display({
   variable: "--font-accent",
 });
 
-// Assinatura dos pilotos (components/driver-signature.tsx): Great Vibes, manuscrita GENÉRICA (SIL OFL). Nunca imitar o
-// autógrafo real de um piloto. Sem preload: só as páginas de piloto a usam (o arquivo só baixa onde aparece).
-export const fontSignature = Great_Vibes({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-  preload: false,
-  variable: "--font-signature",
-});
+// Assinatura dos pilotos: Great Vibes (SIL OFL) lida pelo opentype.js do Signature (public/fonts/greatvibes-latin.woff,
+// subconjunto latino em WOFF; o opentype.js não lê WOFF2). Não passa pelo next/font.
 
 // HERO: tipografia própria, a da feat/loja (não alterar). Inter 400/500 só no hero (classe .hero-type no globals.css);
 // o "pilotos" usa o itálico sintético da Inter, como no original (lá só os pesos normais carregavam). Sem preload: a
@@ -69,4 +62,4 @@ export const fontHero = Inter({
 });
 
 /** Classes para o <html>: expõem as variáveis CSS das famílias. */
-export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontSignature.variable} ${fontHero.variable}`;
+export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontHero.variable}`;

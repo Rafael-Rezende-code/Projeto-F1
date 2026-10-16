@@ -52,7 +52,7 @@ export default async function DriverPage({ params }: Params) {
                 piloto (ver CLAUDE.md). O nome em texto fica no h1 para leitores de tela e buscadores. */}
             <h1 className="@container mt-3">
               <span className="sr-only">{driver.name}</span>
-              <DriverSignature name={driver.name} background={team?.color ?? "#111"} className="text-[clamp(2.25rem,12.5cqw,6rem)]" />
+              <DriverSignature name={driver.name} className="text-[clamp(2.25rem,12.5cqw,6rem)]" />
             </h1>
             <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
           </div>
