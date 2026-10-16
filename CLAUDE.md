@@ -148,9 +148,8 @@ interna e sem arredondamento).
   cartão decorativo, páginas institucionais, navegação, `lib/site.ts`/`lib/company.ts` e textos da home. Favicon
   (`app/icon.tsx`), apple-icon (`app/apple-icon.tsx`) e imagem Open Graph padrão (`app/opengraph-image.tsx`) são gerados
   por `next/og` a partir do nome (inicial + ponto laranja); trocar por arquivos quando houver logo. Os ícones antigos do
-  v0 em `public/` (`icon*.png`, `icon.svg`, `apple-icon.png`) não são mais usados. Rodapé com o nome em tipografia
-  gigante na largura do container (`components/giant-wordmark.tsx`: SVG que ajusta o viewBox ao texto, vale para qualquer
-  nome). 404 "Você saiu da pista." e estados vazios no mesmo tom (sacola "Nada no grid", favoritos "Garagem vazia",
+  v0 em `public/` (`icon*.png`, `icon.svg`, `apple-icon.png`) não são mais usados. O nome gigante no rodapé
+  (`GiantWordmark`) foi removido em feat/ajustes: o rodapé voltou ao layout anterior (links + dados da empresa). 404 "Você saiu da pista." e estados vazios no mesmo tom (sacola "Nada no grid", favoritos "Garagem vazia",
   busca "Nada no radar").
 - **QA e desempenho (polimento, fase 11):** e2e (`e2e/compra.spec.ts` e `e2e/busca-e-dock.spec.ts`) passa em desktop e
   celular, também contra o build de produção (`E2E_BASE_URL=http://localhost:3001`). Revisão em 1440, 1280, 820, 390 e

@@ -1,7 +1,6 @@
 import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import { CirclePlay, Globe } from "lucide-react";
-import { GiantWordmark } from "@/components/giant-wordmark";
 import { company } from "@/lib/company";
 import { footerColumns, legalLinks } from "@/lib/navigation";
 
@@ -28,10 +27,6 @@ export function SiteFooter() {
             </div>
           </div>
         ))}
-      </div>
-      {/* Nome da marca em tipografia gigante, na largura do container (lib/brand.ts). */}
-      <div className="mx-auto mt-16 max-w-[1400px] text-white/[0.92]">
-        <GiantWordmark />
       </div>
       {/* Identificação do fornecedor (Decreto 7.962/2013). Dados em lib/company.ts (placeholders até o lançamento). */}
       <address className="mx-auto mt-16 grid max-w-[1400px] gap-x-8 gap-y-2 border-t border-white/10 pt-6 text-xs not-italic leading-5 text-white/50 sm:grid-cols-2 lg:grid-cols-4">
