@@ -111,18 +111,18 @@ export default async function ProductPage({ params }: Params) {
 
             <p className="mt-5 flex flex-wrap items-baseline gap-3">
               {product.compareAtPriceCents && (
-                <span className="text-base text-black/60 line-through">
+                <span className="text-base text-black/60 line-through xl:text-lg">
                   <span className="sr-only">De </span>
                   {formatPrice(product.compareAtPriceCents)}
                 </span>
               )}
-              <span className="text-2xl font-medium tracking-[-0.03em]">
+              <span className="text-2xl font-medium tracking-[-0.03em] xl:text-4xl">
                 {product.compareAtPriceCents && <span className="sr-only">por </span>}
                 {formatPrice(product.priceCents)}
               </span>
               {discount > 0 && <span className="rounded-md bg-black px-2 py-1 text-[10px] font-semibold tracking-[0.12em] text-white">-{discount}%</span>}
             </p>
-            <p className="mt-1 text-xs text-black/60">ou 3x de {formatPrice(Math.ceil(product.priceCents / 3))} sem juros</p>
+            <p className="mt-1 text-xs text-black/60 xl:mt-2 xl:text-sm">ou 3x de {formatPrice(Math.ceil(product.priceCents / 3))} sem juros</p>
 
             <div className="mt-8">
               <ProductPurchase product={product} />

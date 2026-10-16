@@ -69,7 +69,7 @@ export function ProductPurchase({ product }: { product: Product }) {
               return (
                 <label
                   key={item.sku}
-                  className={`relative flex h-12 min-w-14 items-center justify-center rounded-xl border px-4 text-sm transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black ${
+                  className={`relative flex h-12 min-w-14 items-center justify-center rounded-xl border px-4 text-sm transition xl:h-14 xl:min-w-16 xl:text-base has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black ${
                     out
                       ? "cursor-not-allowed flex-col gap-0.5 border-black/10 bg-black/[0.02] text-black/40"
                       : selected
@@ -106,13 +106,13 @@ export function ProductPurchase({ product }: { product: Product }) {
 
       <div ref={mainRef} className="flex items-stretch gap-3">
         <div className="flex items-center rounded-xl border border-black/20" role="group" aria-label="Quantidade">
-          <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1 || soldOut} aria-label="Diminuir quantidade" className="flex h-12 w-11 items-center justify-center rounded-l-xl transition hover:bg-black/5 disabled:opacity-30">
+          <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1 || soldOut} aria-label="Diminuir quantidade" className="flex h-12 w-11 items-center xl:h-14 xl:w-12 justify-center rounded-l-xl transition hover:bg-black/5 disabled:opacity-30">
             <Minus size={16} />
           </button>
-          <span aria-live="polite" className="w-8 text-center text-sm tabular-nums">
+          <span aria-live="polite" className="w-8 text-center text-sm tabular-nums xl:text-base">
             {quantity}
           </span>
-          <button type="button" onClick={() => setQuantity((q) => Math.min(max, q + 1))} disabled={quantity >= max || soldOut} aria-label="Aumentar quantidade" className="flex h-12 w-11 items-center justify-center rounded-r-xl transition hover:bg-black/5 disabled:opacity-30">
+          <button type="button" onClick={() => setQuantity((q) => Math.min(max, q + 1))} disabled={quantity >= max || soldOut} aria-label="Aumentar quantidade" className="flex h-12 w-11 items-center xl:h-14 xl:w-12 justify-center rounded-r-xl transition hover:bg-black/5 disabled:opacity-30">
             <Plus size={16} />
           </button>
         </div>
@@ -120,11 +120,11 @@ export function ProductPurchase({ product }: { product: Product }) {
           type="button"
           onClick={add}
           disabled={soldOut}
-          className="flex-1 whitespace-nowrap rounded-xl bg-[#b94f01] px-3 py-3 text-sm font-medium text-white sm:px-6 transition hover:bg-[#9f4300] disabled:cursor-not-allowed disabled:bg-black/20"
+          className="flex-1 whitespace-nowrap rounded-xl bg-[#b94f01] px-3 py-3 text-sm font-medium text-white sm:px-6 transition hover:bg-[#9f4300] disabled:cursor-not-allowed disabled:bg-black/20 xl:text-base"
         >
           {soldOut ? "Esgotado" : "Adicionar à sacola"}
         </button>
-        <FavoriteButton slug={product.slug} name={product.name} className="flex w-12 shrink-0 items-center justify-center rounded-xl border border-black/20 transition hover:border-black" />
+        <FavoriteButton slug={product.slug} name={product.name} className="flex w-12 shrink-0 items-center justify-center rounded-xl border border-black/20 transition hover:border-black xl:w-14" />
       </div>
 
       {/* Barra fixa de compra (celular), acima do dock (--dock-space). Só existe quando o botão principal saiu da tela. */}
