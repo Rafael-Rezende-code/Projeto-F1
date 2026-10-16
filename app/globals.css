@@ -241,15 +241,20 @@ h1, h2, .font-display {
 :root { --dock-space: 0px; }
 @media (max-width: 767px) { :root { --dock-space: calc(84px + env(safe-area-inset-bottom)); } }
 
-/* Destaque laranja de palavra (components/motion/highlight-word.tsx). Barra + texto branco entram juntos. */
+/* Destaque laranja de palavra (components/motion/highlight-word.tsx). Barra + texto branco entram juntos.
+   Ao terminar (data-done), o laranja passa para a palavra ESTÁTICA e a cortina some: a camada composta da animação
+   (translate3d) é amostrada em posição fracionária com zoom de 90/125/150% e deixava um fio escuro na borda da barra. */
 .hl { position: relative; display: inline-block; white-space: nowrap; }
 .hl-text, .hl-bar { display: block; padding: 0 0.16em; }
 .hl-cover { position: absolute; inset: 0; overflow: hidden; transform: translate3d(0, 101%, 0); }
 .hl-bar { height: 100%; background: var(--highlight-bg, #b94f01); color: #fff; transform: translate3d(0, -101%, 0); }
 .hl-cover, .hl-bar { transition: transform var(--motion-long) var(--ease-out) 0.15s; }
 .hl[data-in] .hl-cover, .hl[data-in] .hl-bar { transform: none; }
+.hl[data-done] .hl-text { background: var(--highlight-bg, #b94f01); color: #fff; }
+.hl[data-done] .hl-cover { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  .hl-cover, .hl-bar { transform: none; transition: none; }
+  .hl .hl-text { background: var(--highlight-bg, #b94f01); color: #fff; }
+  .hl-cover { display: none; }
 }
 
 /* Assinatura do piloto (components/driver-signature.tsx). O nome fica parado; uma "cortina" na cor do fundo (--sig-bg),
