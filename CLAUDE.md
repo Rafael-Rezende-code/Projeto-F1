@@ -79,6 +79,12 @@ interna e sem arredondamento).
   títulos (`font-medium`, `tracking-[...]`, `leading-[...]`). Títulos pequenos de interface usam `.font-ui`. O acento
   em serifa itálica (`.font-playfair`/`.font-accent`) é a **Playfair Display Italic** real (ver "Decisões da rodada 2").
   Comparação com Inter Tight + Inter e Space Grotesk + Geist em `docs/tipografia/` (não aplicadas).
+- **Hero tem tipografia própria; não alterar.** É a da `feat/loja` (como aparecia no dev e no v0): textos em Inter
+  400/500 (`fontHero` em `lib/fonts.ts`, carregada só para o hero), tracking -0.02em, "Feita para" em Playfair Display
+  Italic 400 e "pilotos" no itálico sintético da Inter (tracking -0.08em). Classe `.hero-type` na seção e `.hero-serif`
+  no "Feita para" (`globals.css`). Comparação em `docs/ajustes/hero-tipografia-loja-vs-agora.jpg`. No build de produção
+  da `feat/loja` o `@import` do Google Fonts era descartado (lá o site aparecia com as fontes do sistema); no dev ele
+  funcionava.
 
 - **Movimento (polimento, fase 2):** tokens em `lib/motion.ts` (durações, curvas, distâncias, stagger) espelhados em
   variáveis CSS (`--motion-*`, `--ease-*`) no `globals.css` — **use esses tokens em toda animação nova**. Títulos de seção

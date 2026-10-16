@@ -29,6 +29,12 @@ h1, h2, .font-display {
 /* Acento em serifa itálica REAL (Playfair Display Italic 400, lib/fonts.ts): logo, "Feita para", "pilotos" do hero,
    "Um jeito de viver.", primeiro nome dos pilotos. Peso fixo 400 e sem síntese: nada de negrito ou inclinação falsos. */
 .font-playfair, .font-accent { font-family: var(--font-accent), serif; font-style: italic; font-weight: 400; font-synthesis: none; }
+/* HERO: TIPOGRAFIA PRÓPRIA — não alterar. É a da feat/loja (como aparecia no dev e no v0): textos em Inter (400/500,
+   lib/fonts.ts) com tracking -0.02em; "Feita para" em Playfair Display Italic 400; "pilotos" no itálico sintético da
+   Inter. O resto do site segue a tipografia nova (regra h1, h2 acima). */
+.hero-type { font-family: var(--font-hero), sans-serif; letter-spacing: -0.02em; }
+.hero-type h1 { font-family: inherit; font-stretch: normal; font-weight: inherit; letter-spacing: inherit; line-height: 0.95; }
+.hero-type .hero-serif { font-family: var(--font-accent), serif; font-weight: 400; }
 /* Título cinético "Luzes apagadas.": a Archivo variável (anima o peso de 300 a 900). */
 .font-kinetic, .font-kinetic * { font-family: var(--font-display), sans-serif; font-stretch: var(--display-stretch); }
 .font-kinetic { font-weight: 300; } /* o KineticText parte do 300; a regra dos títulos acima imporia 600 */

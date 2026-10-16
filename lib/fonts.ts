@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { Great_Vibes, Playfair_Display } from "next/font/google";
+import { Great_Vibes, Inter, Playfair_Display } from "next/font/google";
 
 // TOKENS DE FONTE — o único lugar onde as famílias do site são definidas.
 // Para trocar uma fonte: mude o import e a chamada abaixo (mantenha `variable`); o CSS usa só as variáveis
@@ -57,5 +57,16 @@ export const fontSignature = Great_Vibes({
   variable: "--font-signature",
 });
 
+// HERO: tipografia própria, a da feat/loja (não alterar). Inter 400/500 só no hero (classe .hero-type no globals.css);
+// o "pilotos" usa o itálico sintético da Inter, como no original (lá só os pesos normais carregavam). Sem preload: a
+// imagem do hero é o LCP. O next/font registra a família com o nome "Inter", que só o .hero-type usa.
+export const fontHero = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+  preload: false,
+  variable: "--font-hero",
+});
+
 /** Classes para o <html>: expõem as variáveis CSS das famílias. */
-export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontSignature.variable}`;
+export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontSignature.variable} ${fontHero.variable}`;
