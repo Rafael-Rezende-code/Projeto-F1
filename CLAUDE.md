@@ -472,9 +472,11 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   (item 2 dos ajustes, tipografia original) entrou com +34 KB (subconjunto enxuto; eram 48 KB). Sem a Inter, o modo lento
   da simulação volta ao FCP de ~1,66 s.
 - **Fonte do hero depois do primeiro quadro (feat/pilotos, aprovado pelo dono):** o hero começa em "fontHero Fallback"
-  (Arial com as métricas da Inter, do next/font) e um script inline (`HERO_FONT_SCRIPT` em `lib/hero.ts`) define
-  `--hero-font` no `<html>` quando sai o `first-contentful-paint` (PerformanceObserver; limite de 3 s); em navegação interna
-  o `Spotlight` faz isso. Variável no `style` do `<html>` (não `className`) para não gerar aviso de hidratação. CLS 0.
+  (Arial com as métricas da Inter, do next/font) e um script inline (`HERO_FONT_SCRIPT` em `lib/hero.ts`) injeta no
+  `<head>` um `<style>` com `:root{--hero-font:var(--font-hero)}` quando sai o `first-contentful-paint`
+  (PerformanceObserver; limite de 3 s); em navegação interna o `Spotlight` faz isso depois da hidratação. **Não usar
+  atributo do `<html>`** (`style` ou `className`): o React 19 compara os dois na hidratação e acusa divergência; tags
+  inseridas no `<head>` por script são ignoradas por ele. CLS 0.
   Lighthouse mobile da home, mesmas condições e mesma hora (5 execuções): antes 81/83/84/89/84 (mediana 84, FCP ~1,96 s)
   → depois 86/91/88/85/96 (**mediana 88**, FCP ~1,06 s). **Medição:** desligue o dev server e use um Edge headless recém-
   aberto; com o dev server recompilando, o mesmo build caiu para ~72 (TBT ~900 ms).
