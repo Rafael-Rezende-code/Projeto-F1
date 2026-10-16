@@ -125,13 +125,17 @@ interna e sem arredondamento).
   categorias diferentes).
 - **Páginas dos pilotos (polimento, fase 7; refeito em feat/ajustes):** o nome é escrito a caneta pelo **Signature da
   Spell UI** (`components/ui/signature.tsx`, do registry; usado por `components/driver-signature.tsx`): o contorno de cada
-  letra vira path SVG (opentype.js) e é desenhado com pathLength da esquerda para a direita, com o preenchimento revelado
-  por uma máscara logo atrás; ~2,2 s visíveis (o traço termina em 2,6 s), uma vez ao entrar na tela, pronto com reduced
-  motion. Fonte manuscrita **genérica** Great Vibes (SIL OFL) em `public/fonts/greatvibes-latin.woff` (subconjunto latino,
-  53 KB; o opentype.js não lê WOFF2). **opentype.js fixado em 1.3.4**: da 1.3.5 em diante `toPathData(3)` espera um objeto
-  e as coordenadas viram NaN (era essa a causa das letras quebradas nas rodadas anteriores, não a fonte). Adaptações no
-  componente, marcadas "APEX": `fontUrl`, `stagger`, viewBox pela caixa real dos glifos (sem cortes) e `still`. Custo:
-  opentype.js (~50 KB gzip) + a fonte, só na página do piloto. Nome em texto `sr-only` no h1.
+  letra vira path SVG e é desenhado com pathLength da esquerda para a direita, com o preenchimento revelado por uma
+  máscara logo atrás; ~2,2 s visíveis (o traço termina em 2,6 s), uma vez ao entrar na tela, pronto com reduced motion.
+  **Contornos gerados no servidor (feat/pilotos):** `lib/signature-paths.ts` lê a fonte com o opentype.js no build (as
+  páginas são estáticas) e a página passa os paths prontos ao `DriverSignature`; o cliente não baixa opentype.js nem a
+  fonte (JS da página: 296 → 245 KB comprimido, −17%; e −53 KB de fonte). Fonte manuscrita **genérica** Great Vibes (SIL
+  OFL) em `assets/fonts/greatvibes-latin.woff` (fora do `public/`; subconjunto latino; o opentype.js não lê WOFF2).
+  **Espaço entre palavras:** cada palavra começa 0,32 em depois do fim da TINTA da anterior (o espaço da fonte, 0,17 em,
+  deixava as laçadas emendarem: "GabrielBortoleto"). **opentype.js fixado em 1.3.4**: da 1.3.5 em diante `toPathData(3)`
+  espera um objeto e as coordenadas viram NaN. Adaptações no componente, marcadas "APEX": paths prontos, `stagger`,
+  viewBox pela caixa real dos glifos (sem cortes) e `still`. Nome em texto `sr-only` no h1. GIF em
+  `docs/pilotos/assinaturas-4.gif`.
   **NUNCA imitar o autógrafo real de um piloto** (nem fonte, nem traçado, nem imagem de assinatura): é a assinatura
   dele, com implicações de direito de imagem e de falsificação. **Fotos da página (feat/pilotos):**
   `photoMain` e `photoSecondary` em `lib/drivers.ts` (`{ src, width, height, position }`), arquivos

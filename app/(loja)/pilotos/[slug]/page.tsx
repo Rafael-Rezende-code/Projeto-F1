@@ -8,6 +8,7 @@ import { DriverSignature } from "@/components/driver-signature";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
+import { signaturePaths } from "@/lib/signature-paths";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -54,7 +55,7 @@ export default async function DriverPage({ params }: Params) {
         )}
         <h1 className="@container mt-3">
           <span className="sr-only">{driver.name}</span>
-          <DriverSignature name={driver.name} className={wide ? "text-[clamp(2.25rem,8cqw,6rem)]" : "text-[clamp(2.25rem,12.5cqw,6rem)]"} />
+          <DriverSignature signature={signaturePaths(driver.name)} className={wide ? "text-[clamp(2.25rem,8cqw,6rem)]" : "text-[clamp(2.25rem,12.5cqw,6rem)]"} />
         </h1>
         <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
       </div>
