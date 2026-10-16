@@ -10,13 +10,22 @@ export default function NotFound() {
       <main className="relative flex flex-1 items-center overflow-hidden px-5 py-24 sm:px-10">
         <span
           aria-hidden="true"
-          className="font-display pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 select-none text-center text-[38vw] leading-none text-transparent [-webkit-text-stroke:1px_rgba(0,0,0,0.08)] sm:text-[30vw]"
+          className="font-display pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 select-none text-center text-[30vw] leading-none text-transparent [-webkit-text-stroke:1px_rgba(0,0,0,0.08)] sm:block"
         >
           404
         </span>
         <div className="relative mx-auto max-w-xl text-center">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Bandeira amarela · erro 404</p>
-          <h1 className="mt-4 text-5xl sm:text-7xl">Você saiu da pista.</h1>
+          {/* Celular: o 404 vazado fica centrado atrás do TÍTULO (no desktop, atrás do bloco inteiro, acima). */}
+          <div className="relative mt-4">
+            <span
+              aria-hidden="true"
+              className="font-display pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 select-none text-center text-[38vw] leading-none text-transparent [-webkit-text-stroke:1px_rgba(0,0,0,0.08)] sm:hidden"
+            >
+              404
+            </span>
+            <h1 className="relative text-5xl sm:text-7xl">Você saiu da pista.</h1>
+          </div>
           <p className="mx-auto mt-6 max-w-md text-sm leading-7 text-black/60 sm:text-base">
             Essa curva não existe no traçado. Volte para os boxes ou acelere direto para a coleção.
           </p>
