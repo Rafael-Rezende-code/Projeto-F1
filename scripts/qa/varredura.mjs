@@ -65,7 +65,13 @@ for (const w of WIDTHS.split(",").map(Number)) {
   for (const route of routes) {
     const errors = [];
     page.removeAllListeners("console");
-    page.on("console", (msg) => msg.type() === "error" && errors.push(msg.text().slice(0, 160)));
+    // Ignorados (esperados): 404 do /_vercel/insights (só existe na Vercel) e o 404 do próprio documento numa rota inexistente.
+    page.on("console", (msg) => {
+      if (msg.type() !== "error") return;
+      const where = msg.location().url || "";
+      if (where.includes("/_vercel/") || (where === page.url() && msg.text().includes("404"))) return;
+      errors.push(msg.text().slice(0, 160) + (where ? " (" + where.slice(-60) + ")" : ""));
+    });
     page.removeAllListeners("pageerror");
     page.on("pageerror", (err) => errors.push("EXC " + String(err).slice(0, 160)));
     await page.goto(BASE + route, { waitUntil: "networkidle" });
