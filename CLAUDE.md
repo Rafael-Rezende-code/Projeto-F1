@@ -140,7 +140,9 @@ interna e sem arredondamento).
 - **View Transitions (polimento, fase 9):** `<ViewTransition>` do React canary embutido no Next 16 (sem flag de config),
   via `components/motion/view-transition.tsx` (`SharedTransition`; sem suporte, só renderiza o conteúdo; tipos em
   `types/react-canary.d.ts`). Imagem do card de produto → imagem principal da página (`produto-{slug}`); card do
-  piloto → foto do cabeçalho da página (`piloto-{slug}`). **Nomes precisam ser únicos na tela**: o card só liga a
+  piloto → foto do cabeçalho da página (`piloto-{slug}`), **sem crossfade** (`crossfade={false}`: a mistura com o card,
+  que tem gradiente escuro e o nome, deixava a foto esmaecida; agora ela aparece nítida desde o primeiro quadro e só o
+  movimento anima; a foto da página não tem gradiente nenhum). **Nomes precisam ser únicos na tela**: o card só liga a
   transição com `transition` (grades e grade da home; o carrossel "O que o grid veste" não, porque repete produtos da
   grade). Os cards de piloto passaram a usar `next/link` (navegação SPA, necessária para a transição). Testado no build
   de produção: a transição começa, anima os elementos compartilhados e termina (~250 ms) sem travar cliques. Em Edge

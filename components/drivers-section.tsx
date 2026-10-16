@@ -93,7 +93,7 @@ function DriverCard({ driver }: { driver: Driver }) {
 
   return (
     <li className="w-[80%] shrink-0 snap-start sm:w-auto">
-      <SharedTransition name={driverTransitionName(driver.slug)}>
+      <SharedTransition name={driverTransitionName(driver.slug)} crossfade={false}>
       <div className="relative aspect-[4/5]">
         <HoverTransition
           aria-hidden="true"

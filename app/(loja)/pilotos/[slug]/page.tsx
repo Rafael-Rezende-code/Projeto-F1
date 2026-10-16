@@ -57,7 +57,7 @@ export default async function DriverPage({ params }: Params) {
             <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
           </div>
         </div>
-        <SharedTransition name={driverTransitionName(driver.slug)}>
+        <SharedTransition name={driverTransitionName(driver.slug)} crossfade={false}>
         <div className="relative min-h-[420px] md:min-h-[560px]">
           <Image
             src={driver.pageImage}
