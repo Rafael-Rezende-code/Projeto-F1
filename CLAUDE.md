@@ -120,8 +120,15 @@ interna e sem arredondamento).
   guia de tamanhos em modal (tabela placeholder `[MEDIDAS A CONFIRMAR]`), favoritar, barra fixa de compra no celular
   acima do dock (aparece quando o botão principal sai da tela) e "Complete o look" (até 4 relacionados, priorizando
   categorias diferentes).
-- **Páginas dos pilotos (polimento, fase 7; refeito na rodada 2):** o nome aparece "escrito" (`components/driver-signature.tsx`)
-  numa fonte manuscrita **genérica** (Great Vibes, SIL OFL), com o nome em texto `sr-only` no h1.
+- **Páginas dos pilotos (polimento, fase 7; refeito em feat/ajustes):** o nome é escrito a caneta pelo **Signature da
+  Spell UI** (`components/ui/signature.tsx`, do registry; usado por `components/driver-signature.tsx`): o contorno de cada
+  letra vira path SVG (opentype.js) e é desenhado com pathLength da esquerda para a direita, com o preenchimento revelado
+  por uma máscara logo atrás; ~2,2 s visíveis (o traço termina em 2,6 s), uma vez ao entrar na tela, pronto com reduced
+  motion. Fonte manuscrita **genérica** Great Vibes (SIL OFL) em `public/fonts/greatvibes-latin.woff` (subconjunto latino,
+  53 KB; o opentype.js não lê WOFF2). **opentype.js fixado em 1.3.4**: da 1.3.5 em diante `toPathData(3)` espera um objeto
+  e as coordenadas viram NaN (era essa a causa das letras quebradas nas rodadas anteriores, não a fonte). Adaptações no
+  componente, marcadas "APEX": `fontUrl`, `stagger`, viewBox pela caixa real dos glifos (sem cortes) e `still`. Custo:
+  opentype.js (~50 KB gzip) + a fonte, só na página do piloto. Nome em texto `sr-only` no h1.
   **NUNCA imitar o autógrafo real de um piloto** (nem fonte, nem traçado, nem imagem de assinatura): é a assinatura
   dele, com implicações de direito de imagem e de falsificação. Foto do cabeçalho: campo `pagePhoto` em
   `lib/drivers.ts` (`/images/pilotos/paginas/{slug}`, sem extensão). Coloque `public/images/pilotos/paginas/{norris,
@@ -157,7 +164,7 @@ interna e sem arredondamento).
 - **Spell UI:** registry `https://spell.sh/r/{nome}.json` (blur-reveal, words-stagger, highlighted-text, tilt-card,
   signature), instalados pelo shadcn CLI e movidos para `components/ui/` (o CLI os põe em `components/`). O CLI chama
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
-  O Signature foi removido na rodada 2 (ver "Decisões da rodada 2"); a assinatura é `components/driver-signature.tsx`.
+  O Signature voltou em feat/ajustes (ver "Páginas dos pilotos").
 
 ## Decisões já tomadas
 
