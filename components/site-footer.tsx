@@ -2,7 +2,7 @@ import { BRAND } from "@/lib/brand";
 import Link from "next/link";
 import { CirclePlay, Globe } from "lucide-react";
 import { FooterColumn } from "@/components/footer-column";
-import { company } from "@/lib/company";
+import { company, companyFacts } from "@/lib/company";
 import { footerColumns, legalLinks } from "@/lib/navigation";
 
 // Rodapé do site (home e páginas internas). Mesmo visual do rodapé original da home; links em lib/navigation.ts.
@@ -23,14 +23,19 @@ export function SiteFooter() {
           <FooterColumn key={column.heading} heading={column.heading} links={column.links} />
         ))}
       </div>
-      {/* Identificação do fornecedor (Decreto 7.962/2013). Dados em lib/company.ts (placeholders até o lançamento). */}
-      <address className="mx-auto mt-16 grid max-w-[1400px] gap-x-8 gap-y-2 border-t border-white/10 pt-6 text-xs not-italic leading-5 text-white/50 sm:grid-cols-2 lg:grid-cols-4">
-        <span>{company.legalName}</span>
-        <span>CNPJ {company.cnpj}</span>
-        <span>{company.address}</span>
-        <span>
-          {company.email} · {company.phone}
-        </span>
+      {/* Identificação do fornecedor (Decreto 7.962/2013). Dados em lib/company.ts: só os preenchidos aparecem. */}
+      <address className="mx-auto mt-16 flex max-w-[1400px] flex-wrap gap-x-8 gap-y-2 border-t border-white/10 pt-6 text-xs not-italic leading-5 text-white/50">
+        <span>{company.tradeName}</span>
+        {companyFacts().map((fact) => (
+          <span key={fact.key}>
+            {fact.key === "document" && `${fact.label} `}
+            {fact.href ? (
+              <a href={fact.href} className="underline-offset-4 transition hover:text-white hover:underline">{fact.value}</a>
+            ) : (
+              fact.value
+            )}
+          </span>
+        ))}
       </address>
       <div className="mx-auto mt-6 flex max-w-[1400px] flex-col justify-between gap-5 border-t border-white/10 pt-6 text-[10px] uppercase tracking-[0.12em] text-white/50 sm:flex-row sm:items-center">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">

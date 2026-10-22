@@ -274,8 +274,11 @@ interna e sem arredondamento).
 - `/politica-de-privacidade`, `/termos-de-uso`, `/trocas-e-devolucoes`, `/envio`, `/contato`, `/faq` e `/sobre`: só
   títulos e seções (`lib/institutional.ts`, visual em `components/institutional-page.tsx`). **Todo o texto é
   "[CONTEÚDO A SER REDIGIDO]"**: o conteúdo jurídico é escrito pelo responsável, não pelo assistente.
-- Rodapé com a identificação do fornecedor exigida pelo Decreto 7.962/2013 (razão social, CNPJ, endereço, e-mail e
-  telefone) em `lib/company.ts` — **placeholders: preencher antes de vender** — e links para a Política e os Termos.
+- Rodapé com a identificação do fornecedor (Decreto 7.962/2013) em `lib/company.ts`: **todos os campos opcionais**
+  (razão social, CNPJ/CPF, endereço, e-mail, telefone, horário); rodapé, /sobre e /contato mostram só os preenchidos
+  (`companyFacts()`), sem placeholder ao público (refino 2, item 4). Hoje: só o nome da loja; o e-mail de contato vem de
+  `NEXT_PUBLIC_CONTACT_EMAIL` (vazio até o responsável informar). **Antes de vender, o decreto exige nome empresarial,
+  CNPJ/CPF e endereço.** Links para a Política e os Termos.
 
 ### SEO e qualidade (fase 7)
 
@@ -649,6 +652,11 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `detailsPending: true` faz a página mostrar "[CONFERIR COM O PRODUTO REAL]" acima da ficha: as fichas são exemplos.
   A meta description usa só o 1º parágrafo. Nenhuma descrição diz "oficial" (a camiseta de equipe dizia "Camiseta
   oficial de torcedor") e o boné de piloto não tem mais "assinatura bordada" (agora "nome bordado na lateral").
+- **Refino 2, item 4, /sobre reescrita:** loja de artigos de F1 e cultura do automobilismo, independente (sem vínculo,
+  patrocínio ou aprovação da F1, das equipes ou dos pilotos, em destaque no manifesto); 6 frentes (camisetas de todas as
+  equipes, miniaturas de carros, pistas impressas em 3D, canecas, pilotos históricos, colecionáveis) + nota de sob
+  encomenda/importado + as categorias do catálogo; entrega em todo o Brasil; prazos e trocas `[CONFIRMAR]`; contato
+  só com os dados preenchidos de `lib/company.ts`. Prints em `docs/refino-2/4-sobre/`. O texto abaixo é o da fase 8.
 - **Fase 8, /sobre:** página própria (`app/(loja)/sobre/page.tsx`, textos em `lib/content/sobre.ts`): manifesto, o que
   vendemos (as 4 categorias do catálogo, com a frase "Não somos uma loja oficial de nenhuma equipe ou piloto") e como
   trabalhamos (envio, trocas, atendimento, com links para as páginas de ajuda). Tudo que depende de dado real vem

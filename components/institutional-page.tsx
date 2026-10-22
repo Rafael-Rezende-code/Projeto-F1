@@ -1,6 +1,6 @@
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { PageIntro } from "@/components/page-intro";
-import { company } from "@/lib/company";
+import { companyFacts } from "@/lib/company";
 import { PLACEHOLDER, type InstitutionalPage } from "@/lib/institutional";
 
 // Esqueleto de página institucional/legal: título, índice e seções com texto placeholder bem marcado.
@@ -70,12 +70,14 @@ export function InstitutionalPageView({ page }: { page: InstitutionalPage }) {
             </div>
           )}
 
-          {page.slug === "contato" && (
+          {page.slug === "contato" && companyFacts().length > 0 && (
             <dl className="grid gap-4 rounded-2xl border border-black/10 p-6 text-sm sm:grid-cols-2">
-              <div><dt className="text-xs text-black/60">E-mail</dt><dd className="mt-1">{company.email}</dd></div>
-              <div><dt className="text-xs text-black/60">Telefone</dt><dd className="mt-1">{company.phone}</dd></div>
-              <div><dt className="text-xs text-black/60">Horário</dt><dd className="mt-1">{company.hours}</dd></div>
-              <div><dt className="text-xs text-black/60">Endereço</dt><dd className="mt-1">{company.address}</dd></div>
+              {companyFacts().map((fact) => (
+                <div key={fact.key}>
+                  <dt className="text-xs text-black/60">{fact.label}</dt>
+                  <dd className="mt-1">{fact.href ? <a href={fact.href} className="underline underline-offset-4">{fact.value}</a> : fact.value}</dd>
+                </div>
+              ))}
             </dl>
           )}
         </div>

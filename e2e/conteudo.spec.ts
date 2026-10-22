@@ -26,7 +26,7 @@ test("Diário: do cabeçalho ao artigo, com produtos relacionados", async ({ pag
   if (!isMobile) await expect(page.getByRole("banner").getByRole("link", { name: "Diário" })).toHaveAttribute("href", "/diario");
 });
 
-test("piloto: texto editorial, números e destaques no topo", async ({ page }) => {
+test("piloto: topo com frase e números, produtos logo depois, depois a história", async ({ page }) => {
   await page.goto("/pilotos/hamilton");
   await expect(page.getByRole("heading", { level: 1, name: "Lewis Hamilton" })).toBeAttached();
   await expect(page.getByText("[TEXTO SOBRE O PILOTO]")).toHaveCount(0);
@@ -36,8 +36,13 @@ test("piloto: texto editorial, números e destaques no topo", async ({ page }) =
   await expect(numbers.getByText("Títulos mundiais")).toBeVisible();
   await expect(numbers.getByText("44", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Curiosidades" })).toBeVisible();
-  // Sem carro no projeto: miniaturas de produtos do piloto no topo (desktop) ou depois da foto (celular).
-  await expect(page.getByText("Destaques Hamilton").first()).toBeAttached();
+  // Refino 2: sem carro, o topo traz "Ver a coleção ↓"; os produtos vêm ANTES da história.
+  await expect(page.getByText("Destaques Hamilton")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Ver a coleção/ }).first()).toHaveAttribute("href", "#produtos-piloto");
+  await expect(page.getByRole("link", { name: /Ver todos os produtos/ })).toHaveAttribute("href", "/produtos?piloto=hamilton");
+  const products = await page.locator("#produtos-piloto").boundingBox();
+  const story = await page.getByRole("heading", { name: "A história de Lewis" }).boundingBox();
+  expect(products!.y).toBeLessThan(story!.y);
 });
 
 test("equipe: história, marcos e sede entre o cabeçalho e os produtos", async ({ page }) => {
@@ -48,10 +53,14 @@ test("equipe: história, marcos e sede entre o cabeçalho e os produtos", async 
   await expect(page.getByRole("list", { name: "Marcos da Williams" }).getByRole("listitem")).toHaveCount(3);
 });
 
-test("/sobre: manifesto, categorias e [CONFIRMAR] destacado; nada de loja oficial", async ({ page }) => {
+test("/sobre: manifesto, independência, o que vendemos e [CONFIRMAR] destacado; sem placeholders da empresa", async ({ page }) => {
   await page.goto("/sobre");
   await expect(page.getByRole("heading", { level: 1, name: "Feita para quem sente a corrida." })).toBeVisible();
+  await expect(page.getByText("Não temos vínculo, patrocínio nem aprovação da Fórmula 1, das equipes ou dos pilotos.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "O que vendemos" })).toBeVisible();
-  await expect(page.getByText("Não somos uma loja oficial de nenhuma equipe ou piloto")).toBeVisible();
-  expect(await page.locator("mark", { hasText: "[CONFIRMAR]" }).count()).toBeGreaterThan(3);
+  await expect(page.getByRole("heading", { name: "Pistas impressas em 3D" })).toBeVisible();
+  await expect(page.getByText("Entregamos em todo o Brasil.")).toBeVisible();
+  expect(await page.locator("mark", { hasText: "[CONFIRMAR]" }).count()).toBe(2);
+  // Dados da empresa: nada de placeholder entre colchetes no rodapé.
+  await expect(page.getByRole("contentinfo").getByText(/\[(RAZÃO|ENDEREÇO|E-MAIL|TELEFONE|00\.000)/)).toHaveCount(0);
 });

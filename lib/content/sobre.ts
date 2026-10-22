@@ -1,40 +1,50 @@
 import { BRAND } from "@/lib/brand";
-import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/cart/config";
-import { formatPrice } from "@/lib/format";
-import { SHIPPING_OPTIONS } from "@/lib/checkout/shipping";
 
-// Página /sobre (fase 8 da rodada de conteúdo): manifesto, o que vendemos e como trabalhamos. Tudo o que depende de
-// dado real da empresa (prazos, canais, horários, licenciamento) vem marcado "[CONFIRMAR]" e aparece destacado na página.
-// Sem texto jurídico: as regras ficam nas páginas de Termos, Trocas e Envio (redigidas pelo responsável).
+// Página /sobre (refino 2, item 4): o que a loja é, o que vende e como trabalha. Fatos dados pelo responsável: loja de
+// artigos de Fórmula 1 e cultura do automobilismo, SEM vínculo, patrocínio ou aprovação da F1, das equipes ou dos
+// pilotos; entrega em todo o Brasil. Prazos e política de trocas ainda não definidos: "[CONFIRMAR]" (destacado na
+// página por ConfirmText). Sem texto jurídico: as regras ficam em Termos, Trocas e Envio (redigidas pelo responsável).
+// Dados da empresa (e-mail etc.) vêm de lib/company.ts e só aparecem quando preenchidos.
 export const CONFIRM = "[CONFIRMAR]";
 
 export const sobre = {
   manifesto: {
     title: "Feita para quem sente a corrida.",
     paragraphs: [
-      "A Fórmula 1 nunca foi só sobre carros. É sobre o domingo que começa cedo, a volta de classificação que prende a respiração, a largada que arrepia, o piloto que vira ídolo e a equipe que vira família.",
-      `A ${BRAND.name} nasceu dessa paixão. Fazemos roupas, acessórios e colecionáveis para quem carrega a corrida no peito, na arquibancada, no sofá de casa ou a caminho do trabalho numa segunda-feira qualquer.`,
-      "Acreditamos em peças bem feitas, em design que respeita a história do esporte e em contar essa história com o cuidado de quem também é fã. Precisão, herança e performance: as mesmas palavras que movem a pista orientam cada coisa que fazemos.",
+      `A ${BRAND.name} é uma loja de artigos de Fórmula 1 e de cultura do automobilismo. Reunimos num lugar só o que um fã procura: a camiseta da equipe do coração, a miniatura do carro que marcou uma temporada, a pista favorita para pôr na estante.`,
+      "A Fórmula 1 nunca foi só sobre carros. É o domingo que começa cedo, a volta de classificação que prende a respiração, o piloto que vira ídolo e a equipe que vira família. É essa história, de hoje e de décadas atrás, que a gente quer levar para a sua casa.",
     ],
+    independence:
+      "Somos uma loja independente, de fãs para fãs. Não temos vínculo, patrocínio nem aprovação da Fórmula 1, das equipes ou dos pilotos.",
   },
   whatWeSell: {
-    intro: `Uma coleção inspirada na cultura da Fórmula 1, organizada em quatro frentes. Não somos uma loja oficial de nenhuma equipe ou piloto: somos fãs criando para fãs. ${CONFIRM} Quais produtos, se houver, são licenciados, e por quem.`,
+    intro: "Do grid atual aos ídolos de outras épocas, seis frentes:",
+    items: [
+      { title: "Camisetas de todas as equipes", text: "Do grid inteiro, não só das mais populares." },
+      { title: "Miniaturas de carros", text: "Carros de várias temporadas, em escalas de coleção." },
+      { title: "Pistas impressas em 3D", text: "O traçado dos circuitos em relevo, para a parede ou a mesa." },
+      { title: "Canecas", text: "Para o café da manhã de domingo de corrida." },
+      { title: "Pilotos históricos", text: "Itens dos nomes que fizeram a história da categoria." },
+      { title: "Colecionáveis", text: "Peças para guardar e exibir." },
+    ],
+    madeToOrder:
+      "Algumas peças ficam em estoque e outras são feitas sob encomenda ou importadas. O prazo de cada uma aparece na página do produto, antes da compra.",
   },
   howWeWork: [
     {
-      title: "Envio",
+      title: "Entrega",
       href: "/envio",
-      text: `Enviamos para todo o Brasil ${CONFIRM}. Hoje o checkout oferece ${SHIPPING_OPTIONS.map((o) => `${o.label.toLowerCase()} (${o.days})`).join(" e ")}, com frete grátis na econômica a partir de ${formatPrice(FREE_SHIPPING_THRESHOLD_CENTS)} ${CONFIRM}. Todo pedido tem código de rastreio, enviado por e-mail assim que sai do estoque ${CONFIRM}.`,
+      text: `Entregamos em todo o Brasil. Prazos de envio e de entrega: ${CONFIRM}.`,
     },
     {
       title: "Trocas e devoluções",
       href: "/trocas-e-devolucoes",
-      text: `Comprou e se arrependeu? Você tem 7 dias a partir do recebimento para desistir da compra feita pela internet. Para trocar por outro tamanho ou modelo, o prazo é de ${CONFIRM} dias, e a primeira troca tem frete por nossa conta ${CONFIRM}. Os detalhes estão na página de trocas.`,
+      text: `Política de trocas e devoluções: ${CONFIRM}.`,
     },
     {
       title: "Atendimento",
       href: "/contato",
-      text: `Fale com a gente por e-mail e WhatsApp ${CONFIRM}, de segunda a sexta, das ${CONFIRM} às ${CONFIRM}. Respondemos em até ${CONFIRM} horas úteis. Gente de verdade, que entende de corrida, do outro lado.`,
+      text: "Dúvida sobre um produto, um tamanho ou um pedido? Fale com a gente: do outro lado tem gente que também acompanha cada corrida.",
     },
   ],
 };
