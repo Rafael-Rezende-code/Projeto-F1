@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShipForm } from "@/components/admin/ship-form";
 import { adminDisabled, requireAdmin } from "@/lib/admin/auth";
-import { ORDER_STATUS_LABELS, orderUrl, PAYMENT_LABELS } from "@/lib/checkout/order";
+import { ORDER_ITEM_STATUS_ADMIN_LABELS, ORDER_STATUS_LABELS, orderUrl, PAYMENT_LABELS } from "@/lib/checkout/order";
 import { formatPrice } from "@/lib/format";
 import { orderFromRow, type OrderRow } from "@/lib/orders/mapping";
 
@@ -27,14 +27,30 @@ export default async function AdminPedido({ params }: { params: Promise<{ id: st
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section className="rounded-2xl bg-white p-6">
-          <h2 className="font-medium">Itens</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-medium">Itens</h2>
+            {order.lines.some((line) => line.status === "aguardando-compra") && <Link href="/admin/fornecedor" className="text-xs underline underline-offset-4">Comprar no fornecedor →</Link>}
+          </div>
           <ul role="list" className="mt-4 divide-y divide-black/5">
-            {order.lines.map((line) => (
+            {order.lines.map((line, index) => {
+              const item = row.order_items?.[index];
+              return (
               <li key={line.sku} className="flex justify-between gap-4 py-3 text-sm">
-                <span>{line.name}<span className="block text-xs text-black/60">SKU {line.sku} · Tam. {line.size} · Qtd. {line.quantity}</span></span>
+                <span>
+                  {line.name}
+                  <span className="block text-xs text-black/60">SKU {line.sku} · Tam. {line.size} · Qtd. {line.quantity}</span>
+                  {line.status && (
+                    <span className="block text-xs text-black/60">
+                      {line.fulfillment === "sob_encomenda" ? "Sob encomenda" : "Estoque próprio"} · <span className="font-medium text-black">{ORDER_ITEM_STATUS_ADMIN_LABELS[line.status]}</span>
+                      {item?.supplier_tracking_code && <> · fornecedor <span className="font-mono">{item.supplier_tracking_code}</span></>}
+                      {line.tracking && <> · cliente <span className="font-mono">{line.tracking}</span></>}
+                    </span>
+                  )}
+                </span>
                 <span className="whitespace-nowrap">{formatPrice(line.unitPriceCents * line.quantity)}</span>
               </li>
-            ))}
+              );
+            })}
           </ul>
           <dl className="mt-4 space-y-1 border-t border-black/10 pt-4 text-sm">
             <div className="flex justify-between"><dt className="text-black/60">Subtotal</dt><dd>{formatPrice(order.subtotalCents)}</dd></div>

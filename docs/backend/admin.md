@@ -39,6 +39,23 @@ em `<slug>/<data>-<nome>.<ext>`. A URL pública vai para `product_images`. O `ne
 Supabase no `next/image` quando `NEXT_PUBLIC_SUPABASE_URL` existe. Remover uma foto do produto não apaga o arquivo do
 Storage (pode estar em uso em pedidos ou cache); limpe pelo painel do Supabase se precisar.
 
+## Venda, custo e fornecedor (refino 2)
+
+- **Venda e envio** (no formulário do produto, público): estoque próprio ou sob encomenda, prazo de envio em dias úteis
+  (mínimo e máximo), origem (nacional/importado), peso e medidas da embalagem (para o frete).
+- **Custo e fornecedor** (privado, tabela `product_private`, só admin pelo RLS): custo, frete do fornecedor, link do
+  fornecedor e notas. Nunca aparece na loja.
+- **Calculadora de preço**: custo + frete do fornecedor + taxa do pagamento (% e fixa) + impostos (%) + margem desejada →
+  preço sugerido (arredondado para ,90) e margem líquida do preço atual. Os parâmetros são editáveis e ficam salvos no
+  navegador de quem administra. Os valores iniciais (4,99% de taxa, 0% de impostos, 35% de margem) são EXEMPLO: confira
+  com o contrato do Mercado Pago e com o contador. O preço só muda ao clicar em "Usar o preço sugerido".
+- **Comprar no fornecedor** (`/admin/fornecedor`): itens sob encomenda de pedidos PAGOS, mais antigos primeiro. Para cada
+  um: "Abrir no fornecedor" (link do produto), "Copiar endereço e dados" (nome, endereço, CEP, telefone e e-mail do
+  cliente), rastreio do fornecedor e "Marcar comprado". A compra é manual: nada é automatizado nem lido do marketplace.
+  O CPF do cliente não é guardado (só vai ao provedor no boleto); se o fornecedor exigir, peça ao cliente.
+- **Marcar como enviado** (detalhe do pedido): grava o rastreio do pedido e passa os itens já separados/comprados para
+  "enviado" com o mesmo código.
+
 ## Não testado nesta sessão
 
 O painel foi verificado no modo desligado (sem Supabase). O fluxo logado não foi exercitado contra um projeto real

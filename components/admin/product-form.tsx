@@ -7,6 +7,8 @@ import { ArrowDown, ArrowUp, Loader2, Plus, Trash2, Upload } from "lucide-react"
 import { saveProduct, setProductStatus } from "@/app/admin/produtos/actions";
 import { slugify, type ProductForm } from "@/lib/admin/product-schema";
 import { createAdminBrowserClient } from "@/lib/supabase/browser";
+import { PriceCalculator } from "@/components/admin/price-calculator";
+import { DEFAULT_DISPATCH, DEFAULT_PACKAGE } from "@/lib/catalog/fulfillment";
 
 type Options = { categories: { slug: string; name: string }[]; teams: { slug: string; name: string }[]; drivers: { slug: string; name: string; team_slug: string }[] };
 
@@ -31,10 +33,24 @@ const EMPTY: ProductForm = {
   status: "draft",
   variants: [{ sku: "", size: "Único", color: "", stock: 0 }],
   images: [],
+  fulfillment: "estoque_proprio",
+  dispatchMin: DEFAULT_DISPATCH.min,
+  dispatchMax: DEFAULT_DISPATCH.max,
+  origin: "nacional",
+  weightGrams: DEFAULT_PACKAGE.weightGrams,
+  lengthCm: DEFAULT_PACKAGE.lengthCm,
+  widthCm: DEFAULT_PACKAGE.widthCm,
+  heightCm: DEFAULT_PACKAGE.heightCm,
+  cost: "",
+  supplierShipping: "",
+  supplierUrl: "",
+  notes: "",
 };
 
 const input = "w-full rounded-xl border border-black/15 bg-white px-3 py-2.5 text-sm outline-none focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/10";
 const label = "mb-1.5 block text-xs font-medium text-black/70";
+const toNumber = (value: string) => (value === "" ? 0 : Number(value.replace(",", ".")));
+
 
 // Formulário de produto do painel (fase 11): dados, preços (em reais), categoria/equipe/piloto, status
 // (rascunho/publicado/arquivado), variantes com estoque, ficha e fotos (envio direto para o Supabase Storage, bucket
@@ -153,6 +169,73 @@ export function ProductFormView({ options, initial, code }: { options: Options; 
                 {error("compareAtPrice")}
               </div>
             </div>
+          </section>
+
+          <section className="rounded-2xl bg-white p-6">
+            <h2 className="font-medium">Venda e envio</h2>
+            <p className="mt-1 text-xs text-black/60">Aparece na loja: &quot;Produto sob encomenda&quot; e o prazo de envio (dias úteis até postar).</p>
+            <fieldset className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <legend className={label}>Modelo</legend>
+              {([["estoque_proprio", "Estoque próprio (pronta entrega)"], ["sob_encomenda", "Sob encomenda (compro no fornecedor)"]] as const).map(([value, text]) => (
+                <label key={value} className="flex items-center gap-2"><input type="radio" name="fulfillment" checked={form.fulfillment === value} onChange={() => set("fulfillment", value)} className="size-4 accent-[#b94f01]" /> {text}</label>
+              ))}
+            </fieldset>
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <div>
+                <label className={label} htmlFor="prazo-min">Envio: mínimo (dias úteis)</label>
+                <input id="prazo-min" type="number" min={0} className={input} value={form.dispatchMin} onChange={(e) => set("dispatchMin", Math.max(0, Math.floor(toNumber(e.target.value))))} />
+                {error("dispatchMin")}
+              </div>
+              <div>
+                <label className={label} htmlFor="prazo-max">Envio: máximo (dias úteis)</label>
+                <input id="prazo-max" type="number" min={0} className={input} value={form.dispatchMax} onChange={(e) => set("dispatchMax", Math.max(0, Math.floor(toNumber(e.target.value))))} />
+                {error("dispatchMax")}
+              </div>
+              <div>
+                <label className={label} htmlFor="origem">Origem</label>
+                <select id="origem" className={input} value={form.origin} onChange={(e) => set("origin", e.target.value as ProductForm["origin"])}>
+                  <option value="nacional">Nacional</option>
+                  <option value="importado">Importado</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {([["weightGrams", "Peso (g)"], ["lengthCm", "Comprimento (cm)"], ["widthCm", "Largura (cm)"], ["heightCm", "Altura (cm)"]] as const).map(([key, text]) => (
+                <div key={key}>
+                  <label className={label} htmlFor={key}>{text}</label>
+                  <input id={key} type="number" min={0} step={key === "weightGrams" ? 1 : 0.5} className={input} value={form[key]} onChange={(e) => set(key, toNumber(e.target.value))} />
+                  {error(key)}
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-black/60">Peso e medidas da EMBALAGEM: usados na cotação do frete.</p>
+          </section>
+
+          <section className="rounded-2xl bg-white p-6 ring-1 ring-[#b94f01]/30">
+            <h2 className="font-medium">Custo e fornecedor <span className="ml-1 rounded-md bg-[#b94f01]/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8a3a00]">privado</span></h2>
+            <p className="mt-1 text-xs text-black/60">Só o painel vê (tabela product_private). Nada disso aparece na loja.</p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={label} htmlFor="custo">Custo do produto (R$)</label>
+                <input id="custo" inputMode="decimal" placeholder="89,90" className={input} value={form.cost} onChange={(e) => set("cost", e.target.value)} />
+                {error("cost")}
+              </div>
+              <div>
+                <label className={label} htmlFor="frete-fornecedor">Frete do fornecedor (R$)</label>
+                <input id="frete-fornecedor" inputMode="decimal" placeholder="15,00" className={input} value={form.supplierShipping} onChange={(e) => set("supplierShipping", e.target.value)} />
+                {error("supplierShipping")}
+              </div>
+              <div className="sm:col-span-2">
+                <label className={label} htmlFor="link-fornecedor">Link do fornecedor</label>
+                <input id="link-fornecedor" type="url" placeholder="https://" className={input} value={form.supplierUrl} onChange={(e) => set("supplierUrl", e.target.value.trim())} />
+                {error("supplierUrl")}
+              </div>
+              <div className="sm:col-span-2">
+                <label className={label} htmlFor="notas">Notas internas</label>
+                <textarea id="notas" rows={3} className={input} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
+              </div>
+            </div>
+            <PriceCalculator cost={form.cost} supplierShipping={form.supplierShipping} price={form.price} onUsePrice={(value) => set("price", value)} />
           </section>
 
           <section className="rounded-2xl bg-white p-6">

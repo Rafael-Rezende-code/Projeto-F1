@@ -734,6 +734,14 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   **Sob encomenda também usa o estoque da variante**: ali ele é "quantas unidades a loja aceita encomendar".
   Prints em `docs/refino-2/5-modelo-de-venda/`.
 
+- **Admin (item 6):** formulário do produto com "Venda e envio" (público) e "Custo e fornecedor" (privado, gravado em
+  `product_private`) + `components/admin/price-calculator.tsx` (cálculo puro em `lib/admin/pricing.ts`, com testes;
+  parâmetros editáveis no localStorage `apex:admin:precificacao:v1`; valores iniciais são exemplo). Fila
+  `/admin/fornecedor` (itens sob encomenda de pedidos pagos; link, copiar dados do cliente via
+  `lib/admin/supplier.ts`, rastreio do fornecedor, "Marcar comprado" em `app/admin/fornecedor/actions.ts`). "Marcar como
+  enviado" também passa os itens para "enviado". Compra manual, sem automação. Desligado sem Supabase (como o resto do
+  painel). Prints (com dados de exemplo, página temporária) em `docs/refino-2/6-admin/`. Guia em `docs/backend/admin.md`.
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete

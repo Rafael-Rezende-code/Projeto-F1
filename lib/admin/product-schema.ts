@@ -45,6 +45,20 @@ export const productFormSchema = z
       )
       .min(1, "Cadastre pelo menos uma variante (tamanho)."),
     images: z.array(z.object({ src: z.string().url("Imagem inválida."), alt: z.string().trim(), storagePath: z.string().nullable() })).max(12),
+    // Modelo de venda (refino 2, item 5): público.
+    fulfillment: z.enum(["estoque_proprio", "sob_encomenda"]),
+    dispatchMin: z.number().int("Use dias inteiros.").min(0, "Mínimo inválido."),
+    dispatchMax: z.number().int("Use dias inteiros.").max(120, "Até 120 dias úteis."),
+    origin: z.enum(["nacional", "importado"]),
+    weightGrams: z.number().int().min(1, "Informe o peso (gramas)."),
+    lengthCm: z.number().positive("Medida inválida."),
+    widthCm: z.number().positive("Medida inválida."),
+    heightCm: z.number().positive("Medida inválida."),
+    // PRIVADO (tabela product_private, só admin): custo e fornecedor. Nunca vai para a loja.
+    cost: z.string(),
+    supplierShipping: z.string(),
+    supplierUrl: z.union([z.literal(""), z.string().trim().url("Link inválido (comece com https://).")]),
+    notes: z.string().max(2000),
   })
   .superRefine((value, ctx) => {
     const price = toCents(value.price);
@@ -53,6 +67,9 @@ export const productFormSchema = z
     if (Number.isNaN(compare)) ctx.addIssue({ code: "custom", path: ["compareAtPrice"], message: "Preço \"de\" inválido." });
     else if (compare !== null && price !== null && !Number.isNaN(price) && compare <= price)
       ctx.addIssue({ code: "custom", path: ["compareAtPrice"], message: "O preço \"de\" precisa ser maior que o preço." });
+    if (value.dispatchMax < value.dispatchMin) ctx.addIssue({ code: "custom", path: ["dispatchMax"], message: "O máximo precisa ser maior ou igual ao mínimo." });
+    for (const key of ["cost", "supplierShipping"] as const)
+      if (Number.isNaN(toCents(value[key]))) ctx.addIssue({ code: "custom", path: [key], message: "Valor inválido (ex.: 89,90)." });
     const skus = value.variants.map((variant) => variant.sku.toUpperCase());
     if (new Set(skus).size !== skus.length) ctx.addIssue({ code: "custom", path: ["variants"], message: "Há SKUs repetidos." });
     if (value.status === "active" && value.images.length === 0) ctx.addIssue({ code: "custom", path: ["images"], message: "Para publicar, envie pelo menos uma foto." });

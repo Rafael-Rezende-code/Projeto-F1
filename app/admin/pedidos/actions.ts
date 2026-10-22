@@ -21,6 +21,13 @@ export async function markShipped(_: ShipState, form: FormData): Promise<ShipSta
     .select("id");
   if (error) return { ok: false, message: `Não foi possível salvar: ${error.message}` };
   if (!data?.length) return { ok: false, message: "Só pedidos pagos podem ser marcados como enviados." };
+  // Itens (refino 2): os que ainda não foram enviados passam a "enviado" com o mesmo rastreio. Item sob encomenda ainda
+  // não comprado fica como está (o aviso aparece no detalhe do pedido).
+  await supabase
+    .from("order_items")
+    .update({ item_status: "enviado", tracking_code: parsed.data.tracking.toUpperCase(), shipped_at: new Date().toISOString() })
+    .eq("order_id", parsed.data.id)
+    .in("item_status", ["separando", "comprado", "enviado"]);
   revalidatePath(`/admin/pedidos/${parsed.data.id}`);
   revalidatePath("/admin/pedidos");
   return { ok: true, message: "Pedido marcado como enviado." };

@@ -20,6 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <nav aria-label="Painel" className="flex items-center gap-1 text-sm">
               <Link href="/admin/produtos" className="rounded-xl px-3 py-2 hover:bg-black/5">Produtos</Link>
               <Link href="/admin/pedidos" className="rounded-xl px-3 py-2 hover:bg-black/5">Pedidos</Link>
+              <Link href="/admin/fornecedor" className="rounded-xl px-3 py-2 hover:bg-black/5">Fornecedor</Link>
               <form action="/admin/sair" method="post">
                 <button type="submit" className="rounded-xl px-3 py-2 text-black/60 hover:bg-black/5 hover:text-black">Sair</button>
               </form>

@@ -7,6 +7,7 @@ export default async function AdminHome() {
   const { supabase, user } = await requireAdmin();
   const count = async (table: string, column: string, value: string) =>
     (await supabase.from(table).select("*", { count: "exact", head: true }).eq(column, value)).count ?? 0;
+  const toBuy = (await supabase.from("order_items").select("id, orders!inner(status)", { count: "exact", head: true }).eq("item_status", "aguardando-compra").eq("orders.status", "pago")).count ?? 0;
   const [paid, waiting, active, drafts, empty] = await Promise.all([
     count("orders", "status", "pago"),
     count("orders", "status", "aguardando-pagamento"),
@@ -16,6 +17,7 @@ export default async function AdminHome() {
   ]);
   const cards = [
     { label: "Pedidos pagos para enviar", value: paid, href: "/admin/pedidos?status=pago" },
+    { label: "Itens para comprar no fornecedor", value: toBuy, href: "/admin/fornecedor" },
     { label: "Aguardando pagamento", value: waiting, href: "/admin/pedidos?status=aguardando-pagamento" },
     { label: "Produtos publicados", value: active, href: "/admin/produtos?status=active" },
     { label: "Rascunhos", value: drafts, href: "/admin/produtos?status=draft" },
@@ -25,7 +27,7 @@ export default async function AdminHome() {
     <div>
       <p className="text-sm text-black/60">Olá, {user.email}.</p>
       <h1 className="mt-2 text-4xl tracking-[-0.05em]">Painel</h1>
-      <ul role="list" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <ul role="list" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => (
           <li key={card.label}>
             <Link href={card.href} className="block rounded-2xl bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-sm">

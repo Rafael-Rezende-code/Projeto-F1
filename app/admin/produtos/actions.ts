@@ -37,6 +37,14 @@ export async function saveProduct(input: ProductForm): Promise<SaveResult> {
     is_new: form.isNew,
     featured: form.featured,
     status: form.status,
+    fulfillment: form.fulfillment,
+    dispatch_min_days: form.dispatchMin,
+    dispatch_max_days: form.dispatchMax,
+    origin: form.origin,
+    weight_grams: form.weightGrams,
+    length_cm: form.lengthCm,
+    width_cm: form.widthCm,
+    height_cm: form.heightCm,
   };
 
   let id = form.id;
@@ -48,6 +56,19 @@ export async function saveProduct(input: ProductForm): Promise<SaveResult> {
     if (error || !data) return { ok: false, message: friendly(error?.message ?? "") };
     id = data.id as string;
   }
+
+  // Dados PRIVADOS (custo, fornecedor, notas): tabela product_private, só admin (RLS). Nunca na tabela products.
+  const { error: privateError } = await supabase.from("product_private").upsert(
+    {
+      product_id: id,
+      cost_cents: toCents(form.cost),
+      supplier_shipping_cents: toCents(form.supplierShipping),
+      supplier_url: form.supplierUrl || null,
+      notes: form.notes,
+    },
+    { onConflict: "product_id" },
+  );
+  if (privateError) return { ok: false, message: friendly(privateError.message) };
 
   // Variantes: grava as da lista e remove as que saíram (pedidos antigos guardam o SKU em texto).
   const { error: variantError } = await supabase
