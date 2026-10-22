@@ -103,7 +103,9 @@ export const institutionalPages: Record<string, InstitutionalPage> = {
     eyebrow: `A ${BRAND.name}`,
     title: `Sobre a ${BRAND.name}`,
     description: "Cultura, roupas e colecionáveis premium de Fórmula 1.",
-    sections: ["Quem somos", "Nossa história", "O que vendemos", "Produtos licenciados", "Fale com a gente"],
+    // Página própria desde a fase 8 da rodada de conteúdo (app/(loja)/sobre + lib/content/sobre.ts); fica aqui para
+    // título, descrição e sitemap.
+    sections: [],
   },
 };
 

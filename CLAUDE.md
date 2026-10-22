@@ -627,6 +627,12 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `detailsPending: true` faz a página mostrar "[CONFERIR COM O PRODUTO REAL]" acima da ficha: as fichas são exemplos.
   A meta description usa só o 1º parágrafo. Nenhuma descrição diz "oficial" (a camiseta de equipe dizia "Camiseta
   oficial de torcedor") e o boné de piloto não tem mais "assinatura bordada" (agora "nome bordado na lateral").
+- **Fase 8, /sobre:** página própria (`app/(loja)/sobre/page.tsx`, textos em `lib/content/sobre.ts`): manifesto, o que
+  vendemos (as 4 categorias do catálogo, com a frase "Não somos uma loja oficial de nenhuma equipe ou piloto") e como
+  trabalhamos (envio, trocas, atendimento, com links para as páginas de ajuda). Tudo que depende de dado real vem
+  marcado `[CONFIRMAR]` e aparece destacado (`components/confirm-text.tsx`). Prazos e frete grátis vêm de
+  `lib/checkout/shipping.ts` e `lib/cart/config.ts` (mudam junto). Sem texto jurídico. A entrada `sobre` de
+  `lib/institutional.ts` ficou só para título, descrição e sitemap.
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**
