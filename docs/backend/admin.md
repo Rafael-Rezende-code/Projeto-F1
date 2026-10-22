@@ -56,6 +56,38 @@ Storage (pode estar em uso em pedidos ou cache); limpe pelo painel do Supabase s
 - **Marcar como enviado** (detalhe do pedido): grava o rastreio do pedido e passa os itens já separados/comprados para
   "enviado" com o mesmo código.
 
+## Importar produtos por CSV (lançamento)
+
+`/admin/produtos/importar` (botão "Importar CSV" na lista de produtos).
+
+1. **Baixar o modelo** (`modelo-importacao-produtos.csv`, separador `;`, abre certo no Excel). Colunas: nome, slug
+   (opcional), descricao, categoria, equipe, piloto, preco, preco_de, tamanhos_estoque (`P:3 | M:5`), fulfillment
+   (`estoque_proprio` ou `sob_encomenda`), prazo_min, prazo_max, origem, peso_g, comprimento_cm, largura_cm, altura_cm,
+   custo, frete_fornecedor, link_fornecedor, notas, imagens (URLs separadas por `|`), tags e status (`publicado` ou
+   `rascunho`). A lista com explicação fica no fim da página do importador.
+2. **Enviar o arquivo**: aparece a **prévia** (novos, atualizados, linhas com erro e o motivo). Nada é gravado.
+   Preços aceitam "R$ 1.299,90", "1299,90" ou "1299.90"; cabeçalhos com acento ou maiúsculas funcionam; arquivo salvo
+   pelo Excel em "CSV" (Windows-1252) também.
+3. **Importar**: o servidor lê o arquivo de novo, baixa as fotos (máximo 15 MB cada, só endereços públicos), otimiza
+   (até 2000px, WebP) e guarda no Storage (`produtos/importados/{slug}/`). Depois grava **todos** os produtos válidos
+   numa **transação só** (função `import_products`, migração `20261024000000_importador.sql`): se o banco recusar um,
+   nada é gravado. Relatório no fim: criados, atualizados, fotos que falharam e linhas puladas.
+
+Regras:
+
+- **Slug que já existe = atualização** (os SKUs dos tamanhos que continuam são mantidos; tamanhos que saíram da
+  planilha são removidos).
+- **Custo, frete do fornecedor, link e notas vão para `product_private`** (só admin). Célula vazia nessas colunas não
+  apaga o valor atual. Coluna `imagens` vazia mantém as fotos atuais.
+- **Foto que falhou → o produto entra como rascunho**, com o aviso no relatório. Produto novo sem nenhuma foto também.
+- Até 500 linhas e 2 MB por arquivo; a importação pode levar alguns minutos (limite de 5 minutos por envio na Vercel):
+  com muitas fotos, divida em lotes de ~50 produtos.
+- Linhas com erro não são importadas (as válidas são). Corrija e envie de novo só elas.
+- Fotos enviadas antes de uma importação recusada ficam no Storage (sem uso).
+
+Código: `lib/admin/import.ts` (leitura e validação, com testes), `lib/admin/import-images.ts` (fotos, com testes),
+`app/admin/produtos/importar/` (página, ações e modelo) e `components/admin/import-view.tsx`.
+
 ## Não testado nesta sessão
 
 O painel foi verificado no modo desligado (sem Supabase). O fluxo logado não foi exercitado contra um projeto real

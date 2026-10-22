@@ -750,6 +750,20 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   mostra "Chega em X a Y dias úteis" (envio do item mais lento + transporte; `lib/checkout/shipping.ts`). Guia em
   `docs/backend/frete.md`; prints em `docs/refino-2/7-frete/`.
 
+## Lançamento (feat/lancamento, a partir da feat/refino)
+
+- **SQL único:** `supabase/setup-completo.sql` = todas as migrations + seed, gerado por `pnpm supabase:setup`
+  (`scripts/supabase/setup-completo.mjs`, que torna o texto reexecutável: if not exists, drop policy/trigger if exists,
+  constraint em bloco). Testado rodando duas vezes no PGlite (`supabase/tests/setup-completo.test.ts`, que também
+  falha se faltar uma migration no arquivo). **Ao criar migration nova: `pnpm supabase:setup`.**
+- **Indexação:** `lib/indexing.ts`; sem `NEXT_PUBLIC_ALLOW_INDEXING=true` (lida no build) o site fica fora do índice
+  (robots `Disallow: /`, meta `noindex, nofollow`, `X-Robots-Tag` pelo `next.config.mjs`, sitemap vazio). Páginas
+  privadas usam `privateRobots`. Dia do lançamento em `docs/lancamento.md`.
+- **Importador CSV:** `/admin/produtos/importar` (ver `docs/backend/admin.md`). Parser puro `lib/admin/import.ts`,
+  fotos `lib/admin/import-images.ts` (sharp, agora em `dependencies`), RPC `import_products` (migração
+  `20261024000000_importador.sql`, security invoker + `is_admin()`, uma transação). Slug existente = atualização;
+  privados em `product_private`; foto que falha → rascunho.
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete

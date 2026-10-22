@@ -43,6 +43,7 @@ beforeAll(async () => {
   await db.exec("grant select, insert, update, delete on all tables in schema public to anon, authenticated, service_role;");
   await db.exec("alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated, service_role;");
   await db.exec(read("supabase/migrations/20261023000000_modelo_de_venda.sql"));
+  await db.exec(read("supabase/migrations/20261024000000_importador.sql"));
   await db.exec(read("supabase/seed.sql"));
 }, 60_000);
 
@@ -143,5 +144,43 @@ describe("banco da loja (migração + seed)", () => {
     await db.query("update order_items set item_status = 'comprado', supplier_tracking_code = 'LB123' where order_id = 'APX-T4' and item_status = 'aguardando-compra'");
     await db.exec("reset role");
     expect((await db.query<{ n: number }>("select count(*)::int n from order_items where supplier_tracking_code = 'LB123'")).rows[0].n).toBe(1);
+  });
+
+  it("importador: lote numa transação, slug existente atualiza, privados na tabela privada, só admin", async () => {
+    const item = (slug: string, extra: Record<string, unknown> = {}) => ({
+      slug, name: `Produto ${slug}`, description: "Descrição importada.", category_slug: "colecionaveis", team_slug: "", driver_slug: "hamilton",
+      price_cents: 129990, compare_at_price_cents: null, tags: ["importado"], status: "active", fulfillment: "sob_encomenda",
+      dispatch_min_days: 15, dispatch_max_days: 30, origin: "importado", weight_grams: 900, length_cm: 20, width_cm: 20, height_cm: 20,
+      variants: [{ sku: `${slug.toUpperCase()}-UN`, size: "Único", stock: 3 }],
+      images: [{ src: "https://x.supabase.co/storage/v1/object/public/produtos/importados/a.webp", alt: "", storage_path: "importados/a.webp" }],
+      private: { cost_cents: 64000, supplier_url: "https://fornecedor.exemplo/p/1" },
+      ...extra,
+    });
+    const run = (items: unknown[]) => db.query<{ r: { slug: string; action: string }[] }>("select import_products($1::jsonb) r", [JSON.stringify(items)]);
+    // Visitante e usuário comum: sem permissão.
+    await asRole("anon");
+    await expect(run([item("imp-a")])).rejects.toThrow(/permission denied/);
+    await asRole("authenticated", "outro@x.com");
+    await expect(run([item("imp-a")])).rejects.toThrow("SEM_PERMISSAO");
+    // Admin: cria dois.
+    await asRole("authenticated", "dono@loja.com");
+    expect((await run([item("imp-a"), item("imp-b")])).rows[0].r.map((row) => row.action)).toEqual(["criado", "criado"]);
+    // Lote com erro no meio (SKU de outro produto): NADA é gravado, nem o primeiro.
+    await expect(run([item("imp-c"), item("imp-d", { variants: [{ sku: "IMP-A-UN", size: "Único", stock: 1 }] })])).rejects.toThrow("SKU_DE_OUTRO_PRODUTO");
+    await db.exec("reset role");
+    expect((await db.query<{ n: number }>("select count(*)::int n from products where slug = 'imp-c'")).rows[0].n).toBe(0);
+    // Slug existente atualiza; private sem custo mantém o custo; images null mantém as fotos.
+    await asRole("authenticated", "dono@loja.com");
+    const update = await run([item("imp-a", { name: "Produto A v2", price_cents: 99990, images: null, private: { notes: "nota" }, variants: [{ sku: "IMP-A-UN", size: "Único", stock: 7 }] })]);
+    expect(update.rows[0].r[0].action).toBe("atualizado");
+    await db.exec("reset role");
+    const row = (await db.query<{ name: string; price_cents: number; cost_cents: number; notes: string; images: number; stock: number }>(
+      "select p.name, p.price_cents, pp.cost_cents, pp.notes, (select count(*)::int from product_images i where i.product_id = p.id) images, (select stock from product_variants v where v.product_id = p.id) stock from products p join product_private pp on pp.product_id = p.id where p.slug = 'imp-a'",
+    )).rows[0];
+    expect(row).toEqual({ name: "Produto A v2", price_cents: 99990, cost_cents: 64000, notes: "nota", images: 1, stock: 7 });
+    // Nada privado na tabela pública.
+    await asRole("anon");
+    expect(JSON.stringify((await db.query("select * from products where slug = 'imp-a'")).rows)).not.toContain("fornecedor.exemplo");
+    await db.exec("reset role");
   });
 });

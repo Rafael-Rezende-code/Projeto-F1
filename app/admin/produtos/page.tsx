@@ -31,7 +31,10 @@ export default async function AdminProdutos({ searchParams }: { searchParams: Pr
           <h1 className="text-4xl tracking-[-0.05em]">Produtos</h1>
           <p className="mt-1 text-sm text-black/60">{rows.length} {rows.length === 1 ? "produto" : "produtos"}</p>
         </div>
-        <Link href="/admin/produtos/novo" className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white hover:bg-[#b94f01]">Novo produto</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/produtos/importar" className="rounded-xl border border-black/15 bg-white px-5 py-3 text-sm font-medium hover:border-black">Importar CSV</Link>
+          <Link href="/admin/produtos/novo" className="rounded-xl bg-black px-5 py-3 text-sm font-medium text-white hover:bg-[#b94f01]">Novo produto</Link>
+        </div>
       </div>
       <form className="mt-6 flex flex-wrap gap-2" role="search">
         <label className="sr-only" htmlFor="q">Buscar</label>
