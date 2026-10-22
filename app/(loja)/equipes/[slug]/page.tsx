@@ -59,9 +59,7 @@ export default async function TeamPage({ params }: Params) {
           <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[3px] bg-white/25" />
         </header>
 
-        {story && <TeamStory content={story} color={team.color} name={team.name} />}
-
-        <section aria-labelledby="produtos-equipe" className="mt-16 sm:mt-24">
+        <section aria-labelledby="produtos-equipe" className="mt-16">
           <div className="mb-10 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             <SectionTitle id="produtos-equipe" text={`Produtos ${team.name}`} className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
             <Link href={`/produtos?equipe=${team.slug}`} className="group inline-flex min-h-11 items-center gap-2 text-sm text-black/60 underline-offset-4 transition hover:text-black hover:underline">
@@ -70,6 +68,9 @@ export default async function TeamPage({ params }: Params) {
           </div>
           <ProductGrid products={products} priorityCount={4} />
         </section>
+
+        {/* Ordem (refino 2): cabeçalho → produtos → história → outras equipes. */}
+        {story && <TeamStory content={story} color={team.color} name={team.name} />}
 
         <nav aria-labelledby="outras-equipes" className="mt-24">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Escolha sua equipe</p>

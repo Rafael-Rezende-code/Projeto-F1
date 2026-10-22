@@ -3,12 +3,12 @@ import { BlurReveal } from "@/components/ui/blur-reveal";
 import { WordsStagger } from "@/components/ui/words-stagger";
 import type { TeamContent } from "@/lib/content/teams";
 
-// Texto editorial da página da equipe (fase 5), entre o cabeçalho e os produtos: abertura (WordsStagger), história em
+// Texto editorial da página da equipe (fase 5), depois dos produtos (refino 2): abertura (WordsStagger), história em
 // 2 parágrafos, sede e 3 marcos com o ano grande na Archivo. Mesmo padrão dos pilotos (components/driver-story.tsx):
 // a cor da equipe só como detalhe (fios), BlurReveal no título, animação só ao entrar na tela.
 export function TeamStory({ content, color, name }: { content: TeamContent; color: string; name: string }) {
   return (
-    <section aria-labelledby="historia-equipe" className="mt-16 sm:mt-20" style={{ "--team": color } as CSSProperties}>
+    <section aria-labelledby="historia-equipe" className="mt-20 border-t border-black/10 pt-12 sm:mt-28 sm:pt-16" style={{ "--team": color } as CSSProperties}>
       <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] md:gap-16">
         <div>
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-black/60">A história</p>

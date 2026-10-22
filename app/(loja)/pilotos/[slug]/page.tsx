@@ -6,16 +6,16 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { DriverCar } from "@/components/driver-car";
-import { DriverHighlights } from "@/components/driver-highlights";
+import { DriverIntro } from "@/components/driver-intro";
 import { DriverSignature } from "@/components/driver-signature";
-import { DriverOpening, DriverStory } from "@/components/driver-story";
+import { DriverCareer, DriverExtras, DriverOpening } from "@/components/driver-story";
 import { ImageReveal } from "@/components/motion/image-reveal";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { ArtDirectedImage } from "@/components/ui/art-directed-image";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
 import { getDriverContent } from "@/lib/content/drivers";
-import { readableTextOn } from "@/lib/contrast";
+import { contrastRatio, readableTextOn } from "@/lib/contrast";
 import { CAR_FACING } from "@/lib/drivers";
 import { blurProps, findLocalImage, localImage } from "@/lib/local-images";
 import { signaturePaths } from "@/lib/signature-paths";
@@ -23,9 +23,9 @@ import { signaturePaths } from "@/lib/signature-paths";
 type Params = { params: Promise<{ slug: string }> };
 
 // Coreografia do topo (segundos depois do sinal da foto principal): a assinatura começa em 0,45 s e termina em ~3 s;
-// carro e miniaturas entram quando o nome já está quase todo escrito.
+// carro (ou o bloco de abertura) entra quando o nome já está quase todo escrito.
 const CAR_DELAY = 1.9;
-const HIGHLIGHTS_DELAY = 2.1;
+const INTRO_DELAY = 2.1;
 
 const SECOND_SIZES = "(min-width: 1480px) 680px, (min-width: 768px) calc(50vw - 72px), calc(100vw - 40px)";
 
@@ -66,12 +66,10 @@ export default async function DriverPage({ params }: Params) {
   // Texto editorial (fase 4): lib/content/drivers/{slug}.ts.
   const story = getDriverContent(driver.slug);
 
-  // Espaço ao lado do nome (fase 2): o carro, se o PNG existir no build; senão, miniaturas de produtos do piloto.
-  // Com carro, as miniaturas descem para uma linha logo abaixo do topo.
+  // Espaço ao lado do nome: o carro, se o PNG existir no build (fase 2); sem carro, a frase de abertura, 3 números e
+  // "Ver a coleção ↓" (refino 2). As miniaturas de produto do topo saíram: os produtos vêm logo depois do topo.
   const carSrc = driver.carImage ?? `/images/pilotos/carros/${driver.slug}.png`;
   const carFile = localImage(carSrc);
-  const highlights = [...products].sort((a, b) => Number(!!b.featured) - Number(!!a.featured)).slice(0, 3);
-  const highlightsLabel = `Destaques ${driver.name.split(" ").slice(-1)[0]}`;
   const slot = carFile ? (
     <DriverCar
       src={carSrc}
@@ -85,9 +83,11 @@ export default async function DriverPage({ params }: Params) {
       blur={carFile.blur}
       sizes="(min-width: 768px) 45vw, 90vw"
     />
-  ) : (
-    <DriverHighlights products={highlights} cue={photoCue} delay={HIGHLIGHTS_DELAY} label={highlightsLabel} className="w-full" />
-  );
+  ) : story ? (
+    <DriverIntro content={story} textColor={smallText} cue={photoCue} delay={INTRO_DELAY} />
+  ) : null;
+  // Números das curiosidades (texto pequeno sobre branco): cor da equipe só com ≥ 4,5:1.
+  const accentOnWhite = contrastRatio(teamColor, "#FFFFFF") >= 4.5 ? teamColor : "#000000";
 
   // Nome e equipe (bloco na cor da equipe). O nome em texto fica no h1 para leitores de tela e buscadores; a
   // assinatura animada (DriverSignature) usa uma fonte manuscrita GENÉRICA: nunca imitar o autógrafo real (CLAUDE.md).
@@ -165,27 +165,39 @@ export default async function DriverPage({ params }: Params) {
       <header className={`text-white ${headerLayout}`} style={{ backgroundColor: teamColor }}>
         {identity}
         {photo}
-        <div className="px-5 py-8 md:hidden">{slot}</div>
+        {slot && <div className="px-5 py-8 md:hidden">{slot}</div>}
       </header>
 
-      {carFile && (
-        <section aria-label={highlightsLabel} className="px-5 pt-10 sm:px-10">
-          <div className="mx-auto max-w-[1400px]">
-            <DriverHighlights products={highlights} cue={photoCue} delay={HIGHLIGHTS_DELAY + 0.4} tone="light" label={highlightsLabel} />
+      {/* Ordem (refino 2): topo → produtos → história e números → bloco editorial com a foto secundária. */}
+      <section aria-labelledby="produtos-piloto" id="produtos-piloto-secao" className="scroll-mt-24 px-5 pt-16 sm:px-10 sm:pt-20">
+        <div className="mx-auto max-w-[1400px]">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Coleção do piloto</p>
+          <div className="mb-10 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+            <SectionTitle id="produtos-piloto" text={`A coleção ${driver.name}`} className="scroll-mt-24 text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
+            <Link href={`/produtos?piloto=${driver.slug}`} className="group inline-flex min-h-11 items-center gap-2 text-sm text-black/60 underline-offset-4 transition hover:text-black hover:underline">
+              Ver todos os produtos <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
+            </Link>
           </div>
-        </section>
+          <ProductGrid products={products} priorityCount={4} layout="colecao" />
+        </div>
+      </section>
+
+      {story && (
+        <div className="px-5 pt-20 sm:px-10 sm:pt-28">
+          <DriverCareer content={story} color={teamColor} name={driver.name} />
+        </div>
       )}
 
-      {/* Bloco editorial: foto secundária (dentro do container: rounded-2xl) e texto. A cor da equipe aparece como
-          detalhe (fio e marcador), não como cor de texto: algumas cores não têm contraste suficiente sobre o branco. */}
-      <section aria-label={`Sobre ${driver.name}`} className="px-5 pt-16 sm:px-10 sm:pt-24">
-        <div className="mx-auto grid max-w-[1400px] items-center gap-10 md:grid-cols-2 md:gap-16">
+      {/* Bloco editorial: foto secundária (dentro do container: rounded-2xl) com estilo de pilotagem e curiosidades. A cor
+          da equipe aparece como detalhe (fio e marcador), não como cor de texto. */}
+      <section aria-label={`Sobre ${driver.name}`} className="px-5 pt-20 sm:px-10 sm:pt-28">
+        <div className="mx-auto grid max-w-[1400px] items-start gap-10 md:grid-cols-2 md:gap-16">
           {/* Secundária: mesma cortina, quando a foto entra na tela (e já está decodificada). */}
           <ImageReveal
             variant="curtain"
             start="view"
             color={teamColor}
-            className={`relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4] ${secondDesktop ? "lg:aspect-(--desk-ratio)" : ""}`}
+            className={`relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4] md:sticky md:top-24 ${secondDesktop ? "lg:aspect-(--desk-ratio)" : ""}`}
             style={secondDesktop ? ({ "--desk-ratio": `${secondDesktop.width}/${secondDesktop.height}` } as React.CSSProperties) : undefined}
           >
             {secondDesktop ? (
@@ -209,7 +221,7 @@ export default async function DriverPage({ params }: Params) {
               />
             )}
           </ImageReveal>
-          <div className="max-w-md">
+          <div>
             <span aria-hidden="true" className="block h-1 w-12 rounded-full" style={{ backgroundColor: teamColor }} />
             {team && (
               <p className="mt-6 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-black/60">
@@ -217,27 +229,14 @@ export default async function DriverPage({ params }: Params) {
                 {team.name}
               </p>
             )}
-            {story ? <DriverOpening text={story.opening} /> : null}
+            {/* Com carro no topo, a frase de abertura vem para cá (sem carro, ela está no topo). */}
+            {story && carFile && <DriverOpening text={story.opening} />}
+            {story && (
+              <div className="mt-10">
+                <DriverExtras content={story} accent={accentOnWhite} name={driver.name} />
+              </div>
+            )}
           </div>
-        </div>
-      </section>
-
-      {story && (
-        <div className="px-5 pt-16 sm:px-10 sm:pt-24">
-          <DriverStory content={story} color={teamColor} name={driver.name} />
-        </div>
-      )}
-
-      <section aria-labelledby="produtos-piloto" className="px-5 pt-16 sm:px-10">
-        <div className="mx-auto max-w-[1400px]">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Coleção do piloto</p>
-          <div className="mb-10 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
-            <SectionTitle id="produtos-piloto" text={`Produtos ${driver.name}`} className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
-            <Link href={`/produtos?piloto=${driver.slug}`} className="group inline-flex min-h-11 items-center gap-2 text-sm text-black/60 underline-offset-4 transition hover:text-black hover:underline">
-              Filtrar no catálogo <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
-            </Link>
-          </div>
-          <ProductGrid products={products} priorityCount={4} />
         </div>
       </section>
     </div>
