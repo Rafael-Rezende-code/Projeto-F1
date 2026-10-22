@@ -8,11 +8,13 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { DriverCar } from "@/components/driver-car";
 import { DriverHighlights } from "@/components/driver-highlights";
 import { DriverSignature } from "@/components/driver-signature";
+import { DriverOpening, DriverStory } from "@/components/driver-story";
 import { ImageReveal } from "@/components/motion/image-reveal";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { ArtDirectedImage } from "@/components/ui/art-directed-image";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
+import { getDriverContent } from "@/lib/content/drivers";
 import { CAR_FACING } from "@/lib/drivers";
 import { blurProps, findLocalImage, localImage } from "@/lib/local-images";
 import { signaturePaths } from "@/lib/signature-paths";
@@ -58,6 +60,8 @@ export default async function DriverPage({ params }: Params) {
   const teamColor = team?.color ?? "#111";
   // Sinal da foto principal: a assinatura entra depois que ela começa a aparecer (components/motion/cue.ts).
   const photoCue = `piloto-foto-${driver.slug}`;
+  // Texto editorial (fase 4): lib/content/drivers/{slug}.ts.
+  const story = getDriverContent(driver.slug);
 
   // Espaço ao lado do nome (fase 2): o carro, se o PNG existir no build; senão, miniaturas de produtos do piloto.
   // Com carro, as miniaturas descem para uma linha logo abaixo do topo.
@@ -209,10 +213,16 @@ export default async function DriverPage({ params }: Params) {
                 {team.name}
               </p>
             )}
-            <p className="mt-4 text-lg leading-8 text-black/80">[TEXTO SOBRE O PILOTO]</p>
+            {story ? <DriverOpening text={story.opening} /> : null}
           </div>
         </div>
       </section>
+
+      {story && (
+        <div className="px-5 pt-16 sm:px-10 sm:pt-24">
+          <DriverStory content={story} color={teamColor} name={driver.name} />
+        </div>
+      )}
 
       <section aria-labelledby="produtos-piloto" className="px-5 pt-16 sm:px-10">
         <div className="mx-auto max-w-[1400px]">

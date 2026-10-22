@@ -544,6 +544,11 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   assinatura" lido como "quando o nome já está quase todo escrito", para não esperar 3 s por links de produto. Rótulo
   das miniaturas: "Destaques {sobrenome}". Miniaturas em cartões brancos (contraste garantido sobre qualquer cor de
   equipe). Sem fotos de carro no repositório, nenhum recorte foi feito (ver Estado).
+- **Fase 4:** BlurReveal e WordsStagger (Spell UI) voltaram, como pedido, mas SÓ abaixo da dobra e com `inView`: eles
+  escondem o texto até o JS (a rodada 2 os tirou da home por isso). Os números ficam em `<dl>` com `dt` antes dos `dd`
+  (o número aparece primeiro por `order`). Fatos com divergência entre fontes ficaram de fora ou genéricos (idade de
+  Hamilton ao entrar na McLaren; Bortoleto nasceu em "São Paulo" segundo a F1 e em Osasco segundo a Wikipedia).
+  Números do carro: Norris 4 (correu com o 1 em 2026), Verstappen 3 em 2026.
 - **Branches antigas no GitHub:** apagadas localmente; a exclusão remota foi bloqueada pela política do ambiente em
   nuvem (HTTP 403 no push de exclusão). Apagar à mão: `git push origin --delete perf/server-components feat/loja
   feat/polimento feat/polimento-2 feat/ajustes feat/pilotos`.
@@ -593,6 +598,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   (`data-gp-entered`). Medido: 1440×900 (3 cards, conteúdo 332px), 1280×720 (3 cards, 301px), 390×844 (585px); abaixo
   de 620px de altura no desktop ficam 2 cards. `featured` (novo campo do `Product`): Scuderia Racing Jacket, Classic
   Racing Hoodie e miniaturas de capacete de Hamilton e Bortoleto. GlyphPortal não foi alterado.
+- **Fase 4, textos dos pilotos:** `lib/content/drivers/{slug}.ts` (tipo em `types.ts`: abertura, trajetória 3–4
+  parágrafos, estilo 1–2, 3–5 números estáveis e 3 curiosidades), fontes por fato em `docs/conteudo/fontes-pilotos.md`.
+  Layout em `components/driver-story.tsx`: abertura com WordsStagger ao lado da foto secundária (no lugar de
+  "[TEXTO SOBRE O PILOTO]"), depois Trajetória (coluna de ~65 caracteres), números grandes na Archivo com fio na cor da
+  equipe, Estilo de pilotagem e Curiosidades lado a lado, nota "Texto editorial independente, escrito por fãs. Sem
+  vínculo com..." e os produtos. Títulos com BlurReveal. **Ao atualizar:** nada de total de vitórias/pódios/pontos
+  (muda a cada corrida); recordes e títulos só com fonte; sem citações do piloto; nunca sugerir loja oficial.
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**
