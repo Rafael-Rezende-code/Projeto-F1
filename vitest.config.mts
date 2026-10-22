@@ -1,8 +1,9 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-// Testes unitários da lógica pura (sacola, formatação, validações). Sem DOM.
+// Testes unitários da lógica pura (sacola, formatação, validações, webhook) e do banco (PGlite). Sem DOM.
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./", import.meta.url)) } },
-  test: { include: ["lib/**/*.test.ts"], environment: "node" },
+  // supabase/tests: migração + seed num Postgres em memória (PGlite).
+  test: { include: ["lib/**/*.test.ts", "app/**/*.test.ts", "supabase/tests/**/*.test.ts"], environment: "node" },
 });

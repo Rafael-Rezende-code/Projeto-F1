@@ -35,8 +35,12 @@ export const paymentSchema = z
     // CPF só para os meios em CPF_REQUIRED_METHODS (validado abaixo); nos outros é ignorado.
     cpf: z.string().optional(),
     acceptTerms: z.literal(true, { error: "É preciso aceitar os Termos de Uso e a Política de Privacidade." }),
+    // Dados do componente do provedor real (Mercado Pago: formData do Payment Brick). O provedor valida.
+    providerData: z.unknown().optional(),
   })
   .superRefine((value, ctx) => {
+    // Com o componente do provedor, ele mesmo pede o CPF quando o meio exige (boleto, cartão no Brasil).
+    if (value.providerData !== undefined) return;
     if (!CPF_REQUIRED_METHODS.includes(value.method)) return;
     if (!value.cpf || !isValidCpf(value.cpf)) {
       ctx.addIssue({ code: "custom", path: ["cpf"], message: value.cpf ? "CPF inválido. Confira os números." : "Informe o CPF para emitir o boleto." });

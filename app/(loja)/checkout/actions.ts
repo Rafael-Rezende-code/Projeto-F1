@@ -5,16 +5,23 @@ import { catalog } from "@/lib/catalog";
 import { getShippingOption, shippingPrice } from "@/lib/checkout/shipping";
 import { checkoutSchema, CPF_REQUIRED_METHODS, fieldErrors } from "@/lib/checkout/schema";
 import { newOrderId, type Order, type OrderLine } from "@/lib/checkout/order";
+import { cancelStoredOrder, createStoredOrder, recordPayment } from "@/lib/orders/store";
 import { getPaymentProvider } from "@/lib/payments";
+import { isOrderStoreConfigured } from "@/lib/supabase/config";
 import { onlyDigits } from "@/lib/validators/br";
 
 export type PlaceOrderResult =
   | { ok: true; order: Order }
   | { ok: false; message: string; errors?: Record<string, string>; stockIssues?: { sku: string; available: number }[] };
 
+const STOCK_MESSAGE = "Alguns itens não têm mais estoque suficiente. Ajuste a sacola e tente de novo.";
+
 // Server action do checkout. Nunca confia no cliente: valida tudo com zod de novo, busca preço e estoque de cada SKU
-// no catálogo, recalcula frete e total, e só então chama o provedor de pagamento (hoje, o simulado).
-// Pedido SIMULADO: não é gravado em lugar nenhum (ver CLAUDE.md, "Checkout").
+// no catálogo, recalcula frete e total, e só então chama o provedor de pagamento.
+// - Sem Supabase: pedido SIMULADO, não é gravado (ver CLAUDE.md, "Checkout").
+// - Com Supabase (fase 9): o pedido é gravado e o estoque baixado numa transação (create_order) ANTES do pagamento; o
+//   total cobrado é o calculado pelo banco. Pagamento recusado ou erro do provedor: o pedido é cancelado e o estoque
+//   volta. Pix e boleto ficam "aguardando pagamento" até o webhook (fase 10) confirmar.
 export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const parsed = checkoutSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: "Confira os dados destacados.", errors: fieldErrors(parsed.error) };
@@ -38,14 +45,41 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       quantity: item.quantity,
     });
   }
-  if (stockIssues.length) return { ok: false, message: "Alguns itens não têm mais estoque suficiente. Ajuste a sacola e tente de novo.", stockIssues };
+  if (stockIssues.length) return { ok: false, message: STOCK_MESSAGE, stockIssues };
 
   const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
   const option = getShippingOption(data.shipping.shippingId);
   if (!option) return { ok: false, message: "Forma de entrega inválida." };
   const shippingCents = shippingPrice(option, subtotalCents);
-  const totalCents = subtotalCents + shippingCents;
   const id = newOrderId();
+  const shipping = { id: option.id, label: option.label, days: option.days, priceCents: shippingCents };
+  const address = {
+    street: data.address.street,
+    number: data.address.number,
+    complement: data.address.complement || undefined,
+    district: data.address.district,
+    city: data.address.city,
+    state: data.address.state,
+    cep: data.address.cep,
+  };
+
+  // Pedido gravado (Supabase): reserva o estoque antes de cobrar.
+  const stored = isOrderStoreConfigured()
+    ? await createStoredOrder({
+        id,
+        customer: { name: data.contact.name, email: data.contact.email, phone: data.contact.phone },
+        address,
+        shipping,
+        paymentMethod: data.payment.method,
+        items: data.items,
+      })
+    : null;
+  if (stored && !stored.ok) {
+    if ("stockIssues" in stored) return { ok: false, message: STOCK_MESSAGE, stockIssues: stored.stockIssues };
+    console.error("[checkout] create_order:", stored.error);
+    return { ok: false, message: "Não foi possível registrar o pedido agora. Tente de novo em instantes." };
+  }
+  const totalCents = stored?.ok ? stored.order.totalCents : subtotalCents + shippingCents;
 
   const payment = await getPaymentProvider().createPayment({
     orderId: id,
@@ -54,29 +88,36 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     // CPF só vai ao provedor quando o meio exige (hoje, boleto); o schema já validou.
     customer: { name: data.contact.name, email: data.contact.email, cpf: CPF_REQUIRED_METHODS.includes(data.payment.method) && data.payment.cpf ? onlyDigits(data.payment.cpf) : undefined },
     description: `Pedido ${id} - ${BRAND.name}`,
+    providerData: data.payment.providerData,
   });
-  if (!payment.ok) return { ok: false, message: payment.message };
 
+  if (stored?.ok) {
+    if (!payment.ok) {
+      await cancelStoredOrder(id);
+      return { ok: false, message: payment.message };
+    }
+    const status = await recordPayment(id, {
+      provider: payment.provider,
+      reference: payment.reference,
+      providerStatus: payment.providerStatus ?? payment.status,
+      details: { ...payment.details, instructions: payment.instructions },
+    });
+    return { ok: true, order: { ...stored.order, status: status ?? stored.order.status, payment: { ...stored.order.payment, provider: payment.provider, reference: payment.reference, instructions: payment.instructions, details: payment.details } } };
+  }
+
+  if (!payment.ok) return { ok: false, message: payment.message };
   const order: Order = {
     id,
     createdAt: new Date().toISOString(),
-    status: payment.status === "approved" ? "confirmado" : "aguardando-pagamento",
+    status: payment.status === "approved" ? "confirmado" : payment.status === "rejected" ? "recusado" : "aguardando-pagamento",
     customer: { name: data.contact.name, email: data.contact.email },
-    address: {
-      street: data.address.street,
-      number: data.address.number,
-      complement: data.address.complement || undefined,
-      district: data.address.district,
-      city: data.address.city,
-      state: data.address.state,
-      cep: data.address.cep,
-    },
-    shipping: { id: option.id, label: option.label, days: option.days, priceCents: shippingCents },
-    payment: { method: data.payment.method, provider: payment.provider, reference: payment.reference, instructions: payment.instructions },
+    address,
+    shipping,
+    payment: { method: data.payment.method, provider: payment.provider, reference: payment.reference, instructions: payment.instructions, details: payment.details },
     lines,
     subtotalCents,
     totalCents,
-    simulated: true,
+    simulated: payment.provider === "simulado",
   };
   return { ok: true, order };
 }

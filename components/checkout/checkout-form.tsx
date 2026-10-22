@@ -8,7 +8,7 @@ import { Check, Loader2 } from "lucide-react";
 import { useCart } from "@/components/cart";
 import { DecorativeCard } from "@/components/checkout/decorative-card";
 import { placeOrder } from "@/app/(loja)/checkout/actions";
-import { ORDER_STORAGE_PREFIX, PAYMENT_LABELS } from "@/lib/checkout/order";
+import { ORDER_STORAGE_PREFIX, orderUrl, PAYMENT_LABELS } from "@/lib/checkout/order";
 import { addressSchema, contactSchema, CPF_REQUIRED_METHODS, fieldErrors, paymentSchema, shippingSchema } from "@/lib/checkout/schema";
 import { SHIPPING_OPTIONS, shippingPrice } from "@/lib/checkout/shipping";
 import { formatPrice } from "@/lib/format";
@@ -140,8 +140,9 @@ export function CheckoutForm() {
       } catch {
         // sem sessionStorage: a página do pedido mostra só o número
       }
-      clear();
-      router.push(`/pedido/${result.order.id}`);
+      // Recusado: a sacola fica (o cliente tenta de novo); nos outros casos o pedido foi feito.
+      if (result.order.status !== "recusado") clear();
+      router.push(orderUrl(result.order));
     });
   };
 

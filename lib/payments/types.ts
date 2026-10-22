@@ -1,3 +1,5 @@
+import type { PaymentDetails } from "@/lib/checkout/order";
+
 // Ponto de integração de pagamento. Cada provedor (simulado, Mercado Pago, Stripe...) implementa esta interface.
 // O checkout (server action) só conversa com getPaymentProvider() de lib/payments/index.ts.
 export type PaymentMethod = "pix" | "cartao" | "boleto";
@@ -15,10 +17,26 @@ export type PaymentRequest = {
    */
   customer: { name: string; email: string; cpf?: string };
   description: string;
+  /**
+   * Dados do componente do provedor (Mercado Pago: o formData do Payment Brick, com o TOKEN do cartão, nunca o
+   * número). Validado pelo próprio provedor. O simulado ignora.
+   */
+  providerData?: unknown;
 };
 
 export type PaymentResult =
-  | { ok: true; status: "approved" | "pending"; provider: string; reference: string; instructions?: string }
+  | {
+      ok: true;
+      /** approved: pago · pending: Pix/boleto em aberto ou cartão em análise · rejected: recusado pelo emissor */
+      status: "approved" | "pending" | "rejected";
+      provider: string;
+      reference: string;
+      /** Status bruto do provedor (ex.: in_process), gravado no pedido. */
+      providerStatus?: string;
+      instructions?: string;
+      /** QR do Pix, link do boleto, bandeira e últimos 4 dígitos do cartão (página de status). */
+      details?: PaymentDetails;
+    }
   | { ok: false; message: string };
 
 export interface PaymentProvider {

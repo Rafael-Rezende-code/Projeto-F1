@@ -11,10 +11,13 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "qa:varredura": "node scripts/qa/varredura.mjs",
-    "images:blur": "node scripts/images/blur-placeholders.mjs"
+    "images:blur": "node scripts/images/blur-placeholders.mjs",
+    "supabase:seed": "tsx scripts/supabase/seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
     "@types/opentype.js": "^1.3.10",
     "@vercel/analytics": "1.6.1",
     "class-variance-authority": "^0.7.1",
@@ -32,6 +35,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "~0.3.16",
     "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24",
@@ -42,6 +46,7 @@
     "postcss": "^8.5",
     "sharp": "0.35.3",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "5.7.3",
     "vitest": "^5.0.4"
   }

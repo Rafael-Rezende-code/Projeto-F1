@@ -5,5 +5,7 @@ minimumReleaseAgeExclude:
   - next
 
 allowBuilds:
+  # tsx (script de seed do Supabase): o esbuild já vem com o binário da plataforma
+  esbuild: false
   # binário nativo já vem como dependência opcional; não precisa rodar o script de instalação
   unrs-resolver: false

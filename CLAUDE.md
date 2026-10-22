@@ -543,6 +543,12 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   assinatura" lido como "quando o nome já está quase todo escrito", para não esperar 3 s por links de produto. Rótulo
   das miniaturas: "Destaques {sobrenome}". Miniaturas em cartões brancos (contraste garantido sobre qualquer cor de
   equipe). Sem fotos de carro no repositório, nenhum recorte foi feito (ver Estado).
+- **Fase 9:** catálogo do Supabase carregado inteiro com cache curto (é pequeno) em vez de uma consulta por filtro:
+  reaproveita exatamente a mesma busca/ordem do seed. Fotos de página e carro dos pilotos continuam no código
+  (`lib/drivers.ts`); o banco guarda nome, equipe, número e frase. O código legível do seed (APX-001) vira
+  `products.code` (o `id` é uuid). Painel admin via link mágico do Supabase Auth (sem senha). O preço de cada item do
+  pedido vem do banco dentro da `create_order`; o frete vem do servidor (mesma regra de `lib/checkout/shipping.ts`).
+  `server-only` nos módulos com service role. A extensão pgcrypto não é necessária (gen_random_uuid é nativo).
 - **Fase 6:** o dock não tem item "Diário" (5 ícones aprovados); o link fica no menu que o dock abre. Datas dos artigos:
   22, 20 e 18/10/2026. Fotos dos artigos reaproveitam as do site (Bortoleto: fotos da página do piloto; dia de prova:
   Verstappen e o abraço Red Bull/Ferrari). Autor no JSON-LD: a própria marca (organização).
@@ -633,6 +639,19 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   marcado `[CONFIRMAR]` e aparece destacado (`components/confirm-text.tsx`). Prazos e frete grátis vêm de
   `lib/checkout/shipping.ts` e `lib/cart/config.ts` (mudam junto). Sem texto jurídico. A entrada `sobre` de
   `lib/institutional.ts` ficou só para título, descrição e sitemap.
+- **Fase 9, Supabase (pronto, desligado):** ativa com `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (catálogo)
+  e `SUPABASE_SERVICE_ROLE_KEY` (pedidos); sem elas, nada muda. Passo a passo em `docs/backend/supabase.md`, variáveis
+  em `.env.example`. Migração `supabase/migrations/20261022000000_loja.sql` (tabelas, RLS, `create_order`,
+  `release_order_stock`, `is_admin`, bucket `produtos`); seed `supabase/seed.sql` gerado por `pnpm supabase:seed`
+  (`--push` grava direto). `lib/catalog/memory-repository.ts` (filtros/busca em memória, ex-seed-repository) é a base
+  de `SeedCatalogRepository` e `SupabaseCatalogRepository` (cache de 60 s; `getVariantBySku` sempre fresco).
+  Mapeamento linhas ↔ tipos em `lib/catalog/supabase-mapping.ts` e `lib/orders/mapping.ts` (com testes). Pedidos em
+  `lib/orders/store.ts` (service role). O checkout grava o pedido e baixa o estoque ANTES de cobrar; total cobrado =
+  total do banco; recusa/erro cancela e devolve o estoque. `/pedido/[id]?t=<access_token>` lê do banco;
+  `components/checkout/order-view.tsx` é a página de status (aprovado, Pix, boleto, análise, recusado, cancelado,
+  enviado), usada também no modo simulado. `supabase/tests/loja.test.ts` testa a migração + seed num Postgres em
+  memória (PGlite) no `pnpm test`: baixa transacional, venda acima do estoque bloqueada, devolução idempotente e RLS.
+  **Não testado contra um projeto Supabase real** (sem credenciais nesta sessão).
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**

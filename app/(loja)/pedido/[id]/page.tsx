@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
 import { OrderConfirmation } from "@/components/checkout/order-confirmation";
+import { OrderView } from "@/components/checkout/order-view";
+import { getOrderForCustomer } from "@/lib/orders/store";
+import { isOrderStoreConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
-export default async function PedidoPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> };
+
+// Pedido gravado (Supabase): lido no servidor com a chave do link (?t=). Simulado: lido do sessionStorage no cliente.
+export default async function PedidoPage({ params, searchParams }: Props) {
+  const id = decodeURIComponent((await params).id);
+  const { t } = await searchParams;
+  const stored = isOrderStoreConfigured() && t ? await getOrderForCustomer(id, t) : null;
   return (
     <div className="px-5 pb-24 pt-12 sm:px-10 sm:pt-16">
-      <div className="mx-auto max-w-[1400px]">
-        <OrderConfirmation id={decodeURIComponent(id)} />
-      </div>
+      <div className="mx-auto max-w-[1400px]">{stored ? <OrderView order={stored} /> : <OrderConfirmation id={id} />}</div>
     </div>
   );
 }

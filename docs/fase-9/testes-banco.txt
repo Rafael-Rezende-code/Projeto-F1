@@ -1,0 +1,13 @@
+ ✓ lib/orders/mapping.test.ts > pedido gravado > linha → Order (frete do banco, instruções separadas dos detalhes, link do cliente) 4ms
+ ✓ lib/orders/mapping.test.ts > pedido gravado > status do pagamento → status do pedido 1ms
+ ✓ lib/catalog/supabase-mapping.test.ts > mapeamento Supabase ↔ catálogo > produto do seed vai e volta igual (com variantes e imagens) 5ms
+ ✓ lib/catalog/supabase-mapping.test.ts > mapeamento Supabase ↔ catálogo > equipe e piloto vão e voltam iguais 3ms
+ ✓ lib/catalog/supabase-mapping.test.ts > mapeamento Supabase ↔ catálogo > piloto sem cadastro no site usa a foto da linha 0ms
+ ✓ supabase/tests/loja.test.ts > banco da loja (migração + seed) > seed completo e idempotente 66ms
+ ✓ supabase/tests/loja.test.ts > banco da loja (migração + seed) > create_order baixa o estoque e calcula o total pelo banco 14ms
+ ✓ supabase/tests/loja.test.ts > banco da loja (migração + seed) > nunca vende acima do estoque (e não grava nada) 9ms
+ ✓ supabase/tests/loja.test.ts > banco da loja (migração + seed) > devolve o estoque uma vez só 5ms
+ ✓ supabase/tests/loja.test.ts > banco da loja (migração + seed) > RLS: visitante lê só o catálogo ativo, não escreve e não cria pedidos 10ms
+ ✓ supabase/tests/loja.test.ts > banco da loja (migração + seed) > RLS: só e-mails de admin_emails editam e veem pedidos e rascunhos 9ms
+ Test Files  3 passed (3)
+      Tests  11 passed (11)
