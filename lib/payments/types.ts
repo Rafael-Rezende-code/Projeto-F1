@@ -15,7 +15,7 @@ export type PaymentRequest = {
    * identificação do pagador). Nesse caso, acrescente o meio em CPF_REQUIRED_METHODS: o campo passa a aparecer SÓ para
    * o meio que exigir (na etapa de pagamento), com máscara e validação, e a action envia o CPF aqui.
    */
-  customer: { name: string; email: string; cpf?: string };
+  customer: { name: string; email: string; cpf?: string; address?: import("@/lib/checkout/order").Order["address"] };
   description: string;
   /**
    * Dados do componente do provedor (Mercado Pago: o formData do Payment Brick, com o TOKEN do cartão, nunca o

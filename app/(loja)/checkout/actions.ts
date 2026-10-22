@@ -86,7 +86,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     method: data.payment.method,
     amountCents: totalCents,
     // CPF só vai ao provedor quando o meio exige (hoje, boleto); o schema já validou.
-    customer: { name: data.contact.name, email: data.contact.email, cpf: CPF_REQUIRED_METHODS.includes(data.payment.method) && data.payment.cpf ? onlyDigits(data.payment.cpf) : undefined },
+    customer: { name: data.contact.name, email: data.contact.email, address, cpf: CPF_REQUIRED_METHODS.includes(data.payment.method) && data.payment.cpf ? onlyDigits(data.payment.cpf) : undefined },
     description: `Pedido ${id} - ${BRAND.name}`,
     providerData: data.payment.providerData,
   });

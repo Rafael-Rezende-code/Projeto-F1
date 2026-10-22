@@ -1,11 +1,11 @@
+import { MercadoPagoProvider, mercadoPagoConfigured } from "./mercado-pago";
 import { SimulatedPaymentProvider } from "./simulated";
 import type { PaymentProvider } from "./types";
 
-// Escolha do provedor de pagamento. Hoje só existe o simulado. Para integrar Mercado Pago ou Stripe, ver CLAUDE.md
-// ("Pagamento"): criar lib/payments/mercado-pago.ts (ou stripe.ts) implementando PaymentProvider e trocar aqui,
-// de preferência por variável de ambiente (PAYMENT_PROVIDER).
+// Escolha do provedor de pagamento: Mercado Pago quando MP_ACCESS_TOKEN e NEXT_PUBLIC_MP_PUBLIC_KEY existem
+// (docs/backend/mercadopago.md); sem elas, o simulado (nada é cobrado). Só no servidor.
 export function getPaymentProvider(): PaymentProvider {
-  return new SimulatedPaymentProvider();
+  return mercadoPagoConfigured() ? new MercadoPagoProvider() : new SimulatedPaymentProvider();
 }
 
 export type * from "./types";

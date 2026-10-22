@@ -1,0 +1,13 @@
+ ✓ lib/payments/mercado-pago-core.test.ts > assinatura do webhook > lê o cabeçalho x-signature 3ms
+ ✓ lib/payments/mercado-pago-core.test.ts > assinatura do webhook > monta o manifesto da documentação (id em minúsculas; partes ausentes saem) 0ms
+ ✓ lib/payments/mercado-pago-core.test.ts > assinatura do webhook > aceita a assinatura certa e recusa adulterada, de outra chave ou velha 2ms
+ ✓ lib/payments/mercado-pago-core.test.ts > handleWebhook > assinatura inválida → 401, sem buscar nem gravar nada 2ms
+ ✓ lib/payments/mercado-pago-core.test.ts > handleWebhook > pagamento aprovado: busca na API e grava no pedido da external_reference 2ms
+ ✓ lib/payments/mercado-pago-core.test.ts > handleWebhook > idempotente: a mesma notificação de novo não grava outra vez 1ms
+ ✓ lib/payments/mercado-pago-core.test.ts > handleWebhook > outros tipos de notificação são ignorados com 200 1ms
+ ✓ lib/payments/mercado-pago-core.test.ts > handleWebhook > pagamento que a API não encontra → 500 (o Mercado Pago tenta de novo) e nada é marcado como processado 1ms
+ ✓ lib/payments/mercado-pago-core.test.ts > handleWebhook > erro ao gravar não marca a notificação como processada (a próxima tentativa grava) 2ms
+ ✓ lib/payments/mercado-pago-core.test.ts > pagamento > lê Pix, boleto e cartão para a página de status 1ms
+ ✓ lib/payments/mercado-pago-core.test.ts > pagamento > o valor cobrado é o do servidor; cartão leva token e parcelas; boleto leva endereço 1ms
+ ✓ lib/payments/mercado-pago-core.test.ts > pagamento > meios do Brick → meios do pedido 0ms
+      Tests  12 passed (12)

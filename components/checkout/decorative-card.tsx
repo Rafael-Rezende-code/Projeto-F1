@@ -8,7 +8,9 @@ import type { CardDisplay } from "@/lib/payments/types";
 // Nunca exibe nem recebe número, validade ou CVV digitados no nosso formulário (PCI): esses dados só existem no
 // componente do provedor. Quando o provedor informar bandeira e últimos 4 dígitos (CardDisplay), eles aparecem aqui;
 // no modo simulado, os dígitos ficam todos mascarados.
-export function DecorativeCard({ holder, display }: { holder: string; display?: CardDisplay }) {
+// `simulated`: mostra o selo "Simulado" (modo sem provedor). Com o Mercado Pago, bandeira (pelo BIN, via SDK) e últimos
+// 4 dígitos (devolvidos pelo Brick no envio) vêm em `display`.
+export function DecorativeCard({ holder, display, simulated = true }: { holder: string; display?: CardDisplay; simulated?: boolean }) {
   const last4 = display?.last4 && /^\d{4}$/.test(display.last4) ? display.last4 : "••••";
   const name = holder.trim().toUpperCase() || "NOME DO TITULAR";
   return (
@@ -30,7 +32,7 @@ export function DecorativeCard({ holder, display }: { holder: string; display?: 
         </p>
         <div aria-hidden="true" className="absolute inset-x-5 bottom-4 flex items-end justify-between gap-4">
           <span className="min-w-0 truncate text-xs font-medium tracking-[0.12em]">{name}</span>
-          <span className="shrink-0 text-[10px] uppercase tracking-[0.18em] text-white/70">Simulado</span>
+          {simulated && <span className="shrink-0 text-[10px] uppercase tracking-[0.18em] text-white/70">Simulado</span>}
         </div>
       </div>
     </TiltOnHover>

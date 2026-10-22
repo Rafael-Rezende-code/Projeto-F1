@@ -543,6 +543,10 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   assinatura" lido como "quando o nome já está quase todo escrito", para não esperar 3 s por links de produto. Rótulo
   das miniaturas: "Destaques {sobrenome}". Miniaturas em cartões brancos (contraste garantido sobre qualquer cor de
   equipe). Sem fotos de carro no repositório, nenhum recorte foi feito (ver Estado).
+- **Fase 10:** HTTP direto na API do Mercado Pago (fetch) em vez do SDK Node `mercadopago` (menos dependência; o
+  contrato usado é pequeno). Só cartão de CRÉDITO no Brick (débito e carteira Mercado Pago desligados: os rótulos da
+  loja são Pix, cartão de crédito e boleto). Webhook com tolerância de 15 min no `ts` e `data.id` em minúsculas no
+  manifesto (ids de pagamento são numéricos). Sem `notification_url` quando o site não é https (localhost).
 - **Fase 9:** catálogo do Supabase carregado inteiro com cache curto (é pequeno) em vez de uma consulta por filtro:
   reaproveita exatamente a mesma busca/ordem do seed. Fotos de página e carro dos pilotos continuam no código
   (`lib/drivers.ts`); o banco guarda nome, equipe, número e frase. O código legível do seed (APX-001) vira
@@ -652,6 +656,18 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   enviado), usada também no modo simulado. `supabase/tests/loja.test.ts` testa a migração + seed num Postgres em
   memória (PGlite) no `pnpm test`: baixa transacional, venda acima do estoque bloqueada, devolução idempotente e RLS.
   **Não testado contra um projeto Supabase real** (sem credenciais nesta sessão).
+- **Fase 10, Mercado Pago (pronto, desligado):** liga com `NEXT_PUBLIC_MP_PUBLIC_KEY` + `MP_ACCESS_TOKEN` (e
+  `MP_WEBHOOK_SECRET` para o webhook); sem elas, provedor simulado. Guia em `docs/backend/mercadopago.md` (credenciais
+  de teste, URL do webhook, cartões de teste, produção). Etapa de pagamento: Payment Brick oficial
+  (`components/checkout/mercado-pago-brick.tsx`, `@mercadopago/sdk-react`, carregado por `next/dynamic` só quando
+  ligado) com Pix, crédito até 12x e boleto; o Brick pede o CPF quando o meio exige. `MercadoPagoProvider`
+  (`lib/payments/mercado-pago.ts`) cria o pagamento com o total do servidor e `X-Idempotency-Key` por pedido. Parte pura
+  com testes em `lib/payments/mercado-pago-core.ts` (corpo, resposta, assinatura HMAC-SHA256 do webhook, handler
+  idempotente). Webhook em `app/api/webhooks/mercadopago/route.ts` (404 se desligado; 401 assinatura inválida; busca o
+  pagamento na API; `payment_events` para idempotência). Cartão recusado na hora: fica no checkout com o motivo.
+  Cartão decorativo: bandeira pelo BIN (SDK) e últimos 4 dígitos devolvidos pelo Brick no envio (prop `simulated`).
+  Páginas de status em `OrderView` (prints com pedidos de exemplo em `docs/fase-10/`). O modo do checkout é decidido
+  no build: depois de mudar as variáveis, novo deploy. **Não testado contra o Mercado Pago real** (sem credenciais).
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**

@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, useTransition, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,9 @@ import { ORDER_STORAGE_PREFIX, orderUrl, PAYMENT_LABELS } from "@/lib/checkout/o
 import { addressSchema, contactSchema, CPF_REQUIRED_METHODS, fieldErrors, paymentSchema, shippingSchema } from "@/lib/checkout/schema";
 import { SHIPPING_OPTIONS, shippingPrice } from "@/lib/checkout/shipping";
 import { formatPrice } from "@/lib/format";
+import { methodFromBrick } from "@/lib/payments/brick";
+import type { CardDisplay } from "@/lib/payments/types";
+import type { BrickSubmit } from "@/components/checkout/mercado-pago-brick";
 import { maskCep, maskCpf, maskPhone, onlyDigits, UFS } from "@/lib/validators/br";
 
 type Step = 0 | 1 | 2 | 3;
@@ -40,7 +44,14 @@ function Field({ label, error, children, hint, className = "" }: { label: string
   );
 }
 
-export function CheckoutForm() {
+// Payment Brick do Mercado Pago: só é baixado quando o Mercado Pago está configurado (mpPublicKey).
+const MercadoPagoBrick = dynamic(() => import("@/components/checkout/mercado-pago-brick"), {
+  ssr: false,
+  loading: () => <p className="py-10 text-center text-sm text-black/60">Carregando o pagamento seguro do Mercado Pago…</p>,
+});
+
+/** `mpPublicKey`: Mercado Pago ligado (vem do servidor só quando o access token também existe). */
+export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
   const router = useRouter();
   const { items, subtotalCents, ready, clear } = useCart();
   const [step, setStep] = useState<Step>(0);
@@ -50,6 +61,7 @@ export function CheckoutForm() {
   const [cepStatus, setCepStatus] = useState<{ tone: "info" | "error"; text: string } | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [cardDisplay, setCardDisplay] = useState<CardDisplay>({});
   const cepRequest = useRef<AbortController | null>(null);
   const headingRefs = useRef<(HTMLHeadingElement | null)[]>([]);
 
@@ -119,31 +131,59 @@ export function CheckoutForm() {
     if (validateStep(step) && step < 3) goTo((step + 1) as Step);
   };
 
+  const orderInput = (payment: Record<string, unknown>) => ({
+    contact: { name: form.name, email: form.email, phone: form.phone },
+    address: { cep: form.cep, street: form.street, number: form.number, complement: form.complement || undefined, district: form.district, city: form.city, state: form.state },
+    shipping: { shippingId: form.shippingId },
+    payment: { acceptTerms: form.acceptTerms, ...payment },
+    items: items.map((item) => ({ sku: item.sku, quantity: item.quantity })),
+  });
+
+  /** Depois do placeOrder: erro → mensagem (false); ok → guarda, esvazia a sacola e vai para a página do pedido. */
+  const finish = (result: Awaited<ReturnType<typeof placeOrder>>) => {
+    if (!result.ok) {
+      setSubmitError(result.message);
+      if (result.errors) setErrors(Object.fromEntries(Object.entries(result.errors).map(([key, value]) => [key.split(".").pop() as string, value])));
+      return false;
+    }
+    try {
+      window.sessionStorage.setItem(ORDER_STORAGE_PREFIX + result.order.id, JSON.stringify(result.order));
+    } catch {
+      // sem sessionStorage: a página do pedido mostra só o número
+    }
+    // Recusado: a sacola fica (o cliente tenta de novo); nos outros casos o pedido foi feito.
+    if (result.order.status !== "recusado") clear();
+    router.push(orderUrl(result.order));
+    return true;
+  };
+
   const submit = () => {
     if (!validateStep(3)) return;
     setSubmitError("");
     startTransition(async () => {
-      const result = await placeOrder({
-        contact: { name: form.name, email: form.email, phone: form.phone },
-        address: { cep: form.cep, street: form.street, number: form.number, complement: form.complement || undefined, district: form.district, city: form.city, state: form.state },
-        shipping: { shippingId: form.shippingId },
-        payment: { method: form.method, cpf: needsCpf ? form.cpf : undefined, acceptTerms: form.acceptTerms },
-        items: items.map((item) => ({ sku: item.sku, quantity: item.quantity })),
-      });
-      if (!result.ok) {
-        setSubmitError(result.message);
-        if (result.errors) setErrors(Object.fromEntries(Object.entries(result.errors).map(([key, value]) => [key.split(".").pop() as string, value])));
-        return;
-      }
-      try {
-        window.sessionStorage.setItem(ORDER_STORAGE_PREFIX + result.order.id, JSON.stringify(result.order));
-      } catch {
-        // sem sessionStorage: a página do pedido mostra só o número
-      }
-      // Recusado: a sacola fica (o cliente tenta de novo); nos outros casos o pedido foi feito.
-      if (result.order.status !== "recusado") clear();
-      router.push(orderUrl(result.order));
+      finish(await placeOrder(orderInput({ method: form.method, cpf: needsCpf ? form.cpf : undefined })));
     });
+  };
+
+  // Mercado Pago: o Brick chama isto no envio. Rejeitar mantém o Brick editável (aceite pendente, recusa, erro).
+  const submitBrick = async ({ selectedPaymentMethod, formData }: BrickSubmit) => {
+    setSubmitError("");
+    if (!form.acceptTerms) {
+      setErrors((current) => ({ ...current, acceptTerms: "É preciso aceitar os Termos de Uso e a Política de Privacidade." }));
+      throw new Error("aceite pendente");
+    }
+    const method = methodFromBrick(selectedPaymentMethod);
+    if (!method) {
+      setSubmitError("Escolha Pix, cartão de crédito ou boleto.");
+      throw new Error("meio não aceito");
+    }
+    const result = await placeOrder(orderInput({ method, providerData: formData }));
+    // Cartão recusado na hora: fica no checkout, com o motivo, para tentar outro cartão ou meio.
+    if (result.ok && result.order.status === "recusado") {
+      setSubmitError(result.order.payment.instructions ?? "O pagamento não foi aprovado. Tente outro cartão ou outra forma de pagamento.");
+      throw new Error("recusado");
+    }
+    if (!finish(result)) throw new Error("erro no pedido");
   };
 
   if (!ready) return <p className="py-16 text-sm text-black/60">Carregando a sacola…</p>;
@@ -299,6 +339,15 @@ export function CheckoutForm() {
           {sectionHeader(3)}
           {step === 3 && (
             <div className="mt-6">
+              {mpPublicKey ? (
+                // Mercado Pago: o Brick oficial escolhe o meio e coleta os dados (inclusive o CPF quando exigido).
+                cardDisplay.brand || cardDisplay.last4 ? (
+                  <div className="mb-6">
+                    <DecorativeCard holder={form.name} display={cardDisplay} simulated={false} />
+                  </div>
+                ) : null
+              ) : (
+                <>
               <fieldset>
                 <legend className="sr-only">Forma de pagamento</legend>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -331,6 +380,8 @@ export function CheckoutForm() {
                     : "Pagamento simulado: após confirmar, aparecerão as instruções do boleto."}
               </p>
 
+                </>
+              )}
               <label className="mt-6 flex cursor-pointer items-start gap-3 text-sm leading-6">
                 <input
                   type="checkbox"
@@ -350,10 +401,22 @@ export function CheckoutForm() {
 
               {submitError && <p role="alert" className="mt-5 rounded-xl border border-[#b42318]/30 bg-[#b42318]/5 p-4 text-sm text-[#b42318]">{submitError}</p>}
 
-              <button type="button" onClick={submit} disabled={pending} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#b94f01] px-6 py-4 text-sm font-medium text-white transition hover:bg-[#9f4300] disabled:opacity-70">
-                {pending && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
-                {pending ? "Confirmando pedido…" : `Confirmar pedido · ${formatPrice(subtotalCents + shippingCents)}`}
-              </button>
+              {mpPublicKey ? (
+                <div className="mt-6">
+                  <MercadoPagoBrick
+                    publicKey={mpPublicKey}
+                    amountCents={subtotalCents + shippingCents}
+                    email={form.email}
+                    onCard={(display) => setCardDisplay((current) => ({ ...current, ...display }))}
+                    onSubmit={submitBrick}
+                  />
+                </div>
+              ) : (
+                <button type="button" onClick={submit} disabled={pending} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#b94f01] px-6 py-4 text-sm font-medium text-white transition hover:bg-[#9f4300] disabled:opacity-70">
+                  {pending && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+                  {pending ? "Confirmando pedido…" : `Confirmar pedido · ${formatPrice(subtotalCents + shippingCents)}`}
+                </button>
+              )}
             </div>
           )}
         </li>
