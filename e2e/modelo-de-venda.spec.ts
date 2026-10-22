@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // Modelo de venda (refino 2, item 5): aviso de sob encomenda na página de produto, prazo do item mais lento na sacola
 // com aviso de pacotes separados, e nenhum dado privado (custo, fornecedor, notas) nas respostas públicas.

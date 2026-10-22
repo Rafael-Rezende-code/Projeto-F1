@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // Conteúdo da rodada de conteúdo (fases 4 a 8): Diário (índice → artigo → produtos relacionados), textos do piloto e
 // da equipe, e /sobre. Também confere que nada promete vínculo oficial.

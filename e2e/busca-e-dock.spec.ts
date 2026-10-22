@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // Busca (Ctrl/Cmd+K no desktop, item Buscar do dock no celular) e navegação pelos resultados com o teclado.
 test("busca: abre, mostra resultados e navega com o teclado", async ({ page, isMobile }) => {

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // Fluxo completo: home → equipe → produto → tamanho → sacola → checkout simulado → confirmação.
 test("compra de ponta a ponta (pedido simulado)", async ({ page, isMobile }) => {

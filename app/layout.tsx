@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
+import { HydrationMark } from '@/components/hydration-mark'
 import { LazyShell } from '@/components/lazy-shell'
 import { SearchRoot } from '@/components/search-root'
 import { SiteUIProvider } from '@/components/site-ui'
@@ -38,6 +39,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={fontVariables}>
       <body className="antialiased">
+        <HydrationMark />
         <SiteUIProvider>
           <CartProvider>
             {children}

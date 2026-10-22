@@ -52,3 +52,6 @@ __v0_jsx-dev-runtime.ts
 # Playwright
 /test-results/
 /playwright-report/
+
+# Supabase CLI (arquivos locais de link/estado)
+supabase/.temp/

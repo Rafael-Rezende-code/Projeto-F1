@@ -832,6 +832,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   valores por piloto em `carLight` (`lib/drivers.ts`); o Verstappen (azul-marinho sobre azul-marinho) tem a luz mais forte.
   Comparações em `docs/carros/a3/`.
 
+## Operação e conversão (feat/carros, parte B)
+
+- **Fase 0:** `supabase/.temp/` no `.gitignore` (nesta branch não havia linhas duplicadas de `.vercel`/`.env*`).
+  `components/hydration-mark.tsx` marca `data-hydrated` no `<html>` depois da hidratação; os e2e importam `test` de
+  `e2e/fixtures.ts`, cujo `page.goto` espera essa marca (o clique no card da equipe antes da hidratação se perdia no dev).
+  `app/error.tsx` e `app/global-error.tsx`: "Algo saiu da pista." com "Tentar de novo" e volta para a home.
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete
