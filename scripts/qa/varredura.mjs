@@ -56,7 +56,8 @@ const check = () => {
   return { hscroll: document.documentElement.scrollWidth > cw, over, titles };
 };
 
-const browser = await chromium.launch({ channel: "msedge" });
+// PW_EXECUTABLE_PATH: Chromium no lugar do Edge (ex.: sessão em nuvem Linux), como no playwright.config.ts.
+const browser = await chromium.launch(process.env.PW_EXECUTABLE_PATH ? { executablePath: process.env.PW_EXECUTABLE_PATH } : { channel: "msedge" });
 let problems = 0;
 for (const w of WIDTHS.split(",").map(Number)) {
   const mobile = w < 768;

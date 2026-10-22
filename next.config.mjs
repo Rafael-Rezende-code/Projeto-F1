@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // O `next dev` do Next 16.3 acrescenta um bloco próprio ao CLAUDE.md a cada início; o CLAUDE.md é do projeto.
+  agentRules: false,
   typescript: {
     ignoreBuildErrors: true,
   },
