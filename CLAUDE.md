@@ -451,7 +451,8 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 ## Notas técnicas
 
 - Gerenciador: pnpm (versão em `packageManager` do `package.json`; usar via `corepack pnpm` se o `pnpm`
-  não estiver no PATH). Dev: `corepack pnpm dev`. Build: `corepack pnpm build`.
+  não estiver no PATH). Dev: `corepack pnpm dev`. Build: `corepack pnpm build` (gera antes os placeholders
+  desfocados). Seed do Supabase: `pnpm supabase:seed`.
 - Lint: `corepack pnpm lint` (ESLint 9 + `eslint-config-next`, config padrão em `eslint.config.mjs`; o ESLint
   10 ainda não é suportado pelos plugins do Next). Rodar também `npx tsc --noEmit`, porque o build ignora erros
   de tipo. Testes: `corepack pnpm test` (vitest) e `corepack pnpm test:e2e` (Playwright). Avisos conhecidos (intencionais): `<img>` em `LogoItem` (logos pequenas, monocromáticas) e `pin` sem uso no
@@ -508,11 +509,11 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 
 ## Roteiro (próximos passos, em ordem)
 
-1. **Refinar os cards de pilotos.**
-2. **Página de produto.**
-3. **Seção "Diário"**, com as fotos `senna-sentado` e `senna-champanhe`.
-4. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos e das
-   equipes.
+1. **Revisar e aprovar** `feat/conteudo` e `feat/backend` (prévias da Vercel).
+2. **Ativar Supabase e Mercado Pago em Preview** (guias em `docs/backend/`) e fazer o roteiro de testes.
+3. **Fotos dos carros** e recorte.
+4. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos, das
+   equipes, dos produtos e dos carros.
 
 ## Branches (atualizado em 22/10/2026)
 
@@ -685,10 +686,29 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**
 
+### QA final da rodada (22/10/2026)
+
+- tsc ok; lint 0 erros; build ok; `pnpm test` 57 testes (10 arquivos, inclui PGlite e webhook); e2e 15 passaram / 1
+  pulado (desktop + celular, build de produção; novo `e2e/conteudo.spec.ts`); `pnpm qa:varredura` sem alertas em 5
+  larguras × 15 rotas (lista padrão ampliada com /equipes/williams, /pilotos/bortoleto, /diario, artigo, /sobre, /admin).
+- Lighthouse mobile (mediana de 3, Chromium nesta máquina): home 98, /pilotos/hamilton 87 (main antes: 86), artigo do
+  Diário 89; acessibilidade 100/97/100. Detalhes em `docs/qa-final/lighthouse-mobile.md`. Relatório completo em
+  `docs/relatorio-final.md`.
+- Para rodar e2e e varredura sem Edge: `PW_EXECUTABLE_PATH=/caminho/do/chromium`.
+
 ## Pendências (atualizado em 22/10/2026)
 
-- **Depende do responsável:** contas e chaves do Supabase e do Mercado Pago (o código fica pronto e desligado nas
-  fases 9 a 11), textos legais, razão social/CNPJ/endereço em `lib/company.ts`, fotos licenciadas de produtos, e conferir
-  as cores das equipes com os manuais de marca.
+- **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete
+  perf/server-components feat/loja feat/polimento feat/polimento-2 feat/ajustes feat/pilotos`.
+- **Aprovação:** `feat/conteudo` (fases 1–8) e `feat/backend` (fases 9–11, contém a `feat/conteudo`) sem merge na `main`.
+- **Fotos dos carros:** nenhuma no repositório; recortar com `scripts/carros/recortar.py` quando chegarem (placeholders).
+- **Contraste do cabeçalho do piloto** (anterior à rodada): caminho `white/70`, link da equipe `white/80` e frase
+  `white/85` sobre cores como o vermelho da Ferrari (2,9–4,0:1). Sugestão: branco sólido. Não aplicado.
+- **Depende do responsável:** contas e chaves do Supabase e do Mercado Pago (lista exata em `docs/relatorio-final.md`),
+  textos legais, razão social/CNPJ/endereço em `lib/company.ts`, dados [CONFIRMAR] da /sobre, fichas de produto,
+  fotos licenciadas (editoriais, pilotos, produtos, carros), conferir as cores das equipes com os manuais de marca.
+- E-mails transacionais não implementados; cancelamento automático de Pix/boleto vencidos depende do aviso do Mercado
+  Pago (ou de uma rotina).
+- Supabase, Mercado Pago e o painel logado **não foram testados contra serviços reais** (sem credenciais).
 - **Fotos editoriais:** placeholders (licenciar antes da venda), inclusive as usadas no Diário.
 - O 404 de `/_vercel/insights/script.js` só ocorre localmente.
