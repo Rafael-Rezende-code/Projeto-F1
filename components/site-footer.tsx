@@ -1,9 +1,10 @@
 import { BRAND } from "@/lib/brand";
 import Link from "next/link";
-import { CirclePlay, Globe } from "lucide-react";
 import { FooterColumn } from "@/components/footer-column";
+import { SocialIcon } from "@/components/social-icons";
 import { company, companyFacts } from "@/lib/company";
 import { footerColumns, legalLinks } from "@/lib/navigation";
+import { socialLinks } from "@/lib/social";
 
 // Rodapé do site (home e páginas internas). Mesmo visual do rodapé original da home; links em lib/navigation.ts.
 export function SiteFooter() {
@@ -46,11 +47,18 @@ export function SiteFooter() {
             </Link>
           ))}
         </div>
-        <div className="flex gap-5">
-          <a href="#top" aria-label="Instagram"><Globe size={15} /></a>
-          <a href="#top" aria-label="TikTok"><CirclePlay size={15} /></a>
-          <a href="#top" aria-label="YouTube"><CirclePlay size={15} /></a>
-        </div>
+        {/* Redes: só as que têm URL configurada (lib/social.ts, NEXT_PUBLIC_SOCIAL_*); sem nenhuma, nada aparece. */}
+        {socialLinks.length > 0 && (
+          <ul className="flex gap-1" aria-label="Redes sociais">
+            {socialLinks.map((link) => (
+              <li key={link.network}>
+                <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={`${link.label} (abre em outra aba)`} className="flex size-11 items-center justify-center rounded-xl transition hover:bg-white/10 hover:text-white">
+                  <SocialIcon network={link.network} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </footer>
   );
