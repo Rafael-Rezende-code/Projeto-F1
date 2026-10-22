@@ -584,6 +584,15 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   em `assets/` (nem no histórico do GitHub) em 22/10/2026: os 4 pilotos estão com as miniaturas. O pipeline foi testado
   numa foto do projeto (Verstappen, fundo claro): recorte limpo, sem halo. Prints em `docs/fase-2/` (o
   `TESTE-slot-do-carro-com-silhueta.jpg` usa uma silhueta desenhada só para conferir o layout; não está no site).
+- **Fase 3, VELOCIDADE:** padrão de linhas de fluxo (túnel de vento) gerado em código (`lib/velocidade-pattern.ts`, 26
+  linhas deterministas, Catmull-Rom → Bézier) num SVG dentro da camada do campo que acompanha
+  `scale(var(--gp-field-scale))`; traço branco de 1px (`vector-effect`), opacidade 0,08, deriva de 32 s em
+  `transform` (`.vel-pattern`), parada com reduced motion. Conteúdo revelado: texto à esquerda e 3 produtos `featured`
+  à direita no desktop (cards brancos `rounded-2xl`); no celular, carrossel com snap abaixo do texto. Os cards entram
+  escalonados pela própria revelação do portal (`--gp-reveal` em `.vel-card`) e só são clicáveis depois da entrada
+  (`data-gp-entered`). Medido: 1440×900 (3 cards, conteúdo 332px), 1280×720 (3 cards, 301px), 390×844 (585px); abaixo
+  de 620px de altura no desktop ficam 2 cards. `featured` (novo campo do `Product`): Scuderia Racing Jacket, Classic
+  Racing Hoodie e miniaturas de capacete de Hamilton e Bortoleto. GlyphPortal não foi alterado.
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**

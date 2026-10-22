@@ -1,7 +1,13 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
+import Link from "next/link";
+import type { Product } from "@/lib/catalog/types";
+import { formatPrice } from "@/lib/format";
 import type { GlyphPortalStyle } from "@/components/ui/glyph-portal";
+import { PATTERN_BOX, PATTERN_PATHS } from "@/lib/velocidade-pattern";
 
 // Seção "VELOCIDADE" antes de "Luzes apagadas": a câmera entra numa letra e o vermelho toma a tela.
 // ssr: false → o GlyphPortal só monta no cliente (o id do useId divergia entre servidor e cliente no v0).
@@ -23,30 +29,75 @@ const portalStyle: GlyphPortalStyle = {
   "--gp-foreground": "#ffffff",
 };
 
+// Campo vermelho: gradiente próprio + padrão de linhas de fluxo (lib/velocidade-pattern.ts) dentro da MESMA camada que
+// acompanha scale(var(--gp-field-scale)). Traço branco fino (1px fixo: vector-effect), opacidade 0,08, deriva lenta
+// e contínua (32 s, só transform, CSS .vel-pattern no globals.css); parada com reduced motion. Nunca compete com o texto.
 const field = (
   <div
     style={{
       position: "absolute",
       inset: 0,
+      overflow: "hidden",
       transform: "scale(var(--gp-field-scale,1))",
       background:
         "radial-gradient(circle at 18% 10%, rgba(255,120,90,.45), transparent 36%), radial-gradient(circle at 84% 22%, rgba(255,255,255,.10), transparent 28%), radial-gradient(circle at 50% 82%, rgba(90,0,16,.55), transparent 46%), linear-gradient(135deg,#a50d26 0%,#c8102e 48%,#7d0a1c 100%)",
     }}
-  />
+  >
+    <svg
+      aria-hidden="true"
+      className="vel-pattern"
+      viewBox={`${PATTERN_BOX.x} ${PATTERN_BOX.y} ${PATTERN_BOX.width} ${PATTERN_BOX.height}`}
+      preserveAspectRatio="xMidYMid slice"
+    >
+      <g fill="none" stroke="#fff" strokeWidth={1} vectorEffect="non-scaling-stroke">
+        {PATTERN_PATHS.map((d, index) => (
+          <path key={index} d={d} vectorEffect="non-scaling-stroke" />
+        ))}
+      </g>
+    </svg>
+  </div>
 );
 
-export function VelocidadePortal() {
+// Conteúdo revelado (fase 3): texto à esquerda e os produtos em destaque (`featured` no seed) à direita no desktop;
+// no celular, os cards vêm abaixo do texto num carrossel horizontal com snap. Os cards entram escalonados JUNTO com a
+// revelação do portal (--gp-reveal, 0 → 1 no fim do scroll; CSS .vel-card) e só ficam clicáveis depois da entrada (o
+// GlyphPortal só libera o clique no conteúdo com data-gp-entered=true). Em telas muito baixas (no
+// desktop, ≤ 620px de altura) o terceiro card some para caber em 100svh.
+export function VelocidadePortal({ products }: { products: Product[] }) {
   return (
     <GlyphPortal word="VELOCIDADE" enterLabel="Entrar" scrollLength={2.2} style={portalStyle} background={field} className="velocidade-portal">
-      <div>
-        <h2 data-gp-default-title>Cada décimo conta.</h2>
-        <p data-gp-default-copy>Peças feitas para quem sente a corrida antes mesmo da largada.</p>
-        <a
-          href="#collection"
-          className="mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-6 py-3 text-xs font-medium text-black transition hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-        >
-          Ver a coleção <span aria-hidden="true">→</span>
-        </a>
+      <div className="grid w-full max-w-[1240px] items-center gap-8 justify-self-center lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
+        <div>
+          <h2 data-gp-default-title>Cada décimo conta.</h2>
+          <p data-gp-default-copy>Peças feitas para quem sente a corrida antes mesmo da largada.</p>
+          <a
+            href="#collection"
+            className="mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-6 py-3 text-xs font-medium text-black transition hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          >
+            Ver a coleção <span aria-hidden="true">→</span>
+          </a>
+        </div>
+        {products.length > 0 && (
+          <ul
+            aria-label="Destaques da coleção"
+            className="-mx-8 flex snap-x snap-mandatory scroll-px-8 gap-3 overflow-x-auto px-8 pb-2 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0"
+          >
+            {products.map((product, index) => (
+              <li key={product.slug} className={`vel-card w-[62%] shrink-0 snap-start sm:w-[40%] lg:w-auto ${index === 2 ? "vel-card--third" : ""}`} style={{ "--i": index } as CSSProperties}>
+                <Link
+                  href={`/produtos/${product.slug}`}
+                  className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white p-2 text-black transition-transform duration-[var(--motion-short)] ease-[var(--ease-out)] hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                >
+                  <span className="relative block aspect-[4/5] overflow-hidden rounded-xl bg-[#e9e8e4]">
+                    <Image src={product.images[0].src} alt="" fill sizes="(min-width: 1024px) 220px, 62vw" quality={75} className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                  </span>
+                  <span className="mt-3 line-clamp-2 px-1 text-sm leading-5">{product.name}</span>
+                  <span className="mt-auto px-1 pb-1 pt-1.5 text-sm font-semibold">{formatPrice(product.priceCents)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </GlyphPortal>
   );

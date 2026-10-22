@@ -318,3 +318,20 @@ h1, h2, .font-display {
   .driver-car[data-state="pending"] .driver-car__tilt { translate: none; }
   .driver-car[data-state="pending"] .driver-car__shadow { scale: none; }
 }
+
+/* VELOCIDADE: padrão de linhas de fluxo no campo vermelho (components/velocidade-portal.tsx). Maior que a tela para a
+   deriva não mostrar a borda; deriva lenta, contínua e só em transform (camada própria). Reduced motion: parado
+   (exceção do portal: ele já fica estático). */
+.vel-pattern { position: absolute; inset: -12%; width: 124%; height: 124%; opacity: 0.08; will-change: transform;
+  animation: vel-drift 32s ease-in-out infinite alternate; }
+@keyframes vel-drift { from { transform: translate3d(-3%, -1.5%, 0); } to { transform: translate3d(3%, 1.5%, 0); } }
+@media (prefers-reduced-motion: reduce) { .vel-pattern { animation: none; } }
+/* VELOCIDADE: cards de destaque entram escalonados com a revelação do portal (--gp-reveal vai de 0 a 1 no fim do
+   scroll; cada card começa 0,12 depois do anterior). Só opacity/transform. Telas baixas: o 3º card some (cabe em 100svh; a 1280×720 os 3 cabem). */
+.vel-card { --t: clamp(0, calc((var(--gp-reveal, 1) - 0.12 * var(--i, 0)) / 0.64), 1);
+  opacity: var(--t); transform: translate3d(0, calc((1 - var(--t)) * 28px), 0); }
+@media (prefers-reduced-motion: reduce) { .vel-card { opacity: 1; transform: none; } }
+@media (min-width: 1024px) and (max-height: 620px) {
+  .velocidade-portal .vel-card--third { display: none; }
+  .velocidade-portal ul:has(.vel-card--third) { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 460px; justify-self: end; }
+}

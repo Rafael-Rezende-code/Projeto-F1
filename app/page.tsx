@@ -48,7 +48,9 @@ function CategoryCard({ slug, title, subtitle, image, number }: { slug: string; 
 }
 
 export default async function Page() {
-  const [categories, gridProducts, carouselProducts] = await Promise.all([catalog.getCategories(), catalog.getProductsBySlugs(HOME_GRID_SLUGS), catalog.getProductsBySlugs(HOME_CAROUSEL_SLUGS)])
+  const [categories, gridProducts, carouselProducts, allProducts] = await Promise.all([catalog.getCategories(), catalog.getProductsBySlugs(HOME_GRID_SLUGS), catalog.getProductsBySlugs(HOME_CAROUSEL_SLUGS), catalog.getProducts()])
+  // Destaques da seção VELOCIDADE (fase 3): os 3 primeiros com `featured` no catálogo.
+  const velocidadeProducts = allProducts.filter((product) => product.featured).slice(0, 3)
   const categoryName = (slug: string) => categories.find((category) => category.slug === slug)?.name
   return <main id="top" className="min-h-screen bg-white">
     <SiteHeader variant="overlay" />
@@ -75,7 +77,7 @@ export default async function Page() {
 
     <section id="bestsellers" className="bg-[#f5f5f3] px-5 py-20 sm:px-10 sm:py-28"><div className="mx-auto max-w-[1400px]"><p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Mais desejados</p><div className="flex items-end justify-between gap-5"><div><SectionTitle text="O que o grid veste" highlight="grid" className="text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl" /><p className="mt-4 text-sm text-black/55">As peças às quais nossa comunidade sempre retorna.</p></div><div className="hidden gap-2 sm:flex"><button aria-label="Voltar produtos" className="rounded-xl border border-black/15 p-3 text-black"><ArrowRight className="rotate-180" size={16} /></button><button aria-label="Avançar produtos" className="rounded-xl border border-black/15 p-3 text-black"><ArrowRight size={16} /></button></div></div></div><div className={`-mx-5 mt-12 flex snap-x gap-4 overflow-x-auto pb-4 [scrollbar-width:none] sm:-mx-10 ${CAROUSEL_BLEED}`}>{carouselProducts.map((product) => <div key={product.id} className="min-w-[72vw] snap-start sm:min-w-[320px] lg:min-w-[360px]"><ProductCard product={product} categoryName={categoryName(product.categorySlug)} sizes={CAROUSEL_PRODUCT_SIZES} /></div>)}</div></section>
 
-    <VelocidadePortal />
+    <VelocidadePortal products={velocidadeProducts} />
 
     <section id="journal" className="relative flex min-h-[500px] items-center justify-center overflow-hidden px-5 py-24 text-center text-white sm:px-10"><ImageReveal blur={localImage(editorial.journal.mobile.src)?.blur} className="absolute inset-0"><ArtDirectedImage alt={editorial.journal.alt} mobile={editorial.journal.mobile} desktop={editorial.journal.desktop} quality={editorialQuality} className="object-cover" /></ImageReveal><div className="absolute inset-0 bg-black/55" /><div className="relative z-10"><p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#e8702a]">A corrida noturna</p><KineticText as="h2" text="Luzes apagadas." className={`hidden justify-center text-6xl tracking-[-0.08em] sm:text-8xl lg:[@media(hover:hover)]:flex font-kinetic`} /><h2 className="text-6xl font-medium tracking-[-0.08em] sm:text-8xl lg:[@media(hover:hover)]:hidden">Luzes apagadas.</h2><p className="mx-auto mt-6 max-w-md text-sm text-white/70">Viva a atmosfera da Fórmula 1 além da linha de chegada.</p><Link href="/produtos" className="mt-8 inline-flex items-center gap-3 rounded-xl bg-white px-6 py-3 text-xs font-medium text-black transition hover:bg-[#b94f01] hover:text-white">Comprar a coleção <ArrowUpRight size={16} /></Link></div></section>
 

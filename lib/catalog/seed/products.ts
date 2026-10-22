@@ -9,6 +9,8 @@ import { teams } from "./teams";
 // já usava (lib/catalog/seed/images.ts), sem URLs novas.
 //
 // Ordem do array = ordem de "relevância" no catálogo.
+// `featured`: 4 destaques (Scuderia Racing Jacket, Classic Racing Hoodie e as miniaturas de capacete de Hamilton e
+// Bortoleto); a seção VELOCIDADE mostra os 3 primeiros na ordem do catálogo.
 
 const APPAREL = ["P", "M", "G", "GG"];
 
@@ -53,6 +55,7 @@ function product(base: Base): Product {
 const featured: Product[] = [
   product({
     slug: "scuderia-racing-jacket",
+    featured: true,
     name: "Scuderia Racing Jacket",
     description: "Jaqueta de corrida com corte reto, gola alta e detalhes inspirados no macacão da Scuderia. Forro leve, zíper frontal e bolsos laterais.",
     priceCents: 64990,
@@ -98,6 +101,7 @@ const featured: Product[] = [
   }),
   product({
     slug: "classic-racing-hoodie",
+    featured: true,
     name: "Classic Racing Hoodie",
     description: "Moletom com capuz em felpa macia, punhos canelados e bordado discreto no peito.",
     priceCents: 39990,
@@ -259,6 +263,8 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
       sizes: ["Único"],
       tags: ["miniatura", driver.slug],
       isNew: i % 2 === 0,
+      // Destaques: as miniaturas de capacete de Hamilton e Bortoleto (seção VELOCIDADE e topo do piloto).
+      featured: driver.slug === "hamilton" || driver.slug === "bortoleto",
     }),
     product({
       slug: `poster-${driver.slug}`,
