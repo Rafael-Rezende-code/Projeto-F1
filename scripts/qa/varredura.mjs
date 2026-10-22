@@ -75,7 +75,8 @@ for (const w of WIDTHS.split(",").map(Number)) {
     });
     page.removeAllListeners("pageerror");
     page.on("pageerror", (err) => errors.push("EXC " + String(err).slice(0, 160)));
-    await page.goto(BASE + route, { waitUntil: "networkidle" });
+    // Se a rede não acalma (ex.: o otimizador travar numa imagem), segue com o que já carregou em vez de derrubar a varredura.
+    await page.goto(BASE + route, { waitUntil: "networkidle" }).catch(async () => { await page.waitForTimeout(1500); });
     // rola até o fim e volta (monta o que entra por IntersectionObserver)
     await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 700) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)); } scrollTo(0, 0); await new Promise((r) => setTimeout(r, 600)); });
     const r = await page.evaluate(check);

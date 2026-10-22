@@ -36,9 +36,12 @@ test("piloto: topo com frase e números, produtos logo depois, depois a históri
   await expect(numbers.getByText("Títulos mundiais")).toBeVisible();
   await expect(numbers.getByText("44", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Curiosidades" })).toBeVisible();
-  // Refino 2: sem carro, o topo traz "Ver a coleção ↓"; os produtos vêm ANTES da história.
+  // Com o carro (feat/carros), a frase + números + botão saem do topo: os números abrem a história, e os produtos vêm ANTES dela.
   await expect(page.getByText("Destaques Hamilton")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Ver a coleção/ }).first()).toHaveAttribute("href", "#produtos-piloto");
+  await expect(page.getByRole("link", { name: /Ver a coleção/ })).toHaveCount(0);
+  const numbersBox = await numbers.boundingBox();
+  const storyHeading = await page.getByRole("heading", { name: "A história de Lewis" }).boundingBox();
+  expect(numbersBox!.y).toBeLessThan(storyHeading!.y);
   await expect(page.getByRole("link", { name: /Ver todos os produtos/ })).toHaveAttribute("href", "/produtos?piloto=hamilton");
   const products = await page.locator("#produtos-piloto").boundingBox();
   const story = await page.getByRole("heading", { name: "A história de Lewis" }).boundingBox();
@@ -60,8 +63,9 @@ test("/sobre: manifesto, independência, o que vendemos e [CONFIRMAR] destacado;
   await expect(page.locator("#conteudo").getByText("Não temos vínculo, patrocínio nem aprovação da Fórmula 1, das equipes ou dos pilotos.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "O que vendemos" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Pistas impressas em 3D" })).toBeVisible();
-  await expect(page.getByText("Entregamos em todo o Brasil.")).toBeVisible();
-  expect(await page.locator("mark", { hasText: "[CONFIRMAR]" }).count()).toBe(2);
+  // Promessas comerciais (entrega, prazos, trocas) só aparecem se configuradas em lib/store-policy.ts; sem configuração, nada.
+  await expect(page.getByText("Entregamos em todo o Brasil.")).toHaveCount(0);
+  expect(await page.locator("mark", { hasText: "[CONFIRMAR]" }).count()).toBe(0);
   // Dados da empresa: nada de placeholder entre colchetes no rodapé.
   await expect(page.getByRole("contentinfo").getByText(/\[(RAZÃO|ENDEREÇO|E-MAIL|TELEFONE|00\.000)/)).toHaveCount(0);
 });
