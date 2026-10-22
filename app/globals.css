@@ -326,12 +326,23 @@ h1, h2, .font-display {
   animation: vel-drift 32s ease-in-out infinite alternate; }
 @keyframes vel-drift { from { transform: translate3d(-3%, -1.5%, 0); } to { transform: translate3d(3%, 1.5%, 0); } }
 @media (prefers-reduced-motion: reduce) { .vel-pattern { animation: none; } }
-/* VELOCIDADE: cards de destaque entram escalonados com a revelação do portal (--gp-reveal vai de 0 a 1 no fim do
-   scroll; cada card começa 0,12 depois do anterior). Só opacity/transform. Telas baixas: o 3º card some (cabe em 100svh; a 1280×720 os 3 cabem). */
+/* VELOCIDADE: vitrine de 2 produtos (refino 2). Entrada escalonada com a revelação do portal (--gp-reveal vai de 0 a 1
+   no fim do scroll; cada produto começa 0,12 depois do anterior). Só opacity/transform. */
 .vel-card { --t: clamp(0, calc((var(--gp-reveal, 1) - 0.12 * var(--i, 0)) / 0.64), 1);
   opacity: var(--t); transform: translate3d(0, calc((1 - var(--t)) * 28px), 0); }
 @media (prefers-reduced-motion: reduce) { .vel-card { opacity: 1; transform: none; } }
-@media (min-width: 1024px) and (max-height: 620px) {
-  .velocidade-portal .vel-card--third { display: none; }
-  .velocidade-portal ul:has(.vel-card--third) { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 460px; justify-self: end; }
+/* Celular/tablet: slides grandes (carrossel). */
+.vel-photo { aspect-ratio: 4 / 5; }
+/* Desktop: --vel-h = altura da foto grande (cabe em 100svh e na largura da coluna); a menor tem 70%, desce 20% e
+   encosta de leve na grande (margem negativa), por cima dela. */
+@media (min-width: 1024px) {
+  .vel-showcase { --vel-h: min(58svh, 520px, 33vw); justify-content: flex-end; }
+  .vel-card--main .vel-photo { height: var(--vel-h); width: calc(var(--vel-h) * 0.8); }
+  .vel-card--side { position: relative; z-index: 1; margin-top: calc(var(--vel-h) * 0.2); margin-left: calc(var(--vel-h) * -0.08); }
+  .vel-card--side .vel-photo { height: calc(var(--vel-h) * 0.7); width: calc(var(--vel-h) * 0.56);
+    box-shadow: 0 24px 48px -20px rgba(40, 0, 8, 0.55); }
+  .vel-card--main a, .vel-card--side a { width: max-content; }
+  .vel-card--main .vel-text { max-width: calc(var(--vel-h) * 0.8); }
+  /* o texto do menor começa depois da sobreposição (não encosta na foto grande) */
+  .vel-card--side .vel-text { padding-left: calc(var(--vel-h) * 0.08 + 12px); max-width: calc(var(--vel-h) * 0.56); }
 }

@@ -58,15 +58,17 @@ const field = (
   </div>
 );
 
-// Conteúdo revelado (fase 3): texto à esquerda e os produtos em destaque (`featured` no seed) à direita no desktop;
-// no celular, os cards vêm abaixo do texto num carrossel horizontal com snap. Os cards entram escalonados JUNTO com a
-// revelação do portal (--gp-reveal, 0 → 1 no fim do scroll; CSS .vel-card) e só ficam clicáveis depois da entrada (o
-// GlyphPortal só libera o clique no conteúdo com data-gp-entered=true). Em telas muito baixas (no
-// desktop, ≤ 620px de altura) o terceiro card some para caber em 100svh.
+// Conteúdo revelado (refino 2): texto à esquerda e uma VITRINE EDITORIAL de 2 produtos `featured` à direita, sem
+// caixas: um grande (foto alta, ~60% da coluna) e um menor, mais baixo e sobreposto de leve; nome forte, preço em
+// pílula e "Ver produto →". A altura das fotos (--vel-h) acompanha a tela (svh e vw), então cabe em 100svh em
+// 1440×900 e 1280×720 sem tirar o segundo produto. Celular: carrossel com snap de slides grandes.
+// Entrada escalonada pela própria revelação do portal (--gp-reveal em .vel-card) e clique só depois da entrada
+// (o GlyphPortal libera o conteúdo com data-gp-entered=true). Hover: zoom suave (1,03) na foto.
 export function VelocidadePortal({ products }: { products: Product[] }) {
+  const showcase = products.slice(0, 2);
   return (
     <GlyphPortal word="VELOCIDADE" enterLabel="Entrar" scrollLength={2.2} style={portalStyle} background={field} className="velocidade-portal">
-      <div className="grid w-full max-w-[1240px] items-center gap-8 justify-self-center lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
+      <div className="grid w-full max-w-[1240px] items-center gap-10 justify-self-center lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
         <div>
           <h2 data-gp-default-title>Cada décimo conta.</h2>
           <p data-gp-default-copy>Peças feitas para quem sente a corrida antes mesmo da largada.</p>
@@ -77,22 +79,30 @@ export function VelocidadePortal({ products }: { products: Product[] }) {
             Ver a coleção <span aria-hidden="true">→</span>
           </a>
         </div>
-        {products.length > 0 && (
-          <ul
-            aria-label="Destaques da coleção"
-            className="-mx-8 flex snap-x snap-mandatory scroll-px-8 gap-3 overflow-x-auto px-8 pb-2 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0"
-          >
-            {products.map((product, index) => (
-              <li key={product.slug} className={`vel-card w-[62%] shrink-0 snap-start sm:w-[40%] lg:w-auto ${index === 2 ? "vel-card--third" : ""}`} style={{ "--i": index } as CSSProperties}>
-                <Link
-                  href={`/produtos/${product.slug}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white p-2 text-black transition-transform duration-[var(--motion-short)] ease-[var(--ease-out)] hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-                >
-                  <span className="relative block aspect-[4/5] overflow-hidden rounded-xl bg-[#e9e8e4]">
-                    <Image src={product.images[0].src} alt="" fill sizes="(min-width: 1024px) 220px, 62vw" quality={75} className="object-cover transition-transform duration-700 group-hover:scale-105" />
+        {showcase.length > 0 && (
+          <ul aria-label="Destaques da coleção" className="vel-showcase -mx-8 flex snap-x snap-mandatory scroll-px-8 gap-4 overflow-x-auto px-8 pb-2 [scrollbar-width:none] lg:mx-0 lg:items-start lg:overflow-visible lg:px-0 lg:pb-0">
+            {showcase.map((product, index) => (
+              <li key={product.slug} className={`vel-card ${index === 0 ? "vel-card--main" : "vel-card--side"} w-[78%] shrink-0 snap-start sm:w-[46%] lg:w-auto`} style={{ "--i": index } as CSSProperties}>
+                <Link href={`/produtos/${product.slug}`} className="group block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+                  <span className="vel-photo relative block overflow-hidden rounded-2xl bg-[#e9e8e4]">
+                    <Image
+                      src={product.images[0].src}
+                      alt=""
+                      fill
+                      sizes={index === 0 ? "(min-width: 1024px) 420px, 78vw" : "(min-width: 1024px) 300px, 78vw"}
+                      quality={80}
+                      className="object-cover transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.03]"
+                    />
                   </span>
-                  <span className="mt-3 line-clamp-2 px-1 text-sm leading-5">{product.name}</span>
-                  <span className="mt-auto px-1 pb-1 pt-1.5 text-sm font-semibold">{formatPrice(product.priceCents)}</span>
+                  <span className="vel-text block">
+                  <span className="mt-4 block font-display text-xl leading-tight tracking-[-0.03em] text-white sm:text-2xl">{product.name}</span>
+                  <span className="mt-3 flex flex-wrap items-center gap-3">
+                    <span className="rounded-md bg-white px-2.5 py-1 text-sm font-semibold text-black">{formatPrice(product.priceCents)}</span>
+                    <span className="text-sm text-white underline-offset-4 group-hover:underline">
+                      Ver produto <span aria-hidden="true">→</span>
+                    </span>
+                  </span>
+                  </span>
                 </Link>
               </li>
             ))}

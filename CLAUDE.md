@@ -607,12 +607,15 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 - **Fase 3, VELOCIDADE:** padrão de linhas de fluxo (túnel de vento) gerado em código (`lib/velocidade-pattern.ts`, 26
   linhas deterministas, Catmull-Rom → Bézier) num SVG dentro da camada do campo que acompanha
   `scale(var(--gp-field-scale))`; traço branco de 1px (`vector-effect`), opacidade 0,08, deriva de 32 s em
-  `transform` (`.vel-pattern`), parada com reduced motion. Conteúdo revelado: texto à esquerda e 3 produtos `featured`
-  à direita no desktop (cards brancos `rounded-2xl`); no celular, carrossel com snap abaixo do texto. Os cards entram
-  escalonados pela própria revelação do portal (`--gp-reveal` em `.vel-card`) e só são clicáveis depois da entrada
-  (`data-gp-entered`). Medido: 1440×900 (3 cards, conteúdo 332px), 1280×720 (3 cards, 301px), 390×844 (585px); abaixo
-  de 620px de altura no desktop ficam 2 cards. `featured` (novo campo do `Product`): Scuderia Racing Jacket, Classic
-  Racing Hoodie e miniaturas de capacete de Hamilton e Bortoleto. GlyphPortal não foi alterado.
+  `transform` (`.vel-pattern`), parada com reduced motion. **Vitrine editorial (refino 2, item 2):** texto à esquerda
+  e 2 produtos `featured` à direita, SEM caixas brancas: um grande (foto 4:5, altura `--vel-h` = min(58svh, 520px, 33vw))
+  e um menor (70%), mais baixo e sobreposto ~8% ao grande, com sombra. Cada um: foto `rounded-2xl` com zoom 1,03 no
+  hover, nome forte (Archivo, branco), preço numa pílula branca `rounded-md` e "Ver produto →"; um único link por
+  produto. No celular, carrossel com snap de slides grandes (78% da largura). Entrada escalonada pela revelação do portal
+  (`--gp-reveal` em `.vel-card`), clicável só depois (`data-gp-entered`). Medido (altura do conteúdo): 1440×900 555px,
+  1280×720 497px, 390×844 656px, 2 produtos em todos, sem scroll horizontal. Prints e GIF em `docs/refino-2/2-velocidade/`.
+  `featured` (campo do `Product`): os 2 primeiros são Scuderia Racing Jacket e Classic Racing Hoodie. GlyphPortal não foi
+  alterado.
 - **Fase 4, textos dos pilotos:** `lib/content/drivers/{slug}.ts` (tipo em `types.ts`: abertura, trajetória 3–4
   parágrafos, estilo 1–2, 3–5 números estáveis e 3 curiosidades), fontes por fato em `docs/conteudo/fontes-pilotos.md`.
   Layout em `components/driver-story.tsx`: abertura com WordsStagger ao lado da foto secundária (no lugar de
