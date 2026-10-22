@@ -605,6 +605,10 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   equipe, Estilo de pilotagem e Curiosidades lado a lado, nota "Texto editorial independente, escrito por fãs. Sem
   vínculo com..." e os produtos. Títulos com BlurReveal. **Ao atualizar:** nada de total de vitórias/pódios/pontos
   (muda a cada corrida); recordes e títulos só com fonte; sem citações do piloto; nunca sugerir loja oficial.
+- **Fase 5, textos das equipes:** `lib/content/teams/{slug}.ts` (11 arquivos; tipo em `types.ts`: abertura, história em
+  2 parágrafos, 3 marcos e sede), fontes em `docs/conteudo/fontes-equipes.md`. `components/team-story.tsx` entre o
+  cabeçalho e os produtos de `/equipes/[slug]`: título com BlurReveal, abertura com WordsStagger, sede com marcador na cor
+  da equipe, história em coluna de leitura, marcos com o ano grande na Archivo e a nota de texto independente.
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**

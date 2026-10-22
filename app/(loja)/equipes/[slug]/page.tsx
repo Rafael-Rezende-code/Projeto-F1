@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductGrid } from "@/components/product-grid";
 import { TeamRow } from "@/components/team-row";
+import { TeamStory } from "@/components/team-story";
+import { getTeamContent } from "@/lib/content/teams";
 import { catalog } from "@/lib/catalog";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -27,6 +29,8 @@ export default async function TeamPage({ params }: Params) {
   if (!team) notFound();
   const [products, teams] = await Promise.all([catalog.getProducts({ team: team.slug }), catalog.getTeams()]);
   const h = team.logo.displayHeight;
+  // Texto editorial (fase 5): lib/content/teams/{slug}.ts.
+  const story = getTeamContent(team.slug);
 
   return (
     <div className="px-5 pb-24 pt-8 sm:px-10 sm:pt-10">
@@ -55,7 +59,9 @@ export default async function TeamPage({ params }: Params) {
           <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[3px] bg-white/25" />
         </header>
 
-        <section aria-labelledby="produtos-equipe" className="mt-16">
+        {story && <TeamStory content={story} color={team.color} name={team.name} />}
+
+        <section aria-labelledby="produtos-equipe" className="mt-16 sm:mt-24">
           <div className="mb-10 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             <SectionTitle id="produtos-equipe" text={`Produtos ${team.name}`} className="text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
             <Link href={`/produtos?equipe=${team.slug}`} className="group inline-flex min-h-11 items-center gap-2 text-sm text-black/60 underline-offset-4 transition hover:text-black hover:underline">

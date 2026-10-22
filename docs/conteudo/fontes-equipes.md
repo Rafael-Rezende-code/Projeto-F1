@@ -1,0 +1,19 @@
+# Fontes dos textos das equipes (fase 5)
+
+Textos em `lib/content/teams/{slug}.ts`. Consulta em 22/10/2026. Só fatos estáveis (fundação, sede, linhagem, títulos
+por ano). Frases de abertura e adjetivos são leitura editorial. Sem citações. Homenagem independente de fã: nenhum texto
+sugere vínculo, licença ou endosso da equipe.
+
+| Equipe | Fatos usados | Fonte |
+| --- | --- | --- |
+| Ferrari | Fundada em 1929 por Enzo Ferrari (para correr com Alfa Romeo); sede em Maranello; estreia no GP de Mônaco de 1950; única em todas as temporadas desde 1950; primeiro título de construtores em 1961; Schumacher campeão de 2000 a 2004 | https://en.wikipedia.org/wiki/Scuderia_Ferrari |
+| Mercedes | Correu em 1954–1955 (Fangio campeão nos dois anos); linhagem Tyrrell → BAR → Honda → Brawn GP → Mercedes (2010); Brawn GP campeã dupla em 2009; oito títulos de construtores seguidos 2014–2021 (recorde); Brackley e Brixworth | https://en.wikipedia.org/wiki/Mercedes-AMG_Petronas_F1_Team |
+| McLaren | Fundada em 1963 por Bruce McLaren; estreia em Mônaco 1966; 1ª vitória na Bélgica 1968 com Bruce; 15 vitórias em 16 corridas em 1988; construtores em 2024 e 2025; Woking; Senna (1988, 1990, 1991), Prost e Häkkinen campeões pela equipe | https://en.wikipedia.org/wiki/McLaren |
+| Red Bull Racing | Linhagem Stewart (1997) → Jaguar → Red Bull (compra em nov. 2004); estreia no GP da Austrália 2005; construtores 2010–2013, 2022, 2023; Vettel 2010–2013; Verstappen 2021–2024; motores Red Bull Ford em 2026; Milton Keynes | https://en.wikipedia.org/wiki/Red_Bull_Racing |
+| Aston Martin | Correu em 1959–1960; linhagem Jordan (1991) → Midland → Force India → Racing Point → Aston Martin (2021); Lawrence Stroll; fábrica nova em Silverstone; Alonso desde 2023; Newey desde 2025; Honda de fábrica em 2026 | https://en.wikipedia.org/wiki/Aston_Martin_in_Formula_One |
+| Williams | Fundada em 1977 por Frank Williams e Patrick Head; Grove; 1ª vitória no GP da Inglaterra 1979 (Regazzoni); 9 títulos de construtores (1980–1997); campeões Jones, Rosberg, Piquet (1987), Mansell, Prost, Hill, Villeneuve; Dorilton Capital desde 2020 | https://en.wikipedia.org/wiki/Williams_Racing |
+| Alpine | Linhagem Toleman (1981) → Benetton → Renault → Lotus → Renault → Alpine (2021); Benetton: Schumacher 1994–1995 e construtores 1995; Renault: Alonso e construtores 2005–2006; Ocon vence na Hungria 2021; motores Mercedes desde 2026; Enstone | https://en.wikipedia.org/wiki/Alpine_F1_Team |
+| Haas | Fundada em 2014 por Gene Haas (NASCAR); estreia na Austrália 2016 com Grosjean em 6º (primeira equipe americana a pontuar na estreia); Kannapolis, Banbury e Maranello; motores Ferrari; TGR Haas F1 Team em 2026 | https://en.wikipedia.org/wiki/Haas_F1_Team |
+| Racing Bulls | Minardi (1985) comprada pela Red Bull no fim de 2005 → Toro Rosso (2006) → AlphaTauri (2020) → RB (2024) → Racing Bulls (2025); Faenza; equipe de formação; vitória de Vettel em Monza 2008 (chuva) e de Gasly em Monza 2020 | https://en.wikipedia.org/wiki/Racing_Bulls · https://en.wikipedia.org/wiki/Scuderia_Toro_Rosso · https://www.formula1.com/en/latest/article/gasly-takes-maiden-win-in-monza-thriller-from-sainz-as-penalty-leaves.2wjQyiSgOy8ggwcJlWHhsi |
+| Audi | Equipe de fábrica desde 2026, a partir da Sauber (na F1 desde 1993; vitória no Canadá 2008 como BMW Sauber); Auto Union nos GPs de 1935–1939; Hinwil (chassi) e Neuburg an der Donau (motor); Hülkenberg e Bortoleto | https://en.wikipedia.org/wiki/Audi_in_Formula_One |
+| Cadillac | Aprovação final em março de 2025; estreia em 2026 (GP da Austrália) como 11ª equipe; primeira equipe nova e independente desde a Haas (2016); Fishers (Indiana), Concord (Carolina do Norte), Warren (Michigan) e Silverstone; motores Ferrari até a unidade da GM (prevista para 2029); Pérez e Bottas | https://en.wikipedia.org/wiki/Cadillac_Formula_1_Team |
