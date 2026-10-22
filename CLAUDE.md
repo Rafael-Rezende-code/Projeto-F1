@@ -621,6 +621,12 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   Explorar) aponta para `/diario`; em "Luzes apagadas." entrou só o link "Ler o Diário →" abaixo do botão. Sitemap
   inclui o Diário. Para escrever um artigo novo: criar o arquivo, registrar em `lib/content/diario/index.ts` e listar
   as fontes.
+- **Fase 7, descrições de produto:** os 66 produtos do seed têm descrição em 2 parágrafos (separados por `\n\n`) e
+  ficha `details` (material, caimento/ajuste/escala, cuidados) em `lib/catalog/seed/descriptions.ts` (textos próprios
+  para as 6 peças da casa; modelos por tipo para equipes e pilotos, com a tagline da equipe ou a frase do piloto).
+  `detailsPending: true` faz a página mostrar "[CONFERIR COM O PRODUTO REAL]" acima da ficha: as fichas são exemplos.
+  A meta description usa só o 1º parágrafo. Nenhuma descrição diz "oficial" (a camiseta de equipe dizia "Camiseta
+  oficial de torcedor") e o boné de piloto não tem mais "assinatura bordada" (agora "nome bordado na lateral").
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**

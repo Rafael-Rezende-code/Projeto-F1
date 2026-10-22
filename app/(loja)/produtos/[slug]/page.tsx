@@ -25,12 +25,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!product) return { title: "Produto não encontrado" };
   return {
     title: product.name,
-    description: product.description,
+    description: product.description.split("\n\n")[0],
     alternates: { canonical: `/produtos/${product.slug}` },
     openGraph: {
       type: "website",
       title: product.name,
-      description: product.description,
+      description: product.description.split("\n\n")[0],
       images: [{ url: product.images[0].src, alt: product.images[0].alt }],
     },
   };
@@ -59,7 +59,7 @@ export default async function ProductPage({ params }: Params) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
+    description: product.description.replace(/\n\n/g, " "),
     sku: product.variants[0]?.sku,
     image: product.images.map((image) => (image.src.startsWith("http") ? image.src : `${SITE_URL}${image.src}`)),
     brand: { "@type": "Brand", name: team?.name ?? BRAND.name },
@@ -131,7 +131,24 @@ export default async function ProductPage({ params }: Params) {
             <div className="mt-10 border-t border-black/10">
               <section aria-labelledby="descricao" className="border-b border-black/10 py-6">
                 <h2 id="descricao" className="font-ui text-sm font-medium">Descrição</h2>
-                <p className="mt-3 text-sm leading-7 text-black/65">{product.description}</p>
+                {product.description.split("\n\n").map((paragraph) => (
+                  <p key={paragraph.slice(0, 24)} className="mt-3 text-sm leading-7 text-black/65">{paragraph}</p>
+                ))}
+                {product.details && product.details.length > 0 && (
+                  <div className="mt-5">
+                    {product.detailsPending && (
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#b94f01]">[CONFERIR COM O PRODUTO REAL]</p>
+                    )}
+                    <dl className="divide-y divide-black/10 border-y border-black/10 text-sm">
+                      {product.details.map((detail) => (
+                        <div key={detail.label} className="grid grid-cols-[96px_minmax(0,1fr)] gap-3 py-2.5">
+                          <dt className="font-medium text-black">{detail.label}</dt>
+                          <dd className="leading-6 text-black/65">{detail.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
                 {product.illustrative && <p className="mt-3 text-xs text-black/60">Produto ilustrativo (catálogo de demonstração).</p>}
               </section>
               <details className="group border-b border-black/10 py-5">

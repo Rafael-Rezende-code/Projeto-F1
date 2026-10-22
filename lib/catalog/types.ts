@@ -20,11 +20,19 @@ export type ProductVariant = {
   stock: number;
 };
 
+/** Item da ficha do produto (material, caimento, cuidados...). */
+export type ProductDetail = { label: string; value: string };
+
 export type Product = {
   id: string;
   slug: string;
   name: string;
+  /** Texto do produto: parágrafos separados por linha em branco ("\n\n"). */
   description: string;
+  /** Ficha (material, caimento, cuidados). */
+  details?: ProductDetail[];
+  /** Ficha ainda não conferida com o produto real: a página mostra "[CONFERIR COM O PRODUTO REAL]". */
+  detailsPending?: boolean;
   priceCents: number;
   /** Preço "de" (riscado), quando há promoção. Sempre maior que priceCents. */
   compareAtPriceCents?: number;

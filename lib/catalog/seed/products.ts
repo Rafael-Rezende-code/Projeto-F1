@@ -1,11 +1,12 @@
 import { BRAND } from "@/lib/brand";
 import type { Product, ProductVariant } from "../types";
+import { driverCopy, homeCopy, teamCopy } from "./descriptions";
 import { IMG } from "./images";
 import { drivers } from "./drivers";
 import { teams } from "./teams";
 
 // SEED ILUSTRATIVO: todos os produtos abaixo são de demonstração (illustrative: true). Nomes, preços, estoques e
-// descrições servem para montar a loja; não são itens reais à venda. As fotos reaproveitam as imagens que o site
+// descrições servem para montar a loja; não são itens reais à venda. Descrições e fichas em ./descriptions.ts. As fotos reaproveitam as imagens que o site
 // já usava (lib/catalog/seed/images.ts), sem URLs novas.
 //
 // Ordem do array = ordem de "relevância" no catálogo.
@@ -46,6 +47,8 @@ function product(base: Base): Product {
     variants: variants(code, counter, sizes),
     status: "active",
     illustrative: true,
+    // Ficha de exemplo (lib/catalog/seed/descriptions.ts): conferir com o produto real antes de vender.
+    detailsPending: true,
     // Datas espaçadas para a ordenação "novidades"; os marcados como novos são os mais recentes.
     createdAt: base.createdAt ?? new Date(Date.UTC(2026, 0, 1 + counter * 2)).toISOString(),
   };
@@ -57,7 +60,7 @@ const featured: Product[] = [
     slug: "scuderia-racing-jacket",
     featured: true,
     name: "Scuderia Racing Jacket",
-    description: "Jaqueta de corrida com corte reto, gola alta e detalhes inspirados no macacão da Scuderia. Forro leve, zíper frontal e bolsos laterais.",
+    ...homeCopy["scuderia-racing-jacket"],
     priceCents: 64990,
     categorySlug: "teamwear",
     teamSlug: "ferrari",
@@ -73,7 +76,7 @@ const featured: Product[] = [
   product({
     slug: "ferrari-team-cap",
     name: "Ferrari Team Cap",
-    description: "Boné de seis gomos com aba curva, ajuste traseiro e o vermelho de Maranello.",
+    ...homeCopy["ferrari-team-cap"],
     priceCents: 18990,
     categorySlug: "acessorios",
     teamSlug: "ferrari",
@@ -88,7 +91,7 @@ const featured: Product[] = [
   product({
     slug: "monaco-racing-tee",
     name: "Monaco Racing Tee",
-    description: "Camiseta de algodão penteado com estampa inspirada nas ruas de Mônaco. Modelagem regular.",
+    ...homeCopy["monaco-racing-tee"],
     priceCents: 22990,
     categorySlug: "racing",
     images: [
@@ -103,7 +106,7 @@ const featured: Product[] = [
     slug: "classic-racing-hoodie",
     featured: true,
     name: "Classic Racing Hoodie",
-    description: "Moletom com capuz em felpa macia, punhos canelados e bordado discreto no peito.",
+    ...homeCopy["classic-racing-hoodie"],
     priceCents: 39990,
     compareAtPriceCents: 45990,
     categorySlug: "teamwear",
@@ -118,7 +121,7 @@ const featured: Product[] = [
   product({
     slug: "pit-lane-overshirt",
     name: "Pit Lane Overshirt",
-    description: "Sobrecamisa de sarja com bolsos utilitários, pensada para o dia inteiro no paddock.",
+    ...homeCopy["pit-lane-overshirt"],
     priceCents: 45990,
     categorySlug: "racing",
     images: [
@@ -133,7 +136,7 @@ const featured: Product[] = [
   product({
     slug: "apex-circuit-tote",
     name: `${BRAND.name} Circuit Tote`,
-    description: "Bolsa tote de lona resistente com o traçado de um circuito estampado. Alças reforçadas.",
+    ...homeCopy["apex-circuit-tote"],
     priceCents: 16990,
     categorySlug: "acessorios",
     images: [
@@ -151,7 +154,7 @@ const teamProducts: Product[] = teams.flatMap((team, i) => [
   product({
     slug: `camiseta-${team.slug}-2026`,
     name: `Camiseta ${team.name} 2026`,
-    description: `Camiseta oficial de torcedor da ${team.name}, em algodão macio, com a identidade da equipe para a temporada 2026.`,
+    ...teamCopy("camiseta", team.name, team.tagline),
     priceCents: 21990 + (i % 3) * 1000,
     categorySlug: "teamwear",
     teamSlug: team.slug,
@@ -166,7 +169,7 @@ const teamProducts: Product[] = teams.flatMap((team, i) => [
   product({
     slug: `bone-${team.slug}`,
     name: `Boné ${team.name}`,
-    description: `Boné da ${team.name} com aba curva e ajuste traseiro. Tamanho único.`,
+    ...teamCopy("bone", team.name, team.tagline),
     priceCents: 17990 + (i % 2) * 1000,
     compareAtPriceCents: i % 3 === 0 ? 21990 : undefined,
     categorySlug: "acessorios",
@@ -182,7 +185,7 @@ const teamProducts: Product[] = teams.flatMap((team, i) => [
   product({
     slug: `moletom-${team.slug}`,
     name: `Moletom ${team.name}`,
-    description: `Moletom com capuz nas cores da ${team.name}, felpado por dentro e com bolso canguru.`,
+    ...teamCopy("moletom", team.name, team.tagline),
     priceCents: 38990 + (i % 3) * 2000,
     categorySlug: "teamwear",
     teamSlug: team.slug,
@@ -197,7 +200,7 @@ const teamProducts: Product[] = teams.flatMap((team, i) => [
   product({
     slug: `jaqueta-${team.slug}`,
     name: `Jaqueta ${team.name}`,
-    description: `Jaqueta corta-vento da ${team.name}, leve e com capuz embutido na gola.`,
+    ...teamCopy("jaqueta", team.name, team.tagline),
     priceCents: 59990 + (i % 4) * 2000,
     compareAtPriceCents: i % 5 === 2 ? 69990 + (i % 4) * 2000 : undefined,
     categorySlug: "racing",
@@ -219,7 +222,7 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
     product({
       slug: `camiseta-${driver.slug}`,
       name: `Camiseta ${driver.name}`,
-      description: `Camiseta de torcedor de ${driver.name}, com o nome do piloto nas costas.`,
+      ...driverCopy("camiseta", driver.name, driver.phrase),
       priceCents: 23990,
       categorySlug: "racing",
       teamSlug: driver.teamSlug,
@@ -235,7 +238,7 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
     product({
       slug: `bone-${driver.slug}`,
       name: `Boné ${first}`,
-      description: `Boné da linha de ${driver.name}, com assinatura bordada na lateral.`,
+      ...driverCopy("bone", driver.name, driver.phrase),
       priceCents: 19990,
       categorySlug: "acessorios",
       teamSlug: driver.teamSlug,
@@ -251,7 +254,7 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
     product({
       slug: `miniatura-capacete-${driver.slug}`,
       name: `Miniatura de capacete ${first} 1:5`,
-      description: `Réplica em escala 1:5 do capacete de ${driver.name}, com base expositora.`,
+      ...driverCopy("miniatura", driver.name, driver.phrase),
       priceCents: 89990,
       categorySlug: "colecionaveis",
       teamSlug: driver.teamSlug,
@@ -269,7 +272,7 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
     product({
       slug: `poster-${driver.slug}`,
       name: `Pôster ${driver.name}`,
-      description: `Pôster 50 × 70 cm de ${driver.name}, impresso em papel fotográfico fosco.`,
+      ...driverCopy("poster", driver.name, driver.phrase),
       priceCents: 9990,
       categorySlug: "colecionaveis",
       teamSlug: driver.teamSlug,
