@@ -300,3 +300,21 @@ h1, h2, .font-display {
   .img-reveal[data-state="pending"] img { opacity: 0; transform: none !important; filter: none !important; }
   .img-reveal[data-state="in"] img { transition: opacity var(--motion-long) var(--ease-out); }
 }
+
+/* Carro no topo da página do piloto (components/driver-car.tsx): entra deslizando de lado (só transform/opacity), com
+   sombra no chão em CSS; a inclinação 3D falsa fica na camada __tilt (perspective no contêiner). */
+.driver-car { position: relative; width: 100%; perspective: 900px; }
+.driver-car__tilt { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.25s var(--ease-out); will-change: transform; }
+.driver-car__body { position: absolute; inset: 0; }
+.driver-car__shadow { position: absolute; left: 8%; right: 8%; bottom: -2%; height: 14%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.18) 55%, transparent); }
+.driver-car[data-state="pending"] .driver-car__tilt { opacity: 0; translate: -18% 0; }
+.driver-car[data-from="right"][data-state="pending"] .driver-car__tilt { translate: 18% 0; }
+.driver-car[data-state="pending"] .driver-car__shadow { opacity: 0; scale: 0.7 1; }
+.driver-car[data-state="in"] .driver-car__tilt { transition: opacity var(--motion-long) var(--ease-out),
+  translate var(--motion-reveal) var(--ease-out), transform 0.25s var(--ease-out); }
+.driver-car[data-state="in"] .driver-car__shadow { transition: opacity var(--motion-reveal) var(--ease-out), scale var(--motion-reveal) var(--ease-out); }
+@media (prefers-reduced-motion: reduce) {
+  .driver-car[data-state="pending"] .driver-car__tilt { translate: none; }
+  .driver-car[data-state="pending"] .driver-car__shadow { scale: none; }
+}

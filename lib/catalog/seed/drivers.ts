@@ -18,4 +18,6 @@ export const drivers: Driver[] = cards.map((card) => ({
   imagePosition: card.imagePosition,
   photoMain: card.photoMain,
   photoSecondary: card.photoSecondary,
+  carImage: card.carImage,
+  carFacing: card.carFacing,
 }));

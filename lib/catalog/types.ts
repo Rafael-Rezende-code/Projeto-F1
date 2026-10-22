@@ -40,6 +40,8 @@ export type Product = {
   illustrative?: boolean;
   /** Data de lançamento (ISO), usada na ordenação "novidades". */
   createdAt: string;
+  /** Destaque: aparece primeiro nas vitrines curtas (seção VELOCIDADE, miniaturas do topo do piloto). */
+  featured?: boolean;
 };
 
 export type Category = {
@@ -72,6 +74,9 @@ export type Driver = {
   /** Fotos da página do piloto (lib/drivers.ts): principal no topo, secundária no bloco editorial. */
   photoMain: DriverPhoto;
   photoSecondary: DriverPhoto;
+  /** Carro do topo da página (PNG transparente) e para que lado ele aponta no arquivo (lib/drivers.ts). */
+  carImage?: string;
+  carFacing?: "left" | "right";
 };
 
 /** Resultado da busca (sobreposição de busca do site). */

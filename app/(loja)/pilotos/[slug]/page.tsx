@@ -5,16 +5,24 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { DriverCar } from "@/components/driver-car";
+import { DriverHighlights } from "@/components/driver-highlights";
 import { DriverSignature } from "@/components/driver-signature";
 import { ImageReveal } from "@/components/motion/image-reveal";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { ArtDirectedImage } from "@/components/ui/art-directed-image";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
-import { blurProps, findLocalImage } from "@/lib/local-images";
+import { CAR_FACING } from "@/lib/drivers";
+import { blurProps, findLocalImage, localImage } from "@/lib/local-images";
 import { signaturePaths } from "@/lib/signature-paths";
 
 type Params = { params: Promise<{ slug: string }> };
+
+// Coreografia do topo (segundos depois do sinal da foto principal): a assinatura começa em 0,45 s e termina em ~3 s;
+// carro e miniaturas entram quando o nome já está quase todo escrito.
+const CAR_DELAY = 1.9;
+const HIGHLIGHTS_DELAY = 2.1;
 
 const SECOND_SIZES = "(min-width: 1480px) 680px, (min-width: 768px) calc(50vw - 72px), calc(100vw - 40px)";
 
@@ -51,6 +59,29 @@ export default async function DriverPage({ params }: Params) {
   // Sinal da foto principal: a assinatura entra depois que ela começa a aparecer (components/motion/cue.ts).
   const photoCue = `piloto-foto-${driver.slug}`;
 
+  // Espaço ao lado do nome (fase 2): o carro, se o PNG existir no build; senão, miniaturas de produtos do piloto.
+  // Com carro, as miniaturas descem para uma linha logo abaixo do topo.
+  const carSrc = driver.carImage ?? `/images/pilotos/carros/${driver.slug}.png`;
+  const carFile = localImage(carSrc);
+  const highlights = [...products].sort((a, b) => Number(!!b.featured) - Number(!!a.featured)).slice(0, 3);
+  const highlightsLabel = `Destaques ${driver.name.split(" ").slice(-1)[0]}`;
+  const slot = carFile ? (
+    <DriverCar
+      src={carSrc}
+      width={carFile.w}
+      height={carFile.h}
+      alt=""
+      mirror={(driver.carFacing ?? CAR_FACING) !== CAR_FACING}
+      from={CAR_FACING === "right" ? "left" : "right"}
+      cue={photoCue}
+      delay={CAR_DELAY}
+      blur={carFile.blur}
+      sizes="(min-width: 768px) 45vw, 90vw"
+    />
+  ) : (
+    <DriverHighlights products={highlights} cue={photoCue} delay={HIGHLIGHTS_DELAY} label={highlightsLabel} className="w-full" />
+  );
+
   // Nome e equipe (bloco na cor da equipe). O nome em texto fica no h1 para leitores de tela e buscadores; a
   // assinatura animada (DriverSignature) usa uma fonte manuscrita GENÉRICA: nunca imitar o autógrafo real (CLAUDE.md).
   const identity = (
@@ -59,6 +90,8 @@ export default async function DriverPage({ params }: Params) {
         tone="light"
         items={[{ label: "Início", href: "/" }, { label: "Pilotos", href: "/pilotos" }, { label: driver.name }]}
       />
+      {/* Desktop/tablet: carro ou miniaturas no espaço vazio entre o caminho e o nome. No celular vêm depois da foto. */}
+      <div className="hidden flex-1 items-center md:flex">{slot}</div>
       <div>
         {team && (
           <Link href={`/equipes/${team.slug}`} className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 hover:text-white">
@@ -124,7 +157,16 @@ export default async function DriverPage({ params }: Params) {
       <header className={`text-white ${headerLayout}`} style={{ backgroundColor: teamColor }}>
         {identity}
         {photo}
+        <div className="px-5 py-8 md:hidden">{slot}</div>
       </header>
+
+      {carFile && (
+        <section aria-label={highlightsLabel} className="px-5 pt-10 sm:px-10">
+          <div className="mx-auto max-w-[1400px]">
+            <DriverHighlights products={highlights} cue={photoCue} delay={HIGHLIGHTS_DELAY + 0.4} tone="light" label={highlightsLabel} />
+          </div>
+        </section>
+      )}
 
       {/* Bloco editorial: foto secundária (dentro do container: rounded-2xl) e texto. A cor da equipe aparece como
           detalhe (fio e marcador), não como cor de texto: algumas cores não têm contraste suficiente sobre o branco. */}

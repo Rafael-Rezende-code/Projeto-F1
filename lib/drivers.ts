@@ -33,6 +33,14 @@ export type Driver = {
   photoSecondary: DriverPhoto;
   /** object-position da foto no card 4:5, para enquadrar rosto e capacete. */
   imagePosition?: string;
+  /**
+   * Carro no topo da página do piloto (PNG com fundo transparente). Sem o campo, vale a convenção
+   * public/images/pilotos/carros/{slug}.png; o carro só aparece se o arquivo existir no build. Sem carro, o espaço
+   * mostra miniaturas de produtos do piloto. PLACEHOLDERS de imprensa: ver CLAUDE.md antes do lançamento.
+   */
+  carImage?: string;
+  /** Para que lado o carro aponta NO ARQUIVO. A página quer o carro apontando para CAR_FACING e espelha se precisar. */
+  carFacing?: "left" | "right";
   href: string;
   /** Efeito do HoverTransition e direção de entrada. */
   effect: HoverTransitionEffect;
@@ -42,6 +50,9 @@ export type Driver = {
   /** Curva própria (CSS). Sem ela, usa driverHoverTransition.easing. */
   easing?: string;
 };
+
+/** Lado para onde o carro deve apontar no topo da página do piloto (para a foto, à direita no desktop). */
+export const CAR_FACING: "left" | "right" = "right";
 
 // Transição compartilhada pelos cards: duração em segundos e curva ease-out expo.
 export const driverHoverTransition = {

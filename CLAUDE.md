@@ -540,6 +540,10 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   desfocado, só com o fade; o `ProductCard` também roda no cliente (favoritos), então não lê o mapa de placeholders.
   Categorias da home também ganharam o fade (imagens grandes que pipocavam). `sharp` entrou como devDependency (o
   gerador usa; o Next já o usava como opcional).
+- **Fase 2:** carro e miniaturas entram 1,9 s / 2,1 s depois do sinal da foto (a assinatura termina em ~3 s): "depois da
+  assinatura" lido como "quando o nome já está quase todo escrito", para não esperar 3 s por links de produto. Rótulo
+  das miniaturas: "Destaques {sobrenome}". Miniaturas em cartões brancos (contraste garantido sobre qualquer cor de
+  equipe). Sem fotos de carro no repositório, nenhum recorte foi feito (ver Estado).
 - **Branches antigas no GitHub:** apagadas localmente; a exclusão remota foi bloqueada pela política do ambiente em
   nuvem (HTTP 403 no push de exclusão). Apagar à mão: `git push origin --delete perf/server-components feat/loja
   feat/polimento feat/polimento-2 feat/ajustes feat/pilotos`.
@@ -563,6 +567,26 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `{slug}-secundaria-desktop.*` (jpg/png/webp) são detectadas no build e usadas a partir de 1024px via `<picture>`
   (`ArtDirectedImage`, que ganhou `eager`); cada aparelho baixa só uma. A orientação da versão de desktop decide o layout
   do topo no desktop; enquadramento opcional em `desktopPosition` (`lib/drivers.ts`). GIF em `docs/fase-1/`.
+
+- **Fase 2, topo do piloto:** o espaço vazio entre o caminho (breadcrumbs) e o nome mostra o **carro** se existir
+  `public/images/pilotos/carros/{slug}.png` (ou `carImage` em `lib/drivers.ts`) no build; senão, **miniaturas** de 3
+  produtos do piloto (`components/driver-highlights.tsx`; `featured` primeiro). Com carro, as miniaturas descem para
+  uma linha logo abaixo do topo. Celular: nome → foto → carro/miniaturas. `components/driver-car.tsx`: entra deslizando
+  de lado 1,9 s depois do sinal da foto (CSS `.driver-car`, propriedade `translate`, separada do `transform` da
+  inclinação), sombra no chão em CSS, inclinação até 6° seguindo o mouse (perspective; só com hover + ponteiro fino e
+  ≥ 768px; sem inclinação com reduced motion). `carFacing` = lado para onde o carro aponta NO ARQUIVO; a página quer
+  `CAR_FACING` ("right") e espelha (`scaleX(-1)`) se precisar. Miniaturas: `CueReveal` (`components/motion/cue-reveal.tsx`,
+  entrada escalonada depois de um sinal), 2,1 s depois da foto.
+  **Recorte:** `scripts/carros/recortar.py` (rembg, modelo isnet-general-use; instruções no topo do arquivo) lê
+  `assets/carros-brutos/` (fora do deploy), escolhe por piloto a foto de fundo mais claro e uniforme, remove o fundo,
+  limpa o halo (encolhe 1px o alfa e descontamina a cor do fundo) e exporta PNG de 2000px + prévias sobre fundo claro,
+  escuro e na cor da equipe em `assets/carros-brutos/previas/`. **Nenhuma foto de carro foi encontrada** em `public/` nem
+  em `assets/` (nem no histórico do GitHub) em 22/10/2026: os 4 pilotos estão com as miniaturas. O pipeline foi testado
+  numa foto do projeto (Verstappen, fundo claro): recorte limpo, sem halo. Prints em `docs/fase-2/` (o
+  `TESTE-slot-do-carro-com-silhueta.jpg` usa uma silhueta desenhada só para conferir o layout; não está no site).
+- **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
+  patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
+  nem números (arquivo com o mesmo nome) ou licenciar.**
 
 ## Pendências (atualizado em 22/10/2026)
 
