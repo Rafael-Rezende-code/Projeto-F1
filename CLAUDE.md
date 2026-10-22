@@ -515,12 +515,34 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 4. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos e das
    equipes.
 
-## Pendências (atualizado em 14/10/2026)
+## Branches (atualizado em 22/10/2026)
 
-- **Branch `perf/server-components`:** aguardando teste na prévia da Vercel e aprovação para merge na `main`.
-- **Branch `feat/loja`** (criada a partir da `perf/server-components`): loja completa (fases 1 a 7). Sem merge na
-  `main`. Depende do responsável: integração de pagamento (Mercado Pago ou Stripe), banco (Supabase) para catálogo e
-  pedidos, textos legais, razão social/CNPJ/endereço em `lib/company.ts`, fotos licenciadas de produtos, e conferir
+- **`main`** = tudo o que foi aprovado até a `feat/pilotos` (merge fast-forward em 22/10/2026, `4dd82e2`). As branches
+  antigas (`perf/server-components`, `feat/loja`, `feat/polimento`, `feat/polimento-2`, `feat/ajustes`, `feat/pilotos`)
+  estão contidas na `main`.
+- **`feat/conteudo`** (a partir da `main`): fases 1 a 8 da rodada de conteúdo (imagens, carros, VELOCIDADE, textos,
+  Diário, descrições, /sobre). **`feat/backend`** (a partir da `feat/conteudo`): fases 9 a 11 (Supabase, Mercado Pago,
+  admin). Nenhuma das duas tem merge na `main` sem aprovação.
+
+## Rodada de conteúdo e backend (feat/conteudo, feat/backend)
+
+### Decisões tomadas sem consulta
+
+- **Fase 0, cards de equipe:** a logo passou a ficar numa área acima da pílula "VER COLEÇÃO" (`top: 8%`, base 38px
+  acima do fundo no celular e 43px a partir de 640px) e nunca passa dela (`max-h-full`). Logos de uma linha ficam do
+  mesmo tamanho (sobem ~8px no desktop); as de várias linhas encolhem quando o card é baixo. Prints em `docs/fase-0/`.
+- **`agentRules: false` no `next.config.mjs`:** o `next dev` do Next 16.3 acrescentava um bloco em inglês ao fim deste
+  arquivo a cada início.
+- **Testes sem Edge:** `PW_EXECUTABLE_PATH=/caminho/do/chromium` faz o Playwright (e2e e `qa:varredura`) usar esse
+  Chromium no lugar do Edge (sessão em nuvem Linux: `/opt/pw-browsers/chromium`). Sem a variável, continua o Edge.
+- **Branches antigas no GitHub:** apagadas localmente; a exclusão remota foi bloqueada pela política do ambiente em
+  nuvem (HTTP 403 no push de exclusão). Apagar à mão: `git push origin --delete perf/server-components feat/loja
+  feat/polimento feat/polimento-2 feat/ajustes feat/pilotos`.
+
+## Pendências (atualizado em 22/10/2026)
+
+- **Depende do responsável:** contas e chaves do Supabase e do Mercado Pago (o código fica pronto e desligado nas
+  fases 9 a 11), textos legais, razão social/CNPJ/endereço em `lib/company.ts`, fotos licenciadas de produtos, e conferir
   as cores das equipes com os manuais de marca.
 - **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
   a seção "Diário".
