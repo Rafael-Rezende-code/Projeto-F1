@@ -788,6 +788,10 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `ADMIN_EMAILS` e `NEXT_PUBLIC_SITE_URL` (`lib/admin/env-status.ts`, com teste de que nenhum valor vaza), avisa que
   `NEXT_PUBLIC_` só vale depois de novo deploy e aponta para `docs/backend/roteiro-teste-admin.md`. Print em
   `docs/carros/a4-admin-variaveis.jpg`.
+- **AVIF da `senna-sentado` (A5):** não reproduzido aqui; todas as fotos editoriais e dos pilotos saem em < 1,6 s (AVIF) e
+  < 0,26 s (WebP) no build de produção. A foto não tem nada diferente das outras (sRGB, sem ICC/CMYK, mesma estrutura);
+  progressivo × baseline dá o mesmo tempo. Causa provável na máquina lenta: fila do codificador AVIF com cache frio
+  (o Next reduz a concorrência do sharp). Imagem NÃO alterada. Diagnóstico e tabela em `docs/carros/a5-imagens.md`.
 
 - **Arquivos:** os PNGs enviados (já recortados, fundo transparente) ficam em `assets/carros-brutos/enviados-2026-10-22/`
   (fora do deploy; um quinto Red Bull com o xadrez de transparência "queimado" nos pixels, sem alfa, foi descartado).
