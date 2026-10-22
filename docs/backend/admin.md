@@ -88,6 +88,13 @@ Regras:
 Código: `lib/admin/import.ts` (leitura e validação, com testes), `lib/admin/import-images.ts` (fotos, com testes),
 `app/admin/produtos/importar/` (página, ações e modelo) e `components/admin/import-view.tsx`.
 
+## Teste automático e roteiro manual
+
+`pnpm supabase:ativar` (docs/backend/supabase.md) importa o CSV de exemplo (`docs/modelos/produtos-exemplo.csv`) pela mesma
+camada de código do painel (`lib/admin/import-run.ts`) com um administrador temporário e confere que custo e fornecedor
+ficam só em `product_private`. O que depende do clique no e-mail (login, tela do importador, edição, fila "Comprar no
+fornecedor") está em `docs/backend/roteiro-teste-admin.md`.
+
 ## Não testado nesta sessão
 
 O painel foi verificado no modo desligado (sem Supabase). O fluxo logado não foi exercitado contra um projeto real

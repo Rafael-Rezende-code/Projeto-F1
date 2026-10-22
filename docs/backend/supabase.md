@@ -45,6 +45,15 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = anon public
    - `SUPABASE_SERVICE_ROLE_KEY` = service_role (secreta; só servidor)
    - `ADMIN_EMAILS` = os mesmos e-mails do passo 4
+5b. **Conferir tudo com um comando:** `pnpm supabase:ativar` (lê o `.env.local`; **nunca imprime chaves**). Relatório em
+   português: (a) conexão e se as chaves anon/service_role não estão trocadas; (b) tabelas, funções, bucket e quantos
+   registros o seed trouxe (aponta o que falta); (c) insere em `admin_emails` cada e-mail de `ADMIN_EMAILS` (idempotente);
+   (d) com a chave pública: o catálogo é legível, a tabela privada de custo e fornecedor NÃO é, e nenhuma escrita é
+   permitida (nem enviar foto, nem criar pedido); (e) a baixa de estoque com um pedido de teste (inclusive estoque
+   insuficiente), tudo apagado no fim; (f) o importador com o `docs/modelos/produtos-exemplo.csv`, sem login manual (cria um
+   administrador temporário), conferindo que custo e fornecedor ficam só na tabela privada e depois apagando tudo.
+   `pnpm supabase:ativar --sem-importador` pula o item (f). Se faltar alguma variável, ele diz QUAL (não pede o valor).
+   Roteiro do que só você consegue testar (o clique no e-mail): `docs/backend/roteiro-teste-admin.md`.
 6. **Login do admin (Auth):** Authentication → Providers → Email (ligado). Em Authentication → URL Configuration,
    coloque a URL do site em *Site URL* e `https://<seu-dominio>/admin/entrar/callback` em *Redirect URLs* (o painel
    usa link mágico por e-mail). Desligue o cadastro aberto (Authentication → Sign In / Up → *Allow new users to sign
