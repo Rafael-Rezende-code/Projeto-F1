@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
+import { EnvChecklist } from "@/components/admin/env-checklist";
+import { adminEnvStatus } from "@/lib/admin/env-status";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 // Painel admin (fase 11): fora do índice (noindex + robots.txt + fora do sitemap), sem o cabeçalho da loja.
@@ -29,7 +31,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           )}
         </div>
       </header>
-      <main className="mx-auto max-w-[1200px] px-5 py-10 sm:px-8">{isSupabaseConfigured() ? children : <Disabled />}</main>
+      <main className="mx-auto max-w-[1200px] px-5 py-10 sm:px-8">
+        {isSupabaseConfigured() ? (
+          <>
+            {adminEnvStatus().some((item) => !item.set) && (
+              <details className="mb-8 rounded-2xl bg-white p-5 text-sm">
+                <summary className="cursor-pointer font-medium text-[#b42318]">Faltam variáveis de ambiente: algumas partes do painel não vão funcionar.</summary>
+                <EnvChecklist />
+              </details>
+            )}
+            {children}
+          </>
+        ) : (
+          <Disabled />
+        )}
+      </main>
     </div>
   );
 }
@@ -44,12 +60,14 @@ function Disabled() {
         usa o catálogo de demonstração do código e os pedidos são simulados, então não há nada para administrar aqui.
       </p>
       <ol className="mt-6 list-decimal space-y-2 pl-5 text-sm leading-6 text-black/80">
-        <li>Crie o projeto no Supabase e rode a migração e o seed (<code>docs/backend/supabase.md</code>).</li>
+        <li>Crie o projeto no Supabase e rode o <code>supabase/setup-completo.sql</code> no SQL Editor (<code>docs/backend/supabase.md</code>).</li>
         <li>Cadastre os e-mails de quem administra na tabela <code>admin_emails</code> e na variável <code>ADMIN_EMAILS</code>.</li>
         <li>Configure <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> e <code>SUPABASE_SERVICE_ROLE_KEY</code> e faça um novo deploy.</li>
         <li>Entre em <code>/admin/entrar</code> com o seu e-mail (link mágico).</li>
       </ol>
-      <p className="mt-6 text-sm text-black/60">Passo a passo completo em <code>docs/backend/admin.md</code>.</p>
+      <h2 className="mt-8 text-sm font-medium">Variáveis neste deploy</h2>
+      <EnvChecklist />
+      <p className="mt-6 text-sm text-black/60">Mais detalhes em <code>docs/backend/admin.md</code>.</p>
     </div>
   );
 }

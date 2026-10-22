@@ -783,6 +783,12 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 
 ## Carros na página do piloto (feat/carros, a partir da feat/lancamento)
 
+- **/admin sem configuração (A4):** a página de ativação (e um aviso recolhível no painel, se o Supabase já estiver ligado)
+  lista com ✓/✗ só os NOMES de `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
+  `ADMIN_EMAILS` e `NEXT_PUBLIC_SITE_URL` (`lib/admin/env-status.ts`, com teste de que nenhum valor vaza), avisa que
+  `NEXT_PUBLIC_` só vale depois de novo deploy e aponta para `docs/backend/roteiro-teste-admin.md`. Print em
+  `docs/carros/a4-admin-variaveis.jpg`.
+
 - **Arquivos:** os PNGs enviados (já recortados, fundo transparente) ficam em `assets/carros-brutos/enviados-2026-10-22/`
   (fora do deploy; um quinto Red Bull com o xadrez de transparência "queimado" nos pixels, sem alfa, foi descartado).
   `node scripts/carros/padronizar.mjs` gera em `public/images/pilotos/carros/`: `{slug}.png` com **trim justo** pelo alfa
