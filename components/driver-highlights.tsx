@@ -26,7 +26,7 @@ export function DriverHighlights({
   if (products.length === 0) return null;
   return (
     <div className={className}>
-      <p className={`mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] ${tone === "team" ? "text-white/80" : "text-[#b94f01]"}`}>{label}</p>
+      <p className={`mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] ${tone === "team" ? "text-white" : "text-[#b94f01]"}`}>{label}</p>
       <CueReveal as="ul" cue={cue} delay={delay} className="grid max-w-[540px] grid-cols-3 gap-2 sm:gap-3">
         {products.map((product) => (
           <li key={product.slug}>
