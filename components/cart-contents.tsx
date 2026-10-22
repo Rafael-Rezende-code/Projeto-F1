@@ -16,7 +16,10 @@ import { daysLabel } from '@/lib/catalog/fulfillment'
 export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer' | 'page'; onNavigate?: () => void; empty?: ReactNode }) {
   const { items, subtotalCents, setQuantity, removeItem, ready } = useCart()
   const remaining = freeShippingRemaining(subtotalCents)
-  const progress = Math.min(100, Math.round((subtotalCents / FREE_SHIPPING_THRESHOLD_CENTS) * 100))
+  // Barra de frete grátis só existe se a loja configurou o limite (NEXT_PUBLIC_FREE_SHIPPING_FROM_CENTS).
+  const threshold = FREE_SHIPPING_THRESHOLD_CENTS
+  const hasFreeShipping = threshold !== null
+  const progress = threshold !== null ? Math.min(100, Math.round((subtotalCents / threshold) * 100)) : 0
 
   if (!ready) return <p className="px-1 py-10 text-sm text-black/60">Carregando a sacola…</p>
 
@@ -78,6 +81,7 @@ export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer'
       </ul>
 
       <div className={variant === 'page' ? 'h-fit rounded-2xl bg-[#f5f5f3] p-6 lg:sticky lg:top-24' : 'border-t border-black/10 pt-5'}>
+        {hasFreeShipping && (
         <div className="rounded-xl bg-white p-4 text-xs leading-5 text-black/70 ring-1 ring-black/5">
           {remaining > 0 ? (
             <p>
@@ -90,6 +94,7 @@ export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer'
             <div className="h-full rounded-full bg-[#b94f01] transition-[width] duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
+        )}
         <dl className="mt-5 flex items-center justify-between text-sm">
           <dt>Subtotal</dt>
           <dd className="text-lg font-medium tracking-[-0.03em]">{formatPrice(subtotalCents)}</dd>

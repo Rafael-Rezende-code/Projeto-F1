@@ -4,20 +4,31 @@
 /** CEP de onde a loja posta (Melhor Envio usa como origem). Padrão: São Sebastião do Paraíso, MG. */
 export const ORIGIN_CEP = (process.env.SHIPPING_ORIGIN_CEP ?? "37950000").replace(/\D/g, "");
 
+const wholeNumber = (value: string | undefined) => {
+  const number = Number(String(value ?? "").trim());
+  return String(value ?? "").trim() !== "" && Number.isFinite(number) && number >= 0 ? Math.floor(number) : null;
+};
+const localPrice = wholeNumber(process.env.LOCAL_DELIVERY_PRICE_CENTS);
+const localMin = wholeNumber(process.env.LOCAL_DELIVERY_DAYS_MIN);
+const localMax = wholeNumber(process.env.LOCAL_DELIVERY_DAYS_MAX);
+const localFree = wholeNumber(process.env.LOCAL_DELIVERY_FREE_FROM_CENTS);
+
 /**
- * Entrega local (a própria loja entrega): faixas de CEP atendidas, preço e prazo. A faixa 37950-000 a 37959-999 é a de
- * São Sebastião do Paraíso, MG; cidades vizinhas entram acrescentando faixas aqui. [CONFIRMAR] as faixas, o preço e o
- * prazo com quem faz a entrega. `enabled: false` desliga a opção.
+ * Entrega local (a própria loja entrega): faixas de CEP atendidas, preço e prazo. SÓ EXISTE quando configurada: precisa de
+ * LOCAL_DELIVERY_ENABLED=true E de LOCAL_DELIVERY_PRICE_CENTS, LOCAL_DELIVERY_DAYS_MIN e LOCAL_DELIVERY_DAYS_MAX (preço e
+ * prazo são promessas: nada é escrito à mão). LOCAL_DELIVERY_FREE_FROM_CENTS (opcional) = grátis a partir desse subtotal;
+ * sem ele, nunca é grátis. A faixa 37950-000 a 37959-999 é a de São Sebastião do Paraíso, MG; cidades vizinhas entram
+ * acrescentando faixas aqui. [CONFIRMAR] as faixas com quem faz a entrega.
  */
 export const LOCAL_DELIVERY = {
-  enabled: process.env.LOCAL_DELIVERY_ENABLED !== "false",
+  enabled: process.env.LOCAL_DELIVERY_ENABLED === "true" && localPrice !== null && localMin !== null && localMax !== null && localMax >= localMin,
   label: "Entrega local",
   description: "São Sebastião do Paraíso e região",
   ranges: [{ from: "37950000", to: "37959999", name: "São Sebastião do Paraíso, MG" }],
-  priceCents: Number(process.env.LOCAL_DELIVERY_PRICE_CENTS ?? 1000),
+  priceCents: localPrice ?? 0,
   /** Grátis a partir deste subtotal (null: nunca grátis). */
-  freeFromCents: 15000 as number | null,
-  transitDays: { min: 1, max: 2 },
+  freeFromCents: localFree as number | null,
+  transitDays: { min: localMin ?? 0, max: localMax ?? 0 },
 };
 
 /** Melhor Envio: ligado só com token (MELHOR_ENVIO_TOKEN). Sandbox até MELHOR_ENVIO_ENV=production. */

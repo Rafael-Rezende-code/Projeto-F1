@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SectionTitle } from "@/components/motion/section-title";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Clock, RotateCcw, Truck } from "lucide-react";
+import { Clock, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { productTransitionName } from "@/components/motion/view-transition";
 import { ProductGallery } from "@/components/product-gallery";
@@ -13,6 +13,7 @@ import { catalog } from "@/lib/catalog";
 import { dispatchNotice, ORIGIN_LABELS } from "@/lib/catalog/fulfillment";
 import { discountPercent, formatPrice } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { installmentOffer, storePolicy } from "@/lib/store-policy";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -54,6 +55,8 @@ export default async function ProductPage({ params }: Params) {
     .filter((item, index, list) => list.findIndex((other) => other.id === item.id) === index)
     .slice(0, 4);
   const discount = discountPercent(product.priceCents, product.compareAtPriceCents);
+  // Parcelamento anunciado: só se a loja configurou parcelas SEM JUROS (lib/store-policy.ts); senão, nada aparece.
+  const offer = installmentOffer(product.priceCents);
   const notice = dispatchNotice(product);
   const inStock = product.variants.some((variant) => variant.stock > 0);
 
@@ -124,7 +127,7 @@ export default async function ProductPage({ params }: Params) {
               </span>
               {discount > 0 && <span className="rounded-md bg-black px-2 py-1 text-[10px] font-semibold tracking-[0.12em] text-white">-{discount}%</span>}
             </p>
-            <p className="mt-1 text-xs text-black/60 xl:mt-2 xl:text-sm">ou 3x de {formatPrice(Math.ceil(product.priceCents / 3))} sem juros</p>
+            {offer && <p className="mt-1 text-xs text-black/60 xl:mt-2 xl:text-sm">ou {offer.count}x de {formatPrice(offer.amountCents)} sem juros</p>}
 
             {/* Modelo de venda (refino 2, item 5): sob encomenda e/ou prazo de envio acima do padrão. */}
             {notice && (
@@ -165,25 +168,38 @@ export default async function ProductPage({ params }: Params) {
                 )}
                 {product.illustrative && <p className="mt-3 text-xs text-black/60">Produto ilustrativo (catálogo de demonstração).</p>}
               </section>
-              <details className="group border-b border-black/10 py-5">
-                <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
-                  <Truck size={18} strokeWidth={1.5} aria-hidden="true" /> Envio
-                  <span aria-hidden="true" className="ml-auto transition group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 text-sm leading-7 text-black/65">
-                  [CONTEÚDO A SER REDIGIDO] Prazos e valores de envio. Veja a página de <Link href="/envio" className="underline underline-offset-4">envio</Link>.
-                </p>
-              </details>
-              <details className="group border-b border-black/10 py-5">
-                <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
-                  <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" /> Trocas e devoluções
-                  <span aria-hidden="true" className="ml-auto transition group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 text-sm leading-7 text-black/65">
-                  [CONTEÚDO A SER REDIGIDO] Política de trocas. Veja a página de{" "}
-                  <Link href="/trocas-e-devolucoes" className="underline underline-offset-4">trocas e devoluções</Link>.
-                </p>
-              </details>
+              {/* Envio, trocas e garantia são promessas: só aparecem se a loja as configurou (lib/store-policy.ts). */}
+              {storePolicy.shippingNote && (
+                <details className="group border-b border-black/10 py-5">
+                  <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                    <Truck size={18} strokeWidth={1.5} aria-hidden="true" /> Envio
+                    <span aria-hidden="true" className="ml-auto transition group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-7 text-black/65">
+                    {storePolicy.shippingNote} Veja a página de <Link href="/envio" className="underline underline-offset-4">envio</Link>.
+                  </p>
+                </details>
+              )}
+              {storePolicy.returnsNote && (
+                <details className="group border-b border-black/10 py-5">
+                  <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                    <RotateCcw size={18} strokeWidth={1.5} aria-hidden="true" /> Trocas e devoluções
+                    <span aria-hidden="true" className="ml-auto transition group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-7 text-black/65">
+                    {storePolicy.returnsNote} Veja a página de <Link href="/trocas-e-devolucoes" className="underline underline-offset-4">trocas e devoluções</Link>.
+                  </p>
+                </details>
+              )}
+              {storePolicy.warrantyNote && (
+                <details className="group border-b border-black/10 py-5">
+                  <summary className="flex cursor-pointer list-none items-center gap-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                    <ShieldCheck size={18} strokeWidth={1.5} aria-hidden="true" /> Garantia
+                    <span aria-hidden="true" className="ml-auto transition group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-7 text-black/65">{storePolicy.warrantyNote}</p>
+                </details>
+              )}
             </div>
           </div>
         </div>

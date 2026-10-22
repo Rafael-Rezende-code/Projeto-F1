@@ -39,6 +39,10 @@ test("dados privados nunca aparecem nas páginas públicas", async ({ request })
 });
 
 test("frete: entrega local em São Sebastião do Paraíso e prazo total (envio + transporte)", async ({ page }) => {
+  // A entrega local só existe com LOCAL_DELIVERY_* configuradas NO SERVIDOR (lib/shipping/config.ts). Para rodar este teste,
+  // suba o site com LOCAL_DELIVERY_ENABLED=true, LOCAL_DELIVERY_PRICE_CENTS=1000, LOCAL_DELIVERY_DAYS_MIN=1 e
+  // LOCAL_DELIVERY_DAYS_MAX=2 e rode o e2e com LOCAL_DELIVERY_ENABLED=true também no ambiente do teste.
+  test.skip(process.env.LOCAL_DELIVERY_ENABLED !== "true", "entrega local não configurada (opcional)");
   await page.route("https://viacep.com.br/ws/**", (route) =>
     route.fulfill({ json: { cep: "37950-000", logradouro: "Praça Comendador João Alves", bairro: "Centro", localidade: "São Sebastião do Paraíso", uf: "MG" } }),
   );

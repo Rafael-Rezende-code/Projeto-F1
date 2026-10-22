@@ -32,7 +32,8 @@ cobrado** (o maior entre o peso real e o cúbico C × L × A / 6000, arredondado
 | Nordeste (4, 5) | R$ 32,90 + R$ 7/kg · 6–12 | R$ 64,90 + R$ 10/kg · 3–6 |
 | Norte (6) | R$ 39,90 + R$ 9/kg · 8–15 | R$ 79,90 + R$ 12/kg · 4–8 |
 
-Valores de **exemplo**. A Econômica é grátis a partir de `FREE_SHIPPING_THRESHOLD_CENTS` (`lib/cart/config.ts`).
+Valores de **exemplo**. A Econômica só é grátis se a loja configurar o limite em `NEXT_PUBLIC_FREE_SHIPPING_FROM_CENTS`
+(`lib/store-policy.ts`); sem a variável, não há frete grátis (nem a barra na sacola).
 
 ## (b) Melhor Envio (pronto, desligado)
 
@@ -60,9 +61,10 @@ digitado no painel).
 
 - `ranges`: faixas de CEP atendidas (hoje 37950-000 a 37959-999, São Sebastião do Paraíso). Para atender cidades
   vizinhas, acrescente as faixas delas. **[CONFIRMAR]** as faixas.
-- `priceCents` (ou `LOCAL_DELIVERY_PRICE_CENTS`): preço (exemplo R$ 10,00); `freeFromCents`: grátis a partir de
-  (exemplo R$ 150,00; `null` para nunca); `transitDays`: prazo (exemplo 1–2 dias úteis). **[CONFIRMAR]**.
-- `LOCAL_DELIVERY_ENABLED=false` desliga.
+- **Só existe se configurada** (preço e prazo são promessas; nada é escrito à mão): `LOCAL_DELIVERY_ENABLED=true` e
+  `LOCAL_DELIVERY_PRICE_CENTS`, `LOCAL_DELIVERY_DAYS_MIN` e `LOCAL_DELIVERY_DAYS_MAX` preenchidos. `LOCAL_DELIVERY_FREE_FROM_CENTS`
+  (opcional): grátis a partir desse subtotal; sem ele, nunca é grátis. **[CONFIRMAR]** as faixas de CEP com quem entrega.
+- Sem essas variáveis, a opção "Entrega local" não aparece no checkout.
 
 A entrega local aparece em primeiro lugar, junto com as outras opções.
 

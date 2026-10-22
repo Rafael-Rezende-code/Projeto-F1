@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { LOCAL_DELIVERY } from "./config";
 import { localQuote, localRangeOf } from "./local";
 import { melhorEnvioBody, parseMelhorEnvio } from "./melhor-envio-core";
 import { chargeableKg, simulatedQuotes, zoneOf } from "./simulated";
@@ -37,11 +38,25 @@ describe("frete simulado", () => {
 });
 
 describe("entrega local", () => {
+  const configured = { enabled: true, label: "Entrega local", description: "", ranges: [{ from: "37950000", to: "37959999", name: "SSP" }], priceCents: 1000, freeFromCents: null, transitDays: { min: 1, max: 2 } };
+
   it("só na faixa de CEP configurada", () => {
-    expect(localRangeOf("37950-000")).not.toBeNull();
-    expect(localRangeOf("37960000")).toBeNull();
-    expect(localQuote(request("01310100"))).toBeNull();
-    expect(localQuote(request("37950123"))).toMatchObject({ id: "local", transitDays: { min: 1, max: 2 } });
+    expect(localRangeOf("37950-000", configured)).not.toBeNull();
+    expect(localRangeOf("37960000", configured)).toBeNull();
+    expect(localQuote(request("01310100"), configured)).toBeNull();
+    expect(localQuote(request("37950123"), configured)).toMatchObject({ id: "local", transitDays: { min: 1, max: 2 }, priceCents: 1000 });
+  });
+
+  it("sem configuração (variáveis LOCAL_DELIVERY_*) a entrega local NÃO existe: nem preço nem prazo são prometidos", () => {
+    expect(LOCAL_DELIVERY.enabled).toBe(false);
+    expect(localRangeOf("37950000")).toBeNull();
+    expect(localQuote(request("37950123"))).toBeNull();
+  });
+
+  it("sem limite de frete grátis configurado, nenhuma cotação sai grátis", () => {
+    const [economica] = simulatedQuotes(request("01310100", 99999999), null);
+    expect(economica.priceCents).toBeGreaterThan(0);
+    expect(localQuote(request("37950000", 99999999), configured)?.priceCents).toBe(1000);
   });
 
   it("preço configurável e grátis a partir do valor definido", () => {

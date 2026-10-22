@@ -96,6 +96,6 @@ export function sanitizeItems(raw: unknown): CartItem[] {
 
 export const cartCount = (state: CartState) => state.items.reduce((sum, item) => sum + item.quantity, 0);
 export const cartSubtotal = (state: CartState) => state.items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
-/** Quanto falta para o frete grátis (0 quando já atingiu). */
-export const freeShippingRemaining = (subtotalCents: number, threshold = FREE_SHIPPING_THRESHOLD_CENTS) =>
-  Math.max(0, threshold - subtotalCents);
+/** Quanto falta para o frete grátis (0 quando já atingiu ou quando a loja não tem frete grátis configurado). */
+export const freeShippingRemaining = (subtotalCents: number, threshold: number | null = FREE_SHIPPING_THRESHOLD_CENTS) =>
+  threshold === null ? 0 : Math.max(0, threshold - subtotalCents);

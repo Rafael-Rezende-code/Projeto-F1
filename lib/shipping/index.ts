@@ -17,7 +17,7 @@ export async function getShippingQuotes(request: ShippingQuoteRequest): Promise<
   try {
     quotes = await provider.quote(request);
     // Frete grátis no Melhor Envio: a opção mais barata sai grátis acima do limite (como a Econômica do simulado).
-    if (provider.id === "melhorenvio" && quotes.length && request.subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS) quotes[0] = { ...quotes[0], priceCents: 0 };
+    if (provider.id === "melhorenvio" && quotes.length && FREE_SHIPPING_THRESHOLD_CENTS !== null && request.subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS) quotes[0] = { ...quotes[0], priceCents: 0 };
   } catch (error) {
     console.error("[frete]", error instanceof Error ? error.message : error);
     quotes = await new SimulatedShippingProvider().quote(request);

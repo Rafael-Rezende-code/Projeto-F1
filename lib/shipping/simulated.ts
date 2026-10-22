@@ -3,7 +3,7 @@ import { combinePackages } from "@/lib/catalog/fulfillment";
 import type { ShippingProvider, ShippingQuote, ShippingQuoteRequest } from "./types";
 
 // Frete SIMULADO (sem transportadora): tabela por REGIÃO do CEP de destino (a partir de MG, onde a loja fica) e por PESO.
-// Econômica e Expressa; a Econômica é grátis a partir do limite de frete grátis. Valores de EXEMPLO (docs/backend/frete.md).
+// Econômica e Expressa; a Econômica é grátis a partir do limite de frete grátis (só se a loja configurou um). Valores de EXEMPLO (docs/backend/frete.md).
 
 type Zone = { name: string; economica: Rate; expressa: Rate };
 type Rate = { baseCents: number; perKgCents: number; days: { min: number; max: number } };
@@ -28,12 +28,12 @@ export function chargeableKg(pkg: { weightGrams: number; lengthCm: number; width
   return Math.max(1, Math.ceil(Math.max(real, cubic)));
 }
 
-export function simulatedQuotes(request: ShippingQuoteRequest, freeThresholdCents = FREE_SHIPPING_THRESHOLD_CENTS): ShippingQuote[] {
+export function simulatedQuotes(request: ShippingQuoteRequest, freeThresholdCents: number | null = FREE_SHIPPING_THRESHOLD_CENTS): ShippingQuote[] {
   const zone = zoneOf(request.destinationCep);
   const kg = chargeableKg(combinePackages(request.items));
   const price = (rate: Rate) => rate.baseCents + rate.perKgCents * (kg - 1);
   const economica = price(zone.economica);
-  const free = request.subtotalCents >= freeThresholdCents;
+  const free = freeThresholdCents !== null && request.subtotalCents >= freeThresholdCents;
   return [
     { id: "economica", label: "Econômica", transitDays: zone.economica.days, priceCents: free ? 0 : economica, fullPriceCents: economica },
     { id: "expressa", label: "Expressa", transitDays: zone.expressa.days, priceCents: price(zone.expressa) },

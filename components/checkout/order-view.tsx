@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, Clock3, Truck, XCircle } from "lucide-react";
 import { CopyButton } from "@/components/checkout/copy-button";
 import { OrderStatusPoller } from "@/components/checkout/order-status-poller";
+import { storePolicy } from "@/lib/store-policy";
 import { DispatchSummary } from "@/components/dispatch-summary";
 import { ORDER_ITEM_STATUS_LABELS, ORDER_STATUS_LABELS, PAYMENT_LABELS, type Order } from "@/lib/checkout/order";
 import { formatPrice } from "@/lib/format";
@@ -13,13 +14,16 @@ import { formatPrice } from "@/lib/format";
 
 const BRANDS: Record<string, string> = { visa: "Visa", master: "Mastercard", amex: "American Express", elo: "Elo", hipercard: "Hipercard" };
 
+// Avisos por e-mail são uma promessa: só aparecem se a loja declarou que envia e-mails (lib/store-policy.ts). Hoje não há
+// serviço de e-mail, então por padrão a página só diz que o andamento aparece nela mesma.
 function headline(order: Order) {
+  const mail = storePolicy.emailNotifications;
   const pix = order.payment.details?.pix;
   const boleto = order.payment.details?.boleto;
   switch (order.status) {
     case "confirmado":
     case "pago":
-      return { icon: "ok", title: "Pedido confirmado.", text: "O pagamento foi aprovado. Agora é com a gente: separamos seus itens e avisamos quando saírem para entrega." } as const;
+      return { icon: "ok", title: "Pedido confirmado.", text: mail ? "O pagamento foi aprovado. Agora é com a gente: separamos seus itens e avisamos quando saírem para entrega." : "O pagamento foi aprovado. Agora é com a gente: separamos seus itens e o andamento aparece nesta página." } as const;
     case "recusado":
       return { icon: "no", title: "Pagamento recusado.", text: "O pagamento não foi aprovado e nada foi cobrado. Confira os dados ou tente outra forma de pagamento." } as const;
     case "cancelado":
@@ -28,10 +32,10 @@ function headline(order: Order) {
     case "entregue":
       return { icon: "ship", title: order.status === "entregue" ? "Pedido entregue." : "Pedido a caminho.", text: "Seu pedido já saiu. Acompanhe a entrega pelo código de rastreio." } as const;
     default:
-      if (pix) return { icon: "wait", title: "Falta só o Pix.", text: "Pague com o QR Code ou o código copia e cola. Assim que o pagamento cair, esta página se atualiza e enviamos a confirmação por e-mail." } as const;
-      if (boleto) return { icon: "wait", title: "Boleto gerado.", text: "Pague até o vencimento. A confirmação do banco leva até 3 dias úteis; avisamos por e-mail assim que ela chegar." } as const;
-      if (order.payment.method === "cartao" && !order.simulated) return { icon: "wait", title: "Pagamento em análise.", text: "O emissor do cartão está analisando o pagamento. Avisamos por e-mail assim que houver resposta." } as const;
-      return { icon: "ok", title: "Pedido recebido.", text: "Assim que o pagamento for confirmado, separamos seus itens e enviamos as atualizações por e-mail." } as const;
+      if (pix) return { icon: "wait", title: "Falta só o Pix.", text: mail ? "Pague com o QR Code ou o código copia e cola. Assim que o pagamento cair, esta página se atualiza e enviamos a confirmação por e-mail." : "Pague com o QR Code ou o código copia e cola. Assim que o pagamento cair, esta página se atualiza." } as const;
+      if (boleto) return { icon: "wait", title: "Boleto gerado.", text: mail ? "Pague até o vencimento. A confirmação do banco leva até 3 dias úteis; avisamos por e-mail assim que ela chegar." : "Pague até o vencimento. A confirmação do banco leva até 3 dias úteis. Guarde o link desta página para acompanhar." } as const;
+      if (order.payment.method === "cartao" && !order.simulated) return { icon: "wait", title: "Pagamento em análise.", text: mail ? "O emissor do cartão está analisando o pagamento. Avisamos por e-mail assim que houver resposta." : "O emissor do cartão está analisando o pagamento. Acompanhe o resultado nesta página." } as const;
+      return { icon: "ok", title: "Pedido recebido.", text: mail ? "Assim que o pagamento for confirmado, separamos seus itens e enviamos as atualizações por e-mail." : "Assim que o pagamento for confirmado, separamos seus itens. Acompanhe o andamento nesta página." } as const;
   }
 }
 

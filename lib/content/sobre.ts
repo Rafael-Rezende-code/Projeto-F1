@@ -1,9 +1,9 @@
 import { BRAND } from "@/lib/brand";
+import { storePolicy } from "@/lib/store-policy";
 
 // Página /sobre (refino 2, item 4): o que a loja é, o que vende e como trabalha. Fatos dados pelo responsável: loja de
 // artigos de Fórmula 1 e cultura do automobilismo, SEM vínculo, patrocínio ou aprovação da F1, das equipes ou dos
-// pilotos; entrega em todo o Brasil. Prazos e política de trocas ainda não definidos: "[CONFIRMAR]" (destacado na
-// página por ConfirmText). Sem texto jurídico: as regras ficam em Termos, Trocas e Envio (redigidas pelo responsável).
+// pilotos. Entrega, prazos e trocas NÃO são escritos aqui: vêm de lib/store-policy.ts (sem configuração, não aparecem). Sem texto jurídico: as regras ficam em Termos, Trocas e Envio (redigidas pelo responsável).
 // Dados da empresa (e-mail etc.) vêm de lib/company.ts e só aparecem quando preenchidos.
 export const CONFIRM = "[CONFIRMAR]";
 
@@ -30,17 +30,12 @@ export const sobre = {
     madeToOrder:
       "Algumas peças ficam em estoque e outras são feitas sob encomenda ou importadas. O prazo de cada uma aparece na página do produto, antes da compra.",
   },
+  // Entrega e trocas são promessas: só aparecem se a loja as configurou (lib/store-policy.ts, variáveis NEXT_PUBLIC_POLICY_*).
   howWeWork: [
-    {
-      title: "Entrega",
-      href: "/envio",
-      text: `Entregamos em todo o Brasil. Prazos de envio e de entrega: ${CONFIRM}.`,
-    },
-    {
-      title: "Trocas e devoluções",
-      href: "/trocas-e-devolucoes",
-      text: `Política de trocas e devoluções: ${CONFIRM}.`,
-    },
+    ...(storePolicy.deliveryArea || storePolicy.shippingNote
+      ? [{ title: "Entrega", href: "/envio", text: [storePolicy.deliveryArea, storePolicy.shippingNote].filter(Boolean).join(" ") }]
+      : []),
+    ...(storePolicy.returnsNote ? [{ title: "Trocas e devoluções", href: "/trocas-e-devolucoes", text: storePolicy.returnsNote }] : []),
     {
       title: "Atendimento",
       href: "/contato",
