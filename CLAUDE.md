@@ -867,6 +867,15 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   Supabase o campo não aparece (cupom precisa do banco). Admin `/admin/cupons` (lista com situação, criar/editar,
   ativar/desativar, usos). Testes: `lib/coupons.test.ts`, `lib/admin/coupon-schema.test.ts`, `supabase/tests/cupons.test.ts`
   (vencido, mínimo, esgotado, concorrência no limite, devolução).
+- **Consulta de pedido (fase 1d):** `/pedido/consultar` (número + e-mail; `?pedido=` preenche o número). Migração
+  `20261027000000_consulta_e_limites.sql`: `lookup_order` (só service_role; devolve NULL para "não existe" e para
+  "e-mail errado", e só acompanhamento: status, itens, entrega, cidade/UF, rastreio; sem CPF, telefone, endereço, chave do
+  link nem rastreio do fornecedor) e o **limitador central** `rate_limit_hit(balde, hash do IP, limite, janela)` (tabela
+  `rate_limit_hits` sem acesso público, trava por chave). No servidor: `lib/rate-limit.ts` (`allowRequest(balde)`, IP com
+  sal `RATE_LIMIT_SALT` ou `NEWSLETTER_IP_SALT`; sem Supabase não limita) e limites em `lib/rate-limit-config.ts`.
+  Peças puras em `lib/orders/lookup.ts`; action em `app/(loja)/pedido/consultar/actions.ts`. Links: rodapé (Ajuda),
+  menu, página do pedido gravado e `/pedido/[id]` sem chave válida. Testes: `supabase/tests/consulta.test.ts`,
+  `lib/orders/lookup.test.ts`, `e2e/consulta-pedido.spec.ts`. Prints em `docs/operacao/prints/consulta-*.png`.
 
 ## Pendências (atualizado em 22/10/2026)
 

@@ -2,6 +2,7 @@ import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { Order, PaymentDetails } from "@/lib/checkout/order";
 import { orderFromRow, orderStatusFromPayment, type OrderRow } from "./mapping";
+import { lookupFromRow, type OrderLookup } from "./lookup";
 
 // Pedidos gravados no Supabase (fase 9). Só no servidor, com a service role. Usado pelo checkout (server action), pela
 // página /pedido/[id] e pelo webhook do Mercado Pago. Sem Supabase configurado, ninguém chama isto (pedidos simulados).
@@ -113,4 +114,11 @@ export async function hasPaymentEvent(eventId: string) {
 export async function savePaymentEvent(eventId: string, orderId: string | null, payload: unknown) {
   const { error } = await createServiceClient().from("payment_events").insert({ id: eventId, order_id: orderId, payload });
   if (error && error.code !== "23505") throw new Error(`Supabase (evento): ${error.message}`);
+}
+
+/** Consulta por número + e-mail (/pedido/consultar): null para "não existe" E para "e-mail errado". */
+export async function lookupStoredOrder(orderId: string, email: string): Promise<OrderLookup | null> {
+  const { data, error } = await createServiceClient().rpc("lookup_order", { p_order_id: orderId, p_email: email });
+  if (error) throw new Error(`lookup_order: ${error.code}`);
+  return lookupFromRow(data);
 }

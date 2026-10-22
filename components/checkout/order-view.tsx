@@ -143,6 +143,12 @@ export function OrderView({ order }: { order: Order }) {
         ) : (
           <Link href="/produtos" className="mt-10 inline-flex rounded-xl bg-black px-6 py-3 text-sm font-medium text-white transition hover:bg-[#b94f01]">Continuar comprando</Link>
         )}
+        {!order.simulated && (
+          <p className="mt-6 text-sm text-black/60">
+            Para acompanhar depois, use o número <span className="font-mono text-black">{order.id}</span> e o seu e-mail em{" "}
+            <Link href="/pedido/consultar" className="font-medium text-black underline underline-offset-4 hover:text-[#b94f01]">Consultar pedido</Link>.
+          </p>
+        )}
       </div>
 
       <aside aria-labelledby="resumo-pedido" className="h-fit rounded-2xl bg-[#f5f5f3] p-6">

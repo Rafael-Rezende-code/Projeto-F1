@@ -21,6 +21,7 @@ export const menuSecondaryLinks: NavLink[] = [
   { label: "Manifesto", href: "/#story" },
   { label: "Diário", href: "/diario" },
   { label: "Sacola", href: "/carrinho" },
+  { label: "Consultar pedido", href: "/pedido/consultar" },
   { label: "Envio", href: "/envio" },
   { label: "Trocas e devoluções", href: "/trocas-e-devolucoes" },
   { label: "Contato", href: "/contato" },
@@ -52,6 +53,7 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
     heading: "Ajuda",
     links: [
       { label: "Contato", href: "/contato" },
+      { label: "Consultar pedido", href: "/pedido/consultar" },
       { label: "Envio", href: "/envio" },
       { label: "Trocas e devoluções", href: "/trocas-e-devolucoes" },
       { label: "Guia de tamanhos", href: "/faq" },

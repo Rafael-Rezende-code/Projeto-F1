@@ -18,6 +18,7 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
 | **`supabase/setup-completo.sql`** | **Tudo num arquivo só** (migrations + seed), reexecutável: é o que você cola no SQL Editor. Gerado por `pnpm supabase:setup` |
 | **`supabase/atualizacao-2.sql`** | **Só as migrations novas** (depois de `20261025000000`), SEM seed: é o que se roda no banco que já está ativo. Reexecutável. Gerado junto pelo `pnpm supabase:setup` |
 | `supabase/migrations/20261026000000_cupons.sql` | Cupons (`coupons`, `coupon_redemptions`), colunas de desconto em `orders`, `quote_coupon`, `create_order` com cupom (uso contado na mesma transação) e `release_order_stock` devolvendo o uso |
+| `supabase/migrations/20261027000000_consulta_e_limites.sql` | Limite de tentativas por IP centralizado (`rate_limit_hits`, `rate_limit_hit`) e a consulta de pedido `lookup_order` (só o servidor executa) |
 | `supabase/migrations/20261022000000_loja.sql` | Tabelas (categorias, equipes, pilotos, produtos, variantes, imagens, clientes, pedidos, itens, eventos de pagamento, e-mails de admin), RLS, funções `create_order` / `release_order_stock` / `is_admin` e o bucket `produtos` |
 | `supabase/migrations/20261025000000_newsletter.sql` | Lista da newsletter (`newsletter_subscribers`): inserção pública limitada, leitura só do admin (ver `docs/backend/newsletter.md`) |
 | `supabase/migrations/20261023000000_modelo_de_venda.sql` | Modelo de venda (sob encomenda, prazos, origem, pacote), tabela privada `product_private`, status por item do pedido |
