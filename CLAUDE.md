@@ -524,7 +524,7 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   estão contidas na `main`.
 - **`feat/conteudo`** (a partir da `main`): fases 1 a 8 da rodada de conteúdo (imagens, carros, VELOCIDADE, textos,
   Diário, descrições, /sobre). **`feat/backend`** (a partir da `feat/conteudo`): fases 9 a 11 (Supabase, Mercado Pago,
-  admin). Nenhuma das duas tem merge na `main` sem aprovação.
+  admin). **`feat/refino`** (a partir da `feat/backend`): refino 2 (itens 0–8). Nenhuma tem merge na `main` sem aprovação.
 
 ## Rodada de conteúdo e backend (feat/conteudo, feat/backend)
 
@@ -754,7 +754,11 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete
   perf/server-components feat/loja feat/polimento feat/polimento-2 feat/ajustes feat/pilotos`.
-- **Aprovação:** `feat/conteudo` (fases 1–8) e `feat/backend` (fases 9–11, contém a `feat/conteudo`) sem merge na `main`.
+- **Aprovação:** `feat/conteudo` (fases 1–8), `feat/backend` (fases 9–11, contém a `feat/conteudo`) e `feat/refino`
+  (refino 2, contém a `feat/backend`) sem merge na `main`. Relatório do refino 2 em `docs/refino-2/relatorio.md`.
+- **Refino 2:** rodar a migração `20261023000000_modelo_de_venda.sql` no Supabase; e-mail de contato
+  (`NEXT_PUBLIC_CONTACT_EMAIL`); dados da empresa em `lib/company.ts`; entrega local e calculadora com valores reais;
+  conta/token do Melhor Envio; questões de `docs/operacao/modelo-de-venda.md` com advogado e contador.
 - **Fotos dos carros:** nenhuma no repositório; recortar com `scripts/carros/recortar.py` quando chegarem (placeholders).
 - **Contraste do cabeçalho do piloto** (anterior à rodada): caminho `white/70`, link da equipe `white/80` e frase
   `white/85` sobre cores como o vermelho da Ferrari (2,9–4,0:1). Sugestão: branco sólido. Não aplicado.
