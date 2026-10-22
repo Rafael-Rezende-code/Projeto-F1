@@ -1,4 +1,4 @@
-# Supabase: como ativar (fase 9)
+# Supabase: como ativar
 
 O código está pronto e **desligado**. Sem as variáveis de ambiente, o site usa o catálogo do seed (`lib/catalog/seed/`)
 e os pedidos continuam simulados, exatamente como antes. Com elas:
@@ -12,10 +12,13 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
 
 | Arquivo | O quê |
 | --- | --- |
+| **`supabase/setup-completo.sql`** | **Tudo num arquivo só** (migrations + seed), reexecutável: é o que você cola no SQL Editor. Gerado por `pnpm supabase:setup` |
 | `supabase/migrations/20261022000000_loja.sql` | Tabelas (categorias, equipes, pilotos, produtos, variantes, imagens, clientes, pedidos, itens, eventos de pagamento, e-mails de admin), RLS, funções `create_order` / `release_order_stock` / `is_admin` e o bucket `produtos` |
+| `supabase/migrations/20261023000000_modelo_de_venda.sql` | Modelo de venda (sob encomenda, prazos, origem, pacote), tabela privada `product_private`, status por item do pedido |
 | `supabase/seed.sql` | Catálogo atual em SQL (gerado por `pnpm supabase:seed`) |
 | `scripts/supabase/seed.ts` | Gera o `seed.sql` ou grava direto no projeto (`--push`) |
 | `supabase/tests/loja.test.ts` | Testes da migração + seed num Postgres em memória (estoque, RLS) — rodam no `pnpm test` |
+| `supabase/tests/setup-completo.test.ts` | Roda o `setup-completo.sql` DUAS vezes num Postgres limpo e confere o catálogo e o modelo de venda |
 | `lib/supabase/` | Configuração (variáveis) e clientes do servidor |
 | `lib/catalog/supabase-repository.ts` | Catálogo do banco (cache de 60 s; estoque do checkout sempre lido na hora) |
 | `lib/orders/` | Pedidos gravados (criar, ler com a chave do cliente, registrar pagamento, devolver estoque) |
@@ -23,17 +26,20 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
 ## Passo a passo
 
 1. **Criar o projeto** em https://supabase.com (região São Paulo, `sa-east-1`). Guarde a senha do banco.
-2. **Rodar a migração.** Escolha um:
-   - Painel → SQL Editor → cole o conteúdo de `supabase/migrations/20261022000000_loja.sql` → Run; ou
-   - Supabase CLI: `supabase link --project-ref <ref>` e `supabase db push`.
-3. **Carregar o catálogo.** Escolha um:
-   - SQL Editor → cole `supabase/seed.sql` → Run; ou
-   - `node --env-file=.env.local node_modules/tsx/dist/cli.mjs scripts/supabase/seed.ts --push` (com as variáveis do
-     passo 5 no `.env.local`).
-   Os produtos entram como `illustrative` (demonstração), com fichas a conferir. Troque pelos reais no painel admin.
-   **Atenção:** rodar o seed de novo volta o estoque das variantes do seed ao valor original.
-4. **Cadastrar quem administra:** SQL Editor →
-   `insert into admin_emails (email) values ('voce@sua-loja.com.br');` (sempre em minúsculas).
+2. **Rodar o setup completo (um arquivo só).** Painel do projeto → **SQL Editor** → **New query** → abra
+   `supabase/setup-completo.sql`, copie TUDO, cole e clique em **Run**. Ele cria as tabelas, as políticas de segurança
+   (RLS), as funções, o bucket de fotos `produtos` e carrega o catálogo de demonstração (66 produtos: alguns **sob
+   encomenda**, com prazo e origem, o resto em **estoque próprio**). Deve terminar com "Success. No rows returned".
+   - Pode rodar de novo sem erro (só cria o que falta e atualiza o catálogo do seed), mas **rodar de novo devolve o
+     estoque dos produtos do seed aos valores de exemplo**. Depois que a loja estiver vendendo, rode só migrations novas.
+   - Alternativa pela CLI: `supabase link --project-ref <ref>`, `supabase db push` (migrations) e, para o catálogo,
+     `node --env-file=.env.local node_modules/tsx/dist/cli.mjs scripts/supabase/seed.ts --push`.
+3. **Conferir.** Table Editor → `products` deve ter 66 linhas; a coluna `fulfillment` mostra `estoque_proprio` e
+   `sob_encomenda`. Os produtos entram como `illustrative` (demonstração), com fichas a conferir: troque pelos reais no
+   painel admin (ou pelo importador CSV).
+4. **Cadastrar quem administra:** no fim do arquivo há a linha comentada; no SQL Editor rode
+   `insert into public.admin_emails (email) values ('voce@sua-loja.com.br') on conflict do nothing;` (sempre em
+   minúsculas).
 5. **Variáveis de ambiente** (Project Settings → API), no `.env.local` e na Vercel (Production e Preview):
    - `NEXT_PUBLIC_SUPABASE_URL` = Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = anon public
@@ -69,3 +75,10 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
 - Pix/boleto não pagos ficam "aguardando pagamento" até o Mercado Pago avisar o vencimento (`cancelled`), quando o
   estoque volta. Se quiser liberar antes, crie uma rotina (cron) que cancele pedidos antigos sem pagamento.
 - E-mails transacionais (confirmação, envio) não estão implementados: precisam de um serviço de e-mail (Resend, etc.).
+
+## Ao criar uma migration nova
+
+1. Crie `supabase/migrations/AAAAMMDDHHMMSS_nome.sql` (nunca altere as já aplicadas).
+2. Rode `pnpm supabase:setup`: regera o `seed.sql` e o `setup-completo.sql` (o teste `setup-completo.test.ts` falha
+   se o arquivo ficar desatualizado).
+3. No projeto que já está no ar, cole **só a migration nova** no SQL Editor.

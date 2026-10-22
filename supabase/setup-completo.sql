@@ -1,0 +1,1117 @@
+-- Apex: SETUP COMPLETO do Supabase (gerado por scripts/supabase/setup-completo.mjs; NÃO editar à mão).
+-- Cole tudo no SQL Editor do projeto e clique em Run. Passo a passo em docs/backend/supabase.md.
+--
+-- Contém, nesta ordem: 20261022000000_loja.sql, 20261023000000_modelo_de_venda.sql e o seed do catálogo (supabase/seed.sql).
+-- Pode rodar de novo: tabelas, índices, colunas, políticas e gatilhos são recriados só se faltarem, e o seed atualiza
+-- o que já existe. ATENÇÃO: rodar de novo devolve o ESTOQUE dos produtos do seed aos valores de exemplo; depois que a
+-- loja estiver vendendo, rode só as migrations novas.
+--
+-- No fim, troque o e-mail de exemplo pelo seu (é quem pode entrar no /admin; também vai em ADMIN_EMAILS na Vercel).
+
+-- =====================================================================================================
+-- 20261022000000_loja.sql
+-- =====================================================================================================
+-- Loja Apex: catálogo, pedidos e administração (fase 9 da rodada de backend).
+-- Rode com a Supabase CLI (`supabase db push`) ou cole no SQL Editor do painel. Passo a passo em docs/backend/supabase.md.
+--
+-- Regras:
+-- * Preços SEMPRE em centavos (integer), como em lib/catalog/types.ts.
+-- * RLS ligado em todas as tabelas: o catálogo ativo é público para leitura; escrita só para administradores
+--   (e-mails da tabela admin_emails, conferidos pelo JWT do Supabase Auth). Pedidos e clientes não têm acesso público:
+--   o servidor do site usa a service role (que ignora RLS) e o painel admin lê pelo papel de administrador.
+-- * Baixa de estoque só pela função create_order (transação única, UPDATE condicional por SKU: nunca vende acima do
+--   estoque, mesmo com compras simultâneas). Devolução de estoque pela release_order_stock (idempotente).
+
+-- gen_random_uuid() é nativo do Postgres 13+ (sem extensão).
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Administradores
+create table if not exists public.admin_emails (
+  email text primary key check (email = lower(email)),
+  created_at timestamptz not null default now()
+);
+
+create or replace function public.is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.admin_emails where email = lower(coalesce(auth.jwt() ->> 'email', '')));
+$$;
+
+-- updated_at automático
+create or replace function public.touch_updated_at() returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end;
+$$;
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Catálogo
+create table if not exists public.categories (
+  slug text primary key,
+  name text not null,
+  description text not null default '',
+  image text not null default '',
+  position integer not null default 0
+);
+
+create table if not exists public.teams (
+  slug text primary key,
+  name text not null,
+  tagline text not null default '',
+  color text not null,
+  brand_color text not null,
+  -- { src, width, height, displayHeight } (mesma forma de Team.logo)
+  logo jsonb not null,
+  position integer not null default 0
+);
+
+create table if not exists public.drivers (
+  slug text primary key,
+  name text not null,
+  team_slug text not null references public.teams (slug) on update cascade,
+  number integer,
+  phrase text not null default '',
+  image text not null default '',
+  position integer not null default 0
+);
+
+create table if not exists public.products (
+  id uuid primary key default gen_random_uuid(),
+  code text unique,                       -- código legível (APX-001)
+  slug text not null unique,
+  name text not null,
+  description text not null default '',   -- parágrafos separados por linha em branco
+  details jsonb not null default '[]',    -- [{ label, value }]
+  details_pending boolean not null default true,
+  price_cents integer not null check (price_cents >= 0),
+  compare_at_price_cents integer check (compare_at_price_cents is null or compare_at_price_cents > price_cents),
+  category_slug text not null references public.categories (slug) on update cascade,
+  team_slug text references public.teams (slug) on update cascade,
+  driver_slug text references public.drivers (slug) on update cascade,
+  tags text[] not null default '{}',
+  is_new boolean not null default false,
+  featured boolean not null default false,
+  status text not null default 'draft' check (status in ('draft', 'active', 'archived')),
+  illustrative boolean not null default false,
+  position integer not null default 0,    -- ordem de "relevância"
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists products_category_idx on public.products (category_slug);
+create index if not exists products_team_idx on public.products (team_slug);
+create index if not exists products_driver_idx on public.products (driver_slug);
+create index if not exists products_status_idx on public.products (status, position);
+drop trigger if exists products_touch on public.products;
+create trigger products_touch before update on public.products for each row execute function public.touch_updated_at();
+
+create table if not exists public.product_variants (
+  sku text primary key,
+  product_id uuid not null references public.products (id) on delete cascade,
+  size text not null,
+  color text,
+  stock integer not null default 0 check (stock >= 0),
+  position integer not null default 0
+);
+create index if not exists product_variants_product_idx on public.product_variants (product_id, position);
+
+create table if not exists public.product_images (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid not null references public.products (id) on delete cascade,
+  src text not null,
+  alt text not null default '',
+  illustrative boolean not null default false,
+  storage_path text,                      -- caminho no bucket "produtos" quando enviada pelo admin
+  position integer not null default 0
+);
+create index if not exists product_images_product_idx on public.product_images (product_id, position);
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Clientes e pedidos (só o necessário para entregar e atender)
+create table if not exists public.customers (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique check (email = lower(email)),
+  name text not null,
+  phone text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.orders (
+  id text primary key,                    -- APX-XXXXXXX-XXXX (lib/checkout/order.ts)
+  access_token uuid not null default gen_random_uuid(), -- link do cliente para /pedido/[id]?t=...
+  customer_id uuid not null references public.customers (id),
+  customer_name text not null,
+  customer_email text not null,
+  customer_phone text,
+  address jsonb not null,
+  shipping jsonb not null,                -- { id, label, days, priceCents }
+  status text not null default 'aguardando-pagamento'
+    check (status in ('aguardando-pagamento', 'pago', 'recusado', 'cancelado', 'enviado', 'entregue')),
+  payment_method text not null check (payment_method in ('pix', 'cartao', 'boleto')),
+  payment_provider text,
+  payment_reference text,
+  payment_status text,                    -- status bruto do provedor (approved, pending, rejected...)
+  payment_details jsonb not null default '{}', -- QR do Pix, link do boleto, bandeira/últimos 4 do cartão
+  subtotal_cents integer not null check (subtotal_cents >= 0),
+  shipping_cents integer not null check (shipping_cents >= 0),
+  total_cents integer not null check (total_cents >= 0),
+  stock_released boolean not null default false,
+  tracking_code text,
+  shipped_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists orders_status_idx on public.orders (status, created_at desc);
+create index if not exists orders_payment_reference_idx on public.orders (payment_reference);
+drop trigger if exists orders_touch on public.orders;
+create trigger orders_touch before update on public.orders for each row execute function public.touch_updated_at();
+
+create table if not exists public.order_items (
+  id uuid primary key default gen_random_uuid(),
+  order_id text not null references public.orders (id) on delete cascade,
+  product_id uuid references public.products (id) on delete set null,
+  sku text not null,
+  product_slug text not null,
+  name text not null,
+  size text not null,
+  image text not null default '',
+  unit_price_cents integer not null check (unit_price_cents >= 0),
+  quantity integer not null check (quantity > 0)
+);
+create index if not exists order_items_order_idx on public.order_items (order_id);
+
+-- Notificações de pagamento já processadas (idempotência do webhook).
+create table if not exists public.payment_events (
+  id text primary key,                    -- provedor + id da notificação
+  order_id text references public.orders (id) on delete set null,
+  payload jsonb not null,
+  received_at timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Pedido com baixa de estoque transacional.
+-- p_order: { id, customer: { name, email, phone }, address, shipping: { id, label, days, priceCents },
+--            payment_method, items: [{ sku, quantity }] }
+-- Preço de cada item vem do BANCO (não do cliente). Se algum SKU não tiver estoque, nada é gravado e a função levanta
+-- 'ESTOQUE_INSUFICIENTE' com os SKUs em DETAIL (JSON: [{ sku, available }]).
+create or replace function public.create_order(p_order jsonb) returns public.orders
+language plpgsql security definer set search_path = public as $$
+declare
+  v_item jsonb;
+  v_qty integer;
+  v_variant record;
+  v_missing jsonb := '[]'::jsonb;
+  v_customer_id uuid;
+  v_subtotal integer := 0;
+  v_shipping integer := coalesce((p_order -> 'shipping' ->> 'priceCents')::integer, 0);
+  v_order public.orders;
+begin
+  if jsonb_array_length(coalesce(p_order -> 'items', '[]'::jsonb)) = 0 then
+    raise exception 'PEDIDO_VAZIO';
+  end if;
+
+  -- 1) Baixa condicional de cada SKU (trava a linha; quem chegar depois vê o estoque já baixado).
+  for v_item in select * from jsonb_array_elements(p_order -> 'items') loop
+    v_qty := (v_item ->> 'quantity')::integer;
+    if v_qty is null or v_qty <= 0 then raise exception 'QUANTIDADE_INVALIDA'; end if;
+    update public.product_variants pv
+      set stock = pv.stock - v_qty
+      from public.products p
+      where pv.sku = v_item ->> 'sku' and p.id = pv.product_id and p.status = 'active' and pv.stock >= v_qty
+      returning pv.sku, pv.product_id, pv.size, p.slug, p.name, p.price_cents,
+        (select src from public.product_images i where i.product_id = p.id order by position limit 1) as image
+      into v_variant;
+    if not found then
+      v_missing := v_missing || jsonb_build_object('sku', v_item ->> 'sku',
+        'available', coalesce((select stock from public.product_variants where sku = v_item ->> 'sku'), 0));
+    else
+      v_subtotal := v_subtotal + v_variant.price_cents * v_qty;
+      -- guarda a linha para inserir depois do pedido
+      v_item := v_item || jsonb_build_object('product_id', v_variant.product_id, 'size', v_variant.size,
+        'slug', v_variant.slug, 'name', v_variant.name, 'price', v_variant.price_cents, 'image', coalesce(v_variant.image, ''));
+      p_order := jsonb_set(p_order, '{_lines}', coalesce(p_order -> '_lines', '[]'::jsonb) || v_item);
+    end if;
+  end loop;
+
+  if jsonb_array_length(v_missing) > 0 then
+    -- desfaz as baixas já feitas nesta transação
+    raise exception 'ESTOQUE_INSUFICIENTE' using detail = v_missing::text;
+  end if;
+
+  -- 2) Cliente (um por e-mail)
+  insert into public.customers (email, name, phone)
+    values (lower(p_order -> 'customer' ->> 'email'), p_order -> 'customer' ->> 'name', p_order -> 'customer' ->> 'phone')
+    on conflict (email) do update set name = excluded.name, phone = coalesce(excluded.phone, public.customers.phone)
+    returning id into v_customer_id;
+
+  -- 3) Pedido e itens
+  insert into public.orders (id, customer_id, customer_name, customer_email, customer_phone, address, shipping,
+      payment_method, subtotal_cents, shipping_cents, total_cents)
+    values (p_order ->> 'id', v_customer_id, p_order -> 'customer' ->> 'name', lower(p_order -> 'customer' ->> 'email'),
+      p_order -> 'customer' ->> 'phone', p_order -> 'address', p_order -> 'shipping', p_order ->> 'payment_method',
+      v_subtotal, v_shipping, v_subtotal + v_shipping)
+    returning * into v_order;
+
+  insert into public.order_items (order_id, product_id, sku, product_slug, name, size, image, unit_price_cents, quantity)
+    select v_order.id, (l ->> 'product_id')::uuid, l ->> 'sku', l ->> 'slug', l ->> 'name', l ->> 'size', l ->> 'image',
+      (l ->> 'price')::integer, (l ->> 'quantity')::integer
+    from jsonb_array_elements(p_order -> '_lines') as l;
+
+  return v_order;
+end;
+$$;
+
+-- Devolve o estoque de um pedido (pagamento recusado, expirado ou cancelado). Idempotente: só devolve uma vez.
+create or replace function public.release_order_stock(p_order_id text) returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.orders set stock_released = true where id = p_order_id and stock_released = false;
+  if not found then return false; end if;
+  update public.product_variants pv set stock = pv.stock + i.quantity
+    from public.order_items i where i.order_id = p_order_id and i.sku = pv.sku;
+  return true;
+end;
+$$;
+
+-- Só o servidor (service role) cria pedidos e devolve estoque.
+revoke all on function public.create_order(jsonb) from public, anon, authenticated;
+revoke all on function public.release_order_stock(text) from public, anon, authenticated;
+grant execute on function public.create_order(jsonb) to service_role;
+grant execute on function public.release_order_stock(text) to service_role;
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- RLS
+alter table public.admin_emails enable row level security;
+alter table public.categories enable row level security;
+alter table public.teams enable row level security;
+alter table public.drivers enable row level security;
+alter table public.products enable row level security;
+alter table public.product_variants enable row level security;
+alter table public.product_images enable row level security;
+alter table public.customers enable row level security;
+alter table public.orders enable row level security;
+alter table public.order_items enable row level security;
+alter table public.payment_events enable row level security;
+
+drop policy if exists "admins leem a lista de admins" on public.admin_emails;
+create policy "admins leem a lista de admins" on public.admin_emails for select to authenticated using (public.is_admin());
+
+-- Catálogo: leitura pública; escrita só admin.
+drop policy if exists "leitura publica" on public.categories;
+create policy "leitura publica" on public.categories for select using (true);
+drop policy if exists "admin escreve" on public.categories;
+create policy "admin escreve" on public.categories for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "leitura publica" on public.teams;
+create policy "leitura publica" on public.teams for select using (true);
+drop policy if exists "admin escreve" on public.teams;
+create policy "admin escreve" on public.teams for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "leitura publica" on public.drivers;
+create policy "leitura publica" on public.drivers for select using (true);
+drop policy if exists "admin escreve" on public.drivers;
+create policy "admin escreve" on public.drivers for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "leitura publica dos ativos" on public.products;
+create policy "leitura publica dos ativos" on public.products for select using (status = 'active' or public.is_admin());
+drop policy if exists "admin escreve" on public.products;
+create policy "admin escreve" on public.products for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "leitura publica dos ativos" on public.product_variants;
+create policy "leitura publica dos ativos" on public.product_variants for select
+  using (exists (select 1 from public.products p where p.id = product_id and (p.status = 'active' or public.is_admin())));
+drop policy if exists "admin escreve" on public.product_variants;
+create policy "admin escreve" on public.product_variants for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "leitura publica dos ativos" on public.product_images;
+create policy "leitura publica dos ativos" on public.product_images for select
+  using (exists (select 1 from public.products p where p.id = product_id and (p.status = 'active' or public.is_admin())));
+drop policy if exists "admin escreve" on public.product_images;
+create policy "admin escreve" on public.product_images for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- Pedidos e clientes: sem acesso público. Admin lê e atualiza (marcar como enviado); criação só pela create_order.
+drop policy if exists "admin le" on public.customers;
+create policy "admin le" on public.customers for select to authenticated using (public.is_admin());
+drop policy if exists "admin le" on public.orders;
+create policy "admin le" on public.orders for select to authenticated using (public.is_admin());
+drop policy if exists "admin atualiza" on public.orders;
+create policy "admin atualiza" on public.orders for update to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin le" on public.order_items;
+create policy "admin le" on public.order_items for select to authenticated using (public.is_admin());
+-- payment_events: nenhuma política (só service role).
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Storage: fotos de produto enviadas pelo admin (bucket público para leitura).
+insert into storage.buckets (id, name, public) values ('produtos', 'produtos', true) on conflict (id) do nothing;
+drop policy if exists "fotos de produto: leitura publica" on storage.objects;
+create policy "fotos de produto: leitura publica" on storage.objects for select using (bucket_id = 'produtos');
+drop policy if exists "fotos de produto: admin envia" on storage.objects;
+create policy "fotos de produto: admin envia" on storage.objects for insert to authenticated
+  with check (bucket_id = 'produtos' and public.is_admin());
+drop policy if exists "fotos de produto: admin altera" on storage.objects;
+create policy "fotos de produto: admin altera" on storage.objects for update to authenticated
+  using (bucket_id = 'produtos' and public.is_admin());
+drop policy if exists "fotos de produto: admin apaga" on storage.objects;
+create policy "fotos de produto: admin apaga" on storage.objects for delete to authenticated
+  using (bucket_id = 'produtos' and public.is_admin());
+
+-- =====================================================================================================
+-- 20261023000000_modelo_de_venda.sql
+-- =====================================================================================================
+-- Modelo de venda (refino 2, item 5): estoque próprio x sob encomenda, prazos, origem, pacote para frete, dados
+-- PRIVADOS do produto (só admin) e status por item do pedido. Não altera a migração anterior: só acrescenta.
+-- Explicação do fluxo em docs/operacao/modelo-de-venda.md.
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Campos PÚBLICOS do produto (aparecem na loja).
+alter table public.products
+  add column if not exists fulfillment text not null default 'estoque_proprio' check (fulfillment in ('estoque_proprio', 'sob_encomenda')),
+  add column if not exists dispatch_min_days integer not null default 1 check (dispatch_min_days >= 0),
+  add column if not exists dispatch_max_days integer not null default 3,
+  add column if not exists origin text not null default 'nacional' check (origin in ('nacional', 'importado')),
+  add column if not exists weight_grams integer check (weight_grams is null or weight_grams > 0),
+  add column if not exists length_cm numeric(6, 1) check (length_cm is null or length_cm > 0),
+  add column if not exists width_cm numeric(6, 1) check (width_cm is null or width_cm > 0),
+  add column if not exists height_cm numeric(6, 1) check (height_cm is null or height_cm > 0);
+do $$ begin
+  alter table public.products add constraint products_dispatch_range check (dispatch_max_days >= dispatch_min_days and dispatch_max_days <= 120);
+exception when duplicate_object or duplicate_table then null;
+end $$;
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Dados PRIVADOS do produto: custo, frete do fornecedor, link do fornecedor e notas. Tabela separada para que nenhuma
+-- consulta pública ("select *" em products) os traga. RLS: só administradores leem e escrevem; o papel anon nem tem
+-- permissão na tabela (defesa em profundidade, além do RLS).
+create table if not exists public.product_private (
+  product_id uuid primary key references public.products (id) on delete cascade,
+  cost_cents integer check (cost_cents is null or cost_cents >= 0),
+  supplier_shipping_cents integer check (supplier_shipping_cents is null or supplier_shipping_cents >= 0),
+  supplier_url text,
+  notes text not null default '',
+  updated_at timestamptz not null default now()
+);
+drop trigger if exists product_private_touch on public.product_private;
+create trigger product_private_touch before update on public.product_private for each row execute function public.touch_updated_at();
+alter table public.product_private enable row level security;
+revoke all on table public.product_private from anon, public;
+drop policy if exists "so admin" on public.product_private;
+create policy "so admin" on public.product_private for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Itens do pedido: modelo de venda copiado do produto no momento da compra, status por item e rastreios.
+--   separando          estoque próprio, ainda não enviado
+--   aguardando-compra  sob encomenda, falta comprar no fornecedor
+--   comprado           comprado no fornecedor (supplier_tracking_code: rastreio do fornecedor até a loja/cliente)
+--   enviado            a caminho do cliente (tracking_code: rastreio até o cliente)
+--   entregue
+alter table public.order_items
+  add column if not exists fulfillment text not null default 'estoque_proprio' check (fulfillment in ('estoque_proprio', 'sob_encomenda')),
+  add column if not exists dispatch_min_days integer not null default 1,
+  add column if not exists dispatch_max_days integer not null default 3,
+  add column if not exists origin text not null default 'nacional' check (origin in ('nacional', 'importado')),
+  add column if not exists item_status text not null default 'separando'
+    check (item_status in ('separando', 'aguardando-compra', 'comprado', 'enviado', 'entregue')),
+  add column if not exists supplier_tracking_code text,
+  add column if not exists purchased_at timestamptz,
+  add column if not exists tracking_code text,
+  add column if not exists shipped_at timestamptz,
+  add column if not exists delivered_at timestamptz;
+create index if not exists order_items_status_idx on public.order_items (item_status);
+
+drop policy if exists "admin atualiza" on public.order_items;
+create policy "admin atualiza" on public.order_items for update to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- create_order: igual à da migração anterior, mas cada item leva o modelo de venda do produto e começa em
+-- "separando" (estoque próprio) ou "aguardando-compra" (sob encomenda). Sob encomenda também baixa o estoque: nesse
+-- caso o "estoque" é quantas unidades a loja aceita encomendar (o admin define).
+create or replace function public.create_order(p_order jsonb) returns public.orders
+language plpgsql security definer set search_path = public as $$
+declare
+  v_item jsonb;
+  v_qty integer;
+  v_variant record;
+  v_missing jsonb := '[]'::jsonb;
+  v_customer_id uuid;
+  v_subtotal integer := 0;
+  v_shipping integer := coalesce((p_order -> 'shipping' ->> 'priceCents')::integer, 0);
+  v_order public.orders;
+begin
+  if jsonb_array_length(coalesce(p_order -> 'items', '[]'::jsonb)) = 0 then
+    raise exception 'PEDIDO_VAZIO';
+  end if;
+
+  for v_item in select * from jsonb_array_elements(p_order -> 'items') loop
+    v_qty := (v_item ->> 'quantity')::integer;
+    if v_qty is null or v_qty <= 0 then raise exception 'QUANTIDADE_INVALIDA'; end if;
+    update public.product_variants pv
+      set stock = pv.stock - v_qty
+      from public.products p
+      where pv.sku = v_item ->> 'sku' and p.id = pv.product_id and p.status = 'active' and pv.stock >= v_qty
+      returning pv.sku, pv.product_id, pv.size, p.slug, p.name, p.price_cents, p.fulfillment, p.dispatch_min_days,
+        p.dispatch_max_days, p.origin,
+        (select src from public.product_images i where i.product_id = p.id order by position limit 1) as image
+      into v_variant;
+    if not found then
+      v_missing := v_missing || jsonb_build_object('sku', v_item ->> 'sku',
+        'available', coalesce((select stock from public.product_variants where sku = v_item ->> 'sku'), 0));
+    else
+      v_subtotal := v_subtotal + v_variant.price_cents * v_qty;
+      v_item := v_item || jsonb_build_object('product_id', v_variant.product_id, 'size', v_variant.size,
+        'slug', v_variant.slug, 'name', v_variant.name, 'price', v_variant.price_cents, 'image', coalesce(v_variant.image, ''),
+        'fulfillment', v_variant.fulfillment, 'dmin', v_variant.dispatch_min_days, 'dmax', v_variant.dispatch_max_days,
+        'origin', v_variant.origin);
+      p_order := jsonb_set(p_order, '{_lines}', coalesce(p_order -> '_lines', '[]'::jsonb) || v_item);
+    end if;
+  end loop;
+
+  if jsonb_array_length(v_missing) > 0 then
+    raise exception 'ESTOQUE_INSUFICIENTE' using detail = v_missing::text;
+  end if;
+
+  insert into public.customers (email, name, phone)
+    values (lower(p_order -> 'customer' ->> 'email'), p_order -> 'customer' ->> 'name', p_order -> 'customer' ->> 'phone')
+    on conflict (email) do update set name = excluded.name, phone = coalesce(excluded.phone, public.customers.phone)
+    returning id into v_customer_id;
+
+  insert into public.orders (id, customer_id, customer_name, customer_email, customer_phone, address, shipping,
+      payment_method, subtotal_cents, shipping_cents, total_cents)
+    values (p_order ->> 'id', v_customer_id, p_order -> 'customer' ->> 'name', lower(p_order -> 'customer' ->> 'email'),
+      p_order -> 'customer' ->> 'phone', p_order -> 'address', p_order -> 'shipping', p_order ->> 'payment_method',
+      v_subtotal, v_shipping, v_subtotal + v_shipping)
+    returning * into v_order;
+
+  insert into public.order_items (order_id, product_id, sku, product_slug, name, size, image, unit_price_cents, quantity,
+      fulfillment, dispatch_min_days, dispatch_max_days, origin, item_status)
+    select v_order.id, (l ->> 'product_id')::uuid, l ->> 'sku', l ->> 'slug', l ->> 'name', l ->> 'size', l ->> 'image',
+      (l ->> 'price')::integer, (l ->> 'quantity')::integer, l ->> 'fulfillment', (l ->> 'dmin')::integer,
+      (l ->> 'dmax')::integer, l ->> 'origin',
+      case when l ->> 'fulfillment' = 'sob_encomenda' then 'aguardando-compra' else 'separando' end
+    from jsonb_array_elements(p_order -> '_lines') as l;
+
+  return v_order;
+end;
+$$;
+
+revoke all on function public.create_order(jsonb) from public, anon, authenticated;
+grant execute on function public.create_order(jsonb) to service_role;
+
+-- =====================================================================================================
+-- seed.sql (catálogo de demonstração)
+-- =====================================================================================================
+-- Gerado por scripts/supabase/seed.ts a partir de lib/catalog/seed/. Não editar à mão.
+begin;
+insert into public.categories (slug, name, description, image, position) values
+  ('teamwear', 'Teamwear', 'Represente sua equipe.', 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 0),
+  ('racing', 'Racing', 'Feito para a velocidade.', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 1),
+  ('colecionaveis', 'Colecionáveis', 'Guarde a memória.', 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 2),
+  ('acessorios', 'Acessórios', 'Leve o grid com você.', 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 3)
+on conflict (slug) do update set name = excluded.name, description = excluded.description, image = excluded.image, position = excluded.position;
+
+insert into public.teams (slug, name, tagline, color, brand_color, logo, position) values
+  ('ferrari', 'Ferrari', 'O vermelho mais famoso do grid.', '#DC0000', '#DC0000', '{"src":"/images/logos-equipes/ferrari.webp","width":271,"height":59,"displayHeight":25}'::jsonb, 0),
+  ('mercedes', 'Mercedes', 'Prata, preto e precisão alemã.', '#00A19C', '#00A19C', '{"src":"/images/logos-equipes/mercedes.webp","width":348,"height":108,"displayHeight":44}'::jsonb, 1),
+  ('mclaren', 'McLaren', 'Papaya de Woking para o mundo.', '#E77400', '#FF8000', '{"src":"/images/logos-equipes/mclaren.webp","width":375,"height":96,"displayHeight":32}'::jsonb, 2),
+  ('red-bull-racing', 'Red Bull Racing', 'Asas para quem acelera.', '#121F45', '#121F45', '{"src":"/images/logos-equipes/red-bull.webp","width":423,"height":69,"displayHeight":23}'::jsonb, 3),
+  ('aston-martin', 'Aston Martin', 'O verde britânico de corrida.', '#00594F', '#00594F', '{"src":"/images/logos-equipes/aston-martin.webp","width":201,"height":135,"displayHeight":45}'::jsonb, 4),
+  ('williams', 'Williams', 'Uma das grandes famílias da F1.', '#005AFF', '#005AFF', '{"src":"/images/logos-equipes/williams.webp","width":292,"height":150,"displayHeight":50}'::jsonb, 5),
+  ('alpine', 'Alpine', 'Azul francês em ritmo de corrida.', '#0090FF', '#0090FF', '{"src":"/images/logos-equipes/alpine.webp","width":162,"height":132,"displayHeight":44}'::jsonb, 6),
+  ('haas', 'Haas', 'A equipe americana do grid.', '#DA291C', '#DA291C', '{"src":"/images/logos-equipes/haas.webp","width":301,"height":99,"displayHeight":33}'::jsonb, 7),
+  ('racing-bulls', 'Racing Bulls', 'A escola de talentos de Faenza.', '#1634CB', '#1634CB', '{"src":"/images/logos-equipes/racing-bulls.webp","width":152,"height":126,"displayHeight":42}'::jsonb, 8),
+  ('audi', 'Audi', 'Quatro argolas no grid.', '#BB0A30', '#BB0A30', '{"src":"/images/logos-equipes/audi.webp","width":163,"height":150,"displayHeight":50}'::jsonb, 9),
+  ('cadillac', 'Cadillac', 'A estreia americana na F1.', '#111111', '#111111', '{"src":"/images/logos-equipes/cadillac.webp","width":266,"height":135,"displayHeight":56}'::jsonb, 10)
+on conflict (slug) do update set name = excluded.name, tagline = excluded.tagline, color = excluded.color, brand_color = excluded.brand_color, logo = excluded.logo, position = excluded.position;
+
+insert into public.drivers (slug, name, team_slug, number, phrase, image, position) values
+  ('norris', 'Lando Norris', 'mclaren', null, 'Papaya até a última volta.', '/images/pilotos/norris.jpeg', 0),
+  ('verstappen', 'Max Verstappen', 'red-bull-racing', null, 'Implacável, volta após volta.', '/images/pilotos/verstappen.png', 1),
+  ('hamilton', 'Lewis Hamilton', 'ferrari', null, 'Uma lenda vestida de vermelho.', '/images/pilotos/hamilton.png', 2),
+  ('bortoleto', 'Gabriel Bortoleto', 'audi', null, 'O Brasil de volta ao grid.', '/images/pilotos/bortoleto.png', 3)
+on conflict (slug) do update set name = excluded.name, team_slug = excluded.team_slug, number = excluded.number, phrase = excluded.phrase, image = excluded.image, position = excluded.position;
+
+insert into public.products (code, slug, name, description, details, details_pending, price_cents, compare_at_price_cents, category_slug, team_slug, driver_slug, tags, is_new, featured, status, illustrative, position, created_at, fulfillment, dispatch_min_days, dispatch_max_days, origin, weight_grams, length_cm, width_cm, height_cm) values
+  ('APX-001', 'scuderia-racing-jacket', 'Scuderia Racing Jacket', 'Corte reto, gola alta e linhas que lembram um macacão de corrida. Uma jaqueta pensada para quem torce de vermelho e quer levar essa paixão para a rua.
+
+Forro leve, zíper frontal e bolsos laterais para o dia a dia. Combina com camiseta lisa no fim de semana de corrida e com tudo no resto da semana.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Zíper frontal, gola alta e bolsos laterais"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 64990, null, 'teamwear', 'ferrari', null, array['jaqueta', 'ferrari']::text[], true, true, 'active', true, 0, '2026-09-20T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 1000, 35, 30, 8),
+  ('APX-002', 'ferrari-team-cap', 'Ferrari Team Cap', 'Seis gomos, aba curva e o vermelho de Maranello como inspiração. O boné que vai do autódromo ao café da manhã de domingo sem pedir licença.
+
+Ajuste traseiro para encontrar o encaixe certo e estrutura firme na frente, que mantém a forma depois de muitos fins de semana.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 18990, null, 'acessorios', 'ferrari', null, array['bone', 'ferrari']::text[], false, false, 'active', true, 1, '2026-01-05T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-003', 'monaco-racing-tee', 'Monaco Racing Tee', 'Uma camiseta com estampa inspirada nas ruas de Mônaco, o circuito mais estreito e mais charmoso do calendário.
+
+Algodão penteado, modelagem regular e toque macio desde a primeira lavagem. Para usar sozinha ou por baixo de uma jaqueta.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 22990, null, 'racing', null, null, array['camiseta', 'monaco']::text[], false, false, 'active', true, 2, '2026-01-07T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-004', 'classic-racing-hoodie', 'Classic Racing Hoodie', 'O moletom de todo fã: capuz, felpa macia e bordado discreto no peito. Clássico de propósito, para durar muitas temporadas.
+
+Punhos e barra canelados seguram o calor nas manhãs de corrida. Fica bem com jeans, com bermuda e com o sofá de casa.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Detalhes","value":"Capuz com cordão e bordado no peito"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 39990, 45990, 'teamwear', null, null, array['moletom']::text[], false, true, 'active', true, 3, '2026-01-09T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 1000, 35, 30, 8),
+  ('APX-005', 'pit-lane-overshirt', 'Pit Lane Overshirt', 'Uma sobrecamisa de sarja com bolsos utilitários, inspirada no uniforme de quem trabalha nos boxes. Feita para o dia inteiro.
+
+Usa aberta, por cima de uma camiseta, ou fechada, como camisa. Resiste ao uso e fica melhor com o tempo.', '[{"label":"Material","value":"Sarja de algodão encorpada"},{"label":"Caimento","value":"Reto, um pouco mais amplo que uma camisa"},{"label":"Detalhes","value":"Dois bolsos utilitários com aba, botões de pressão"},{"label":"Cuidados","value":"Lavar em água fria; secar à sombra"}]'::jsonb, true, 45990, null, 'racing', null, null, array['sobrecamisa']::text[], true, false, 'active', true, 4, '2026-09-10T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 1000, 35, 30, 8),
+  ('APX-006', 'apex-circuit-tote', 'Apex Circuit Tote', 'A bolsa da casa: lona resistente, alças reforçadas e o traçado de um circuito estampado. Apex para levar tudo.
+
+Cabe o notebook, a garrafa d''água e o casaco para quando o sol se esconder na arquibancada.', '[{"label":"Material","value":"Lona de algodão resistente"},{"label":"Medidas","value":"Aprox. 40 × 38 cm, alças de 60 cm"},{"label":"Cuidados","value":"Lavar à mão; não usar alvejante"}]'::jsonb, true, 16990, null, 'acessorios', null, null, array['bolsa']::text[], false, false, 'active', true, 5, '2026-01-13T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-051', 'camiseta-norris', 'Camiseta Lando Norris', 'Camiseta de torcedor com o nome de Lando Norris nas costas. Papaya até a última volta.
+
+Algodão penteado e modelagem regular, para vestir a torcida do jeito mais simples.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 23990, null, 'racing', 'mclaren', 'norris', array['camiseta', 'norris']::text[], false, false, 'active', true, 6, '2026-04-13T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-052', 'bone-norris', 'Boné Norris', 'Boné da linha de Lando Norris, com o nome bordado na lateral. Papaya até a última volta.
+
+Aba curva, ajuste traseiro e estrutura que mantém a forma. Para usar na arquibancada e fora dela.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 19990, null, 'acessorios', 'mclaren', 'norris', array['bone', 'norris']::text[], false, false, 'active', true, 7, '2026-04-15T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-053', 'miniatura-capacete-norris', 'Miniatura de capacete Norris 1:5', 'Miniatura de capacete em escala 1:5 inspirada em Lando Norris, com base expositora. Papaya até a última volta.
+
+Uma peça de coleção para a estante, a mesa de trabalho ou o canto da casa dedicado à corrida.', '[{"label":"Escala","value":"1:5, com base expositora"},{"label":"Material","value":"Resina pintada à mão"},{"label":"Cuidados","value":"Limpar com pincel macio ou pano seco; evitar sol direto"}]'::jsonb, true, 89990, null, 'colecionaveis', 'mclaren', 'norris', array['miniatura', 'norris']::text[], true, false, 'active', true, 8, '2026-04-17T00:00:00.000Z', 'sob_encomenda', 15, 30, 'importado', 900, 20, 20, 20),
+  ('APX-054', 'poster-norris', 'Pôster Lando Norris', 'Pôster 50 × 70 cm de Lando Norris, impresso em papel fotográfico fosco. Papaya até a última volta.
+
+Chega enrolado num tubo rígido, pronto para emoldurar.', '[{"label":"Tamanho","value":"50 × 70 cm"},{"label":"Papel","value":"Fotográfico fosco"},{"label":"Envio","value":"Em tubo rígido; moldura não inclusa"}]'::jsonb, true, 9990, null, 'colecionaveis', 'mclaren', 'norris', array['poster', 'norris']::text[], false, false, 'active', true, 9, '2026-04-19T00:00:00.000Z', 'sob_encomenda', 3, 6, 'nacional', 300, 62, 8, 8),
+  ('APX-055', 'camiseta-verstappen', 'Camiseta Max Verstappen', 'Camiseta de torcedor com o nome de Max Verstappen nas costas. Implacável, volta após volta.
+
+Algodão penteado e modelagem regular, para vestir a torcida do jeito mais simples.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 23990, null, 'racing', 'red-bull-racing', 'verstappen', array['camiseta', 'verstappen']::text[], false, false, 'active', true, 10, '2026-04-21T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-056', 'bone-verstappen', 'Boné Verstappen', 'Boné da linha de Max Verstappen, com o nome bordado na lateral. Implacável, volta após volta.
+
+Aba curva, ajuste traseiro e estrutura que mantém a forma. Para usar na arquibancada e fora dela.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 19990, null, 'acessorios', 'red-bull-racing', 'verstappen', array['bone', 'verstappen']::text[], false, false, 'active', true, 11, '2026-04-23T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-057', 'miniatura-capacete-verstappen', 'Miniatura de capacete Verstappen 1:5', 'Miniatura de capacete em escala 1:5 inspirada em Max Verstappen, com base expositora. Implacável, volta após volta.
+
+Uma peça de coleção para a estante, a mesa de trabalho ou o canto da casa dedicado à corrida.', '[{"label":"Escala","value":"1:5, com base expositora"},{"label":"Material","value":"Resina pintada à mão"},{"label":"Cuidados","value":"Limpar com pincel macio ou pano seco; evitar sol direto"}]'::jsonb, true, 89990, null, 'colecionaveis', 'red-bull-racing', 'verstappen', array['miniatura', 'verstappen']::text[], false, false, 'active', true, 12, '2026-04-25T00:00:00.000Z', 'sob_encomenda', 15, 30, 'importado', 900, 20, 20, 20),
+  ('APX-058', 'poster-verstappen', 'Pôster Max Verstappen', 'Pôster 50 × 70 cm de Max Verstappen, impresso em papel fotográfico fosco. Implacável, volta após volta.
+
+Chega enrolado num tubo rígido, pronto para emoldurar.', '[{"label":"Tamanho","value":"50 × 70 cm"},{"label":"Papel","value":"Fotográfico fosco"},{"label":"Envio","value":"Em tubo rígido; moldura não inclusa"}]'::jsonb, true, 9990, null, 'colecionaveis', 'red-bull-racing', 'verstappen', array['poster', 'verstappen']::text[], false, false, 'active', true, 13, '2026-04-27T00:00:00.000Z', 'sob_encomenda', 3, 6, 'nacional', 300, 62, 8, 8),
+  ('APX-059', 'camiseta-hamilton', 'Camiseta Lewis Hamilton', 'Camiseta de torcedor com o nome de Lewis Hamilton nas costas. Uma lenda vestida de vermelho.
+
+Algodão penteado e modelagem regular, para vestir a torcida do jeito mais simples.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 23990, null, 'racing', 'ferrari', 'hamilton', array['camiseta', 'hamilton']::text[], false, false, 'active', true, 14, '2026-04-29T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-060', 'bone-hamilton', 'Boné Hamilton', 'Boné da linha de Lewis Hamilton, com o nome bordado na lateral. Uma lenda vestida de vermelho.
+
+Aba curva, ajuste traseiro e estrutura que mantém a forma. Para usar na arquibancada e fora dela.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 19990, null, 'acessorios', 'ferrari', 'hamilton', array['bone', 'hamilton']::text[], false, false, 'active', true, 15, '2026-05-01T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-061', 'miniatura-capacete-hamilton', 'Miniatura de capacete Hamilton 1:5', 'Miniatura de capacete em escala 1:5 inspirada em Lewis Hamilton, com base expositora. Uma lenda vestida de vermelho.
+
+Uma peça de coleção para a estante, a mesa de trabalho ou o canto da casa dedicado à corrida.', '[{"label":"Escala","value":"1:5, com base expositora"},{"label":"Material","value":"Resina pintada à mão"},{"label":"Cuidados","value":"Limpar com pincel macio ou pano seco; evitar sol direto"}]'::jsonb, true, 89990, null, 'colecionaveis', 'ferrari', 'hamilton', array['miniatura', 'hamilton']::text[], true, true, 'active', true, 16, '2026-05-03T00:00:00.000Z', 'sob_encomenda', 15, 30, 'importado', 900, 20, 20, 20),
+  ('APX-062', 'poster-hamilton', 'Pôster Lewis Hamilton', 'Pôster 50 × 70 cm de Lewis Hamilton, impresso em papel fotográfico fosco. Uma lenda vestida de vermelho.
+
+Chega enrolado num tubo rígido, pronto para emoldurar.', '[{"label":"Tamanho","value":"50 × 70 cm"},{"label":"Papel","value":"Fotográfico fosco"},{"label":"Envio","value":"Em tubo rígido; moldura não inclusa"}]'::jsonb, true, 9990, null, 'colecionaveis', 'ferrari', 'hamilton', array['poster', 'hamilton']::text[], false, false, 'active', true, 17, '2026-05-05T00:00:00.000Z', 'sob_encomenda', 3, 6, 'nacional', 300, 62, 8, 8),
+  ('APX-063', 'camiseta-bortoleto', 'Camiseta Gabriel Bortoleto', 'Camiseta de torcedor com o nome de Gabriel Bortoleto nas costas. O Brasil de volta ao grid.
+
+Algodão penteado e modelagem regular, para vestir a torcida do jeito mais simples.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 23990, null, 'racing', 'audi', 'bortoleto', array['camiseta', 'bortoleto']::text[], true, false, 'active', true, 18, '2026-05-07T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-064', 'bone-bortoleto', 'Boné Bortoleto', 'Boné da linha de Gabriel Bortoleto, com o nome bordado na lateral. O Brasil de volta ao grid.
+
+Aba curva, ajuste traseiro e estrutura que mantém a forma. Para usar na arquibancada e fora dela.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 19990, null, 'acessorios', 'audi', 'bortoleto', array['bone', 'bortoleto']::text[], false, false, 'active', true, 19, '2026-05-09T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-065', 'miniatura-capacete-bortoleto', 'Miniatura de capacete Bortoleto 1:5', 'Miniatura de capacete em escala 1:5 inspirada em Gabriel Bortoleto, com base expositora. O Brasil de volta ao grid.
+
+Uma peça de coleção para a estante, a mesa de trabalho ou o canto da casa dedicado à corrida.', '[{"label":"Escala","value":"1:5, com base expositora"},{"label":"Material","value":"Resina pintada à mão"},{"label":"Cuidados","value":"Limpar com pincel macio ou pano seco; evitar sol direto"}]'::jsonb, true, 89990, null, 'colecionaveis', 'audi', 'bortoleto', array['miniatura', 'bortoleto']::text[], false, true, 'active', true, 20, '2026-05-11T00:00:00.000Z', 'sob_encomenda', 15, 30, 'importado', 900, 20, 20, 20),
+  ('APX-066', 'poster-bortoleto', 'Pôster Gabriel Bortoleto', 'Pôster 50 × 70 cm de Gabriel Bortoleto, impresso em papel fotográfico fosco. O Brasil de volta ao grid.
+
+Chega enrolado num tubo rígido, pronto para emoldurar.', '[{"label":"Tamanho","value":"50 × 70 cm"},{"label":"Papel","value":"Fotográfico fosco"},{"label":"Envio","value":"Em tubo rígido; moldura não inclusa"}]'::jsonb, true, 9990, null, 'colecionaveis', 'audi', 'bortoleto', array['poster', 'bortoleto']::text[], false, false, 'active', true, 21, '2026-05-13T00:00:00.000Z', 'sob_encomenda', 3, 6, 'nacional', 300, 62, 8, 8),
+  ('APX-007', 'camiseta-ferrari-2026', 'Camiseta Ferrari 2026', 'Uma camiseta de torcedor com as cores da Ferrari para a temporada 2026. O vermelho mais famoso do grid.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 21990, null, 'teamwear', 'ferrari', null, array['camiseta', 'ferrari']::text[], true, false, 'active', true, 22, '2026-01-15T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-008', 'bone-ferrari', 'Boné Ferrari', 'Boné nas cores da Ferrari, com aba curva e ajuste traseiro. O vermelho mais famoso do grid.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 17990, 21990, 'acessorios', 'ferrari', null, array['bone', 'ferrari']::text[], false, false, 'active', true, 23, '2026-01-17T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-009', 'moletom-ferrari', 'Moletom Ferrari', 'Moletom com capuz nas cores da Ferrari, felpado por dentro e com bolso canguru. O vermelho mais famoso do grid.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 38990, null, 'teamwear', 'ferrari', null, array['moletom', 'ferrari']::text[], false, false, 'active', true, 24, '2026-01-19T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-010', 'jaqueta-ferrari', 'Jaqueta Ferrari', 'Jaqueta corta-vento nas cores da Ferrari, leve e com capuz embutido na gola. O vermelho mais famoso do grid.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 59990, null, 'racing', 'ferrari', null, array['jaqueta', 'ferrari']::text[], false, false, 'active', true, 25, '2026-01-21T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-011', 'camiseta-mercedes-2026', 'Camiseta Mercedes 2026', 'Uma camiseta de torcedor com as cores da Mercedes para a temporada 2026. Prata, preto e precisão alemã.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 22990, null, 'teamwear', 'mercedes', null, array['camiseta', 'mercedes']::text[], false, false, 'active', true, 26, '2026-01-23T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-012', 'bone-mercedes', 'Boné Mercedes', 'Boné nas cores da Mercedes, com aba curva e ajuste traseiro. Prata, preto e precisão alemã.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 18990, null, 'acessorios', 'mercedes', null, array['bone', 'mercedes']::text[], false, false, 'active', true, 27, '2026-01-25T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-013', 'moletom-mercedes', 'Moletom Mercedes', 'Moletom com capuz nas cores da Mercedes, felpado por dentro e com bolso canguru. Prata, preto e precisão alemã.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 40990, null, 'teamwear', 'mercedes', null, array['moletom', 'mercedes']::text[], false, false, 'active', true, 28, '2026-01-27T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-014', 'jaqueta-mercedes', 'Jaqueta Mercedes', 'Jaqueta corta-vento nas cores da Mercedes, leve e com capuz embutido na gola. Prata, preto e precisão alemã.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 61990, null, 'racing', 'mercedes', null, array['jaqueta', 'mercedes']::text[], true, false, 'active', true, 29, '2026-01-29T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-015', 'camiseta-mclaren-2026', 'Camiseta McLaren 2026', 'Uma camiseta de torcedor com as cores da McLaren para a temporada 2026. Papaya de Woking para o mundo.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 23990, null, 'teamwear', 'mclaren', null, array['camiseta', 'mclaren']::text[], false, false, 'active', true, 30, '2026-01-31T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-016', 'bone-mclaren', 'Boné McLaren', 'Boné nas cores da McLaren, com aba curva e ajuste traseiro. Papaya de Woking para o mundo.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 17990, null, 'acessorios', 'mclaren', null, array['bone', 'mclaren']::text[], false, false, 'active', true, 31, '2026-02-02T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-017', 'moletom-mclaren', 'Moletom McLaren', 'Moletom com capuz nas cores da McLaren, felpado por dentro e com bolso canguru. Papaya de Woking para o mundo.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 42990, null, 'teamwear', 'mclaren', null, array['moletom', 'mclaren']::text[], false, false, 'active', true, 32, '2026-02-04T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-018', 'jaqueta-mclaren', 'Jaqueta McLaren', 'Jaqueta corta-vento nas cores da McLaren, leve e com capuz embutido na gola. Papaya de Woking para o mundo.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 63990, 73990, 'racing', 'mclaren', null, array['jaqueta', 'mclaren']::text[], false, false, 'active', true, 33, '2026-02-06T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-019', 'camiseta-red-bull-racing-2026', 'Camiseta Red Bull Racing 2026', 'Uma camiseta de torcedor com as cores da Red Bull Racing para a temporada 2026. Asas para quem acelera.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 21990, null, 'teamwear', 'red-bull-racing', null, array['camiseta', 'red-bull-racing']::text[], false, false, 'active', true, 34, '2026-02-08T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-020', 'bone-red-bull-racing', 'Boné Red Bull Racing', 'Boné nas cores da Red Bull Racing, com aba curva e ajuste traseiro. Asas para quem acelera.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 18990, 21990, 'acessorios', 'red-bull-racing', null, array['bone', 'red-bull-racing']::text[], false, false, 'active', true, 35, '2026-02-10T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-021', 'moletom-red-bull-racing', 'Moletom Red Bull Racing', 'Moletom com capuz nas cores da Red Bull Racing, felpado por dentro e com bolso canguru. Asas para quem acelera.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 38990, null, 'teamwear', 'red-bull-racing', null, array['moletom', 'red-bull-racing']::text[], false, false, 'active', true, 36, '2026-02-12T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-022', 'jaqueta-red-bull-racing', 'Jaqueta Red Bull Racing', 'Jaqueta corta-vento nas cores da Red Bull Racing, leve e com capuz embutido na gola. Asas para quem acelera.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 65990, null, 'racing', 'red-bull-racing', null, array['jaqueta', 'red-bull-racing']::text[], false, false, 'active', true, 37, '2026-02-14T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-023', 'camiseta-aston-martin-2026', 'Camiseta Aston Martin 2026', 'Uma camiseta de torcedor com as cores da Aston Martin para a temporada 2026. O verde britânico de corrida.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 22990, null, 'teamwear', 'aston-martin', null, array['camiseta', 'aston-martin']::text[], true, false, 'active', true, 38, '2026-02-16T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-024', 'bone-aston-martin', 'Boné Aston Martin', 'Boné nas cores da Aston Martin, com aba curva e ajuste traseiro. O verde britânico de corrida.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 17990, null, 'acessorios', 'aston-martin', null, array['bone', 'aston-martin']::text[], false, false, 'active', true, 39, '2026-02-18T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-025', 'moletom-aston-martin', 'Moletom Aston Martin', 'Moletom com capuz nas cores da Aston Martin, felpado por dentro e com bolso canguru. O verde britânico de corrida.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 40990, null, 'teamwear', 'aston-martin', null, array['moletom', 'aston-martin']::text[], false, false, 'active', true, 40, '2026-02-20T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-026', 'jaqueta-aston-martin', 'Jaqueta Aston Martin', 'Jaqueta corta-vento nas cores da Aston Martin, leve e com capuz embutido na gola. O verde britânico de corrida.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 59990, null, 'racing', 'aston-martin', null, array['jaqueta', 'aston-martin']::text[], false, false, 'active', true, 41, '2026-02-22T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-027', 'camiseta-williams-2026', 'Camiseta Williams 2026', 'Uma camiseta de torcedor com as cores da Williams para a temporada 2026. Uma das grandes famílias da F1.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 23990, null, 'teamwear', 'williams', null, array['camiseta', 'williams']::text[], false, false, 'active', true, 42, '2026-02-24T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-028', 'bone-williams', 'Boné Williams', 'Boné nas cores da Williams, com aba curva e ajuste traseiro. Uma das grandes famílias da F1.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 18990, null, 'acessorios', 'williams', null, array['bone', 'williams']::text[], false, false, 'active', true, 43, '2026-02-26T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-029', 'moletom-williams', 'Moletom Williams', 'Moletom com capuz nas cores da Williams, felpado por dentro e com bolso canguru. Uma das grandes famílias da F1.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 42990, null, 'teamwear', 'williams', null, array['moletom', 'williams']::text[], false, false, 'active', true, 44, '2026-02-28T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-030', 'jaqueta-williams', 'Jaqueta Williams', 'Jaqueta corta-vento nas cores da Williams, leve e com capuz embutido na gola. Uma das grandes famílias da F1.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 61990, null, 'racing', 'williams', null, array['jaqueta', 'williams']::text[], true, false, 'active', true, 45, '2026-03-02T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-031', 'camiseta-alpine-2026', 'Camiseta Alpine 2026', 'Uma camiseta de torcedor com as cores da Alpine para a temporada 2026. Azul francês em ritmo de corrida.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 21990, null, 'teamwear', 'alpine', null, array['camiseta', 'alpine']::text[], false, false, 'active', true, 46, '2026-03-04T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-032', 'bone-alpine', 'Boné Alpine', 'Boné nas cores da Alpine, com aba curva e ajuste traseiro. Azul francês em ritmo de corrida.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 17990, 21990, 'acessorios', 'alpine', null, array['bone', 'alpine']::text[], false, false, 'active', true, 47, '2026-03-06T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-033', 'moletom-alpine', 'Moletom Alpine', 'Moletom com capuz nas cores da Alpine, felpado por dentro e com bolso canguru. Azul francês em ritmo de corrida.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 38990, null, 'teamwear', 'alpine', null, array['moletom', 'alpine']::text[], false, false, 'active', true, 48, '2026-03-08T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-034', 'jaqueta-alpine', 'Jaqueta Alpine', 'Jaqueta corta-vento nas cores da Alpine, leve e com capuz embutido na gola. Azul francês em ritmo de corrida.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 63990, null, 'racing', 'alpine', null, array['jaqueta', 'alpine']::text[], false, false, 'active', true, 49, '2026-03-10T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-035', 'camiseta-haas-2026', 'Camiseta Haas 2026', 'Uma camiseta de torcedor com as cores da Haas para a temporada 2026. A equipe americana do grid.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 22990, null, 'teamwear', 'haas', null, array['camiseta', 'haas']::text[], false, false, 'active', true, 50, '2026-03-12T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-036', 'bone-haas', 'Boné Haas', 'Boné nas cores da Haas, com aba curva e ajuste traseiro. A equipe americana do grid.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 18990, null, 'acessorios', 'haas', null, array['bone', 'haas']::text[], false, false, 'active', true, 51, '2026-03-14T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-037', 'moletom-haas', 'Moletom Haas', 'Moletom com capuz nas cores da Haas, felpado por dentro e com bolso canguru. A equipe americana do grid.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 40990, null, 'teamwear', 'haas', null, array['moletom', 'haas']::text[], false, false, 'active', true, 52, '2026-03-16T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-038', 'jaqueta-haas', 'Jaqueta Haas', 'Jaqueta corta-vento nas cores da Haas, leve e com capuz embutido na gola. A equipe americana do grid.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 65990, 75990, 'racing', 'haas', null, array['jaqueta', 'haas']::text[], false, false, 'active', true, 53, '2026-03-18T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-039', 'camiseta-racing-bulls-2026', 'Camiseta Racing Bulls 2026', 'Uma camiseta de torcedor com as cores da Racing Bulls para a temporada 2026. A escola de talentos de Faenza.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 23990, null, 'teamwear', 'racing-bulls', null, array['camiseta', 'racing-bulls']::text[], true, false, 'active', true, 54, '2026-03-20T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-040', 'bone-racing-bulls', 'Boné Racing Bulls', 'Boné nas cores da Racing Bulls, com aba curva e ajuste traseiro. A escola de talentos de Faenza.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 17990, null, 'acessorios', 'racing-bulls', null, array['bone', 'racing-bulls']::text[], false, false, 'active', true, 55, '2026-03-22T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-041', 'moletom-racing-bulls', 'Moletom Racing Bulls', 'Moletom com capuz nas cores da Racing Bulls, felpado por dentro e com bolso canguru. A escola de talentos de Faenza.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 42990, null, 'teamwear', 'racing-bulls', null, array['moletom', 'racing-bulls']::text[], false, false, 'active', true, 56, '2026-03-24T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-042', 'jaqueta-racing-bulls', 'Jaqueta Racing Bulls', 'Jaqueta corta-vento nas cores da Racing Bulls, leve e com capuz embutido na gola. A escola de talentos de Faenza.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 59990, null, 'racing', 'racing-bulls', null, array['jaqueta', 'racing-bulls']::text[], false, false, 'active', true, 57, '2026-03-26T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-043', 'camiseta-audi-2026', 'Camiseta Audi 2026', 'Uma camiseta de torcedor com as cores da Audi para a temporada 2026. Quatro argolas no grid.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 21990, null, 'teamwear', 'audi', null, array['camiseta', 'audi']::text[], false, false, 'active', true, 58, '2026-03-28T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-044', 'bone-audi', 'Boné Audi', 'Boné nas cores da Audi, com aba curva e ajuste traseiro. Quatro argolas no grid.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 18990, 21990, 'acessorios', 'audi', null, array['bone', 'audi']::text[], false, false, 'active', true, 59, '2026-03-30T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-045', 'moletom-audi', 'Moletom Audi', 'Moletom com capuz nas cores da Audi, felpado por dentro e com bolso canguru. Quatro argolas no grid.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 38990, null, 'teamwear', 'audi', null, array['moletom', 'audi']::text[], false, false, 'active', true, 60, '2026-04-01T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-046', 'jaqueta-audi', 'Jaqueta Audi', 'Jaqueta corta-vento nas cores da Audi, leve e com capuz embutido na gola. Quatro argolas no grid.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 61990, null, 'racing', 'audi', null, array['jaqueta', 'audi']::text[], true, false, 'active', true, 61, '2026-04-03T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-047', 'camiseta-cadillac-2026', 'Camiseta Cadillac 2026', 'Uma camiseta de torcedor com as cores da Cadillac para a temporada 2026. A estreia americana na F1.
+
+Algodão macio, modelagem regular e estampa resistente a muitas lavagens. Feita para o domingo de corrida e para os outros seis dias.', '[{"label":"Material","value":"100% algodão penteado, malha de toque macio"},{"label":"Caimento","value":"Regular, reto no corpo"},{"label":"Cuidados","value":"Lavar do avesso em água fria; não usar secadora; passar do avesso"}]'::jsonb, true, 22990, null, 'teamwear', 'cadillac', null, array['camiseta', 'cadillac']::text[], false, false, 'active', true, 62, '2026-04-05T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 30, 25, 3),
+  ('APX-048', 'bone-cadillac', 'Boné Cadillac', 'Boné nas cores da Cadillac, com aba curva e ajuste traseiro. A estreia americana na F1.
+
+Leve e firme na medida certa. Protege do sol na arquibancada e completa o visual de quem acompanha cada largada.', '[{"label":"Material","value":"Sarja de algodão, aba pré-curvada"},{"label":"Ajuste","value":"Fecho traseiro regulável, tamanho único"},{"label":"Cuidados","value":"Limpar à mão com pano úmido; não lavar na máquina"}]'::jsonb, true, 17990, null, 'acessorios', 'cadillac', null, array['bone', 'cadillac']::text[], false, false, 'active', true, 63, '2026-04-07T00:00:00.000Z', 'estoque_proprio', 1, 2, 'nacional', 250, 25, 20, 14),
+  ('APX-049', 'moletom-cadillac', 'Moletom Cadillac', 'Moletom com capuz nas cores da Cadillac, felpado por dentro e com bolso canguru. A estreia americana na F1.
+
+Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mundo.', '[{"label":"Material","value":"Moletom de algodão com poliéster, felpado por dentro"},{"label":"Caimento","value":"Regular, com punhos e barra canelados"},{"label":"Cuidados","value":"Lavar do avesso em água fria; secar à sombra"}]'::jsonb, true, 40990, null, 'teamwear', 'cadillac', null, array['moletom', 'cadillac']::text[], false, false, 'active', true, 64, '2026-04-09T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8),
+  ('APX-050', 'jaqueta-cadillac', 'Jaqueta Cadillac', 'Jaqueta corta-vento nas cores da Cadillac, leve e com capuz embutido na gola. A estreia americana na F1.
+
+Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 63990, null, 'racing', 'cadillac', null, array['jaqueta', 'cadillac']::text[], false, false, 'active', true, 65, '2026-04-11T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8)
+on conflict (code) do update set slug = excluded.slug, name = excluded.name, description = excluded.description, details = excluded.details, details_pending = excluded.details_pending, price_cents = excluded.price_cents, compare_at_price_cents = excluded.compare_at_price_cents, category_slug = excluded.category_slug, team_slug = excluded.team_slug, driver_slug = excluded.driver_slug, tags = excluded.tags, is_new = excluded.is_new, featured = excluded.featured, status = excluded.status, illustrative = excluded.illustrative, position = excluded.position, created_at = excluded.created_at, fulfillment = excluded.fulfillment, dispatch_min_days = excluded.dispatch_min_days, dispatch_max_days = excluded.dispatch_max_days, origin = excluded.origin, weight_grams = excluded.weight_grams, length_cm = excluded.length_cm, width_cm = excluded.width_cm, height_cm = excluded.height_cm;
+
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-P', (select id from public.products where code = 'APX-001'), 'P', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-M', (select id from public.products where code = 'APX-001'), 'M', null, 9, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-G', (select id from public.products where code = 'APX-001'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-GG', (select id from public.products where code = 'APX-001'), 'GG', null, 2, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-001') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-001'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Scuderia Racing Jacket', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-001'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Scuderia Racing Jacket em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-002-UN', (select id from public.products where code = 'APX-002'), 'Único', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-002') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-002'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Ferrari Team Cap', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-002'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Ferrari Team Cap, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-003-P', (select id from public.products where code = 'APX-003'), 'P', null, 10, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-003-M', (select id from public.products where code = 'APX-003'), 'M', null, 0, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-003-G', (select id from public.products where code = 'APX-003'), 'G', null, 3, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-003-GG', (select id from public.products where code = 'APX-003'), 'GG', null, 5, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-003') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-003'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Monaco Racing Tee', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-003'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Carro de Fórmula 1 em Mônaco', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-004-P', (select id from public.products where code = 'APX-004'), 'P', null, 6, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-004-M', (select id from public.products where code = 'APX-004'), 'M', null, 8, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-004-G', (select id from public.products where code = 'APX-004'), 'G', null, 10, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-004-GG', (select id from public.products where code = 'APX-004'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-004') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-004'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Classic Racing Hoodie', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-004'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Classic Racing Hoodie em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-005-P', (select id from public.products where code = 'APX-005'), 'P', null, 2, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-005-M', (select id from public.products where code = 'APX-005'), 'M', null, 4, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-005-G', (select id from public.products where code = 'APX-005'), 'G', null, 6, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-005-GG', (select id from public.products where code = 'APX-005'), 'GG', null, 8, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-005') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-005'), 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85', 'Pit Lane Overshirt', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-005'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Pit Lane Overshirt, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-006-UN', (select id from public.products where code = 'APX-006'), 'Único', null, 11, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-006') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-006'), 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=85', 'Apex Circuit Tote', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-006'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Apex Circuit Tote, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-051-P', (select id from public.products where code = 'APX-051'), 'P', null, 5, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-051-M', (select id from public.products where code = 'APX-051'), 'M', null, 7, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-051-G', (select id from public.products where code = 'APX-051'), 'G', null, 9, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-051-GG', (select id from public.products where code = 'APX-051'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-051') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-051'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Lando Norris', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-051'), '/images/pilotos/norris.jpeg', 'Lando Norris', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-052-UN', (select id from public.products where code = 'APX-052'), 'Único', null, 12, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-052') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-052'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Norris', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-052'), '/images/pilotos/norris.jpeg', 'Lando Norris', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-053-UN', (select id from public.products where code = 'APX-053'), 'Único', null, 13, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-053') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-053'), 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 'Miniatura de capacete Norris', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-053'), '/images/pilotos/norris.jpeg', 'Lando Norris', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-054-UN', (select id from public.products where code = 'APX-054'), 'Único', null, 5, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-054') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-054'), '/images/pilotos/norris.jpeg', 'Pôster Lando Norris', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-054'), 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 'Pôster Lando Norris, ambiente', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-055-P', (select id from public.products where code = 'APX-055'), 'P', null, 0, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-055-M', (select id from public.products where code = 'APX-055'), 'M', null, 2, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-055-G', (select id from public.products where code = 'APX-055'), 'G', null, 4, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-055-GG', (select id from public.products where code = 'APX-055'), 'GG', null, 6, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-055') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-055'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Max Verstappen', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-055'), '/images/pilotos/verstappen.png', 'Max Verstappen', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-056-UN', (select id from public.products where code = 'APX-056'), 'Único', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-056') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-056'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Verstappen', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-056'), '/images/pilotos/verstappen.png', 'Max Verstappen', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-057-UN', (select id from public.products where code = 'APX-057'), 'Único', null, 8, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-057') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-057'), 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 'Miniatura de capacete Verstappen', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-057'), '/images/pilotos/verstappen.png', 'Max Verstappen', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-058-UN', (select id from public.products where code = 'APX-058'), 'Único', null, 9, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-058') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-058'), '/images/pilotos/verstappen.png', 'Pôster Max Verstappen', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-058'), 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 'Pôster Max Verstappen, ambiente', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-059-P', (select id from public.products where code = 'APX-059'), 'P', null, 6, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-059-M', (select id from public.products where code = 'APX-059'), 'M', null, 8, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-059-G', (select id from public.products where code = 'APX-059'), 'G', null, 10, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-059-GG', (select id from public.products where code = 'APX-059'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-059') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-059'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Lewis Hamilton', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-059'), '/images/pilotos/hamilton.png', 'Lewis Hamilton', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-060-UN', (select id from public.products where code = 'APX-060'), 'Único', null, 11, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-060') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-060'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Hamilton', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-060'), '/images/pilotos/hamilton.png', 'Lewis Hamilton', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-061-UN', (select id from public.products where code = 'APX-061'), 'Único', null, 12, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-061') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-061'), 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 'Miniatura de capacete Hamilton', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-061'), '/images/pilotos/hamilton.png', 'Lewis Hamilton', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-062-UN', (select id from public.products where code = 'APX-062'), 'Único', null, 13, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-062') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-062'), '/images/pilotos/hamilton.png', 'Pôster Lewis Hamilton', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-062'), 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 'Pôster Lewis Hamilton, ambiente', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-063-P', (select id from public.products where code = 'APX-063'), 'P', null, 0, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-063-M', (select id from public.products where code = 'APX-063'), 'M', null, 3, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-063-G', (select id from public.products where code = 'APX-063'), 'G', null, 5, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-063-GG', (select id from public.products where code = 'APX-063'), 'GG', null, 7, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-063') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-063'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Gabriel Bortoleto', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-063'), '/images/pilotos/bortoleto.png', 'Gabriel Bortoleto', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-064-UN', (select id from public.products where code = 'APX-064'), 'Único', null, 6, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-064') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-064'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Bortoleto', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-064'), '/images/pilotos/bortoleto.png', 'Gabriel Bortoleto', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-065-UN', (select id from public.products where code = 'APX-065'), 'Único', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-065') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-065'), 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 'Miniatura de capacete Bortoleto', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-065'), '/images/pilotos/bortoleto.png', 'Gabriel Bortoleto', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-066-UN', (select id from public.products where code = 'APX-066'), 'Único', null, 8, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-066') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-066'), '/images/pilotos/bortoleto.png', 'Pôster Gabriel Bortoleto', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-066'), 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=85', 'Pôster Gabriel Bortoleto, ambiente', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-007-P', (select id from public.products where code = 'APX-007'), 'P', null, 5, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-007-M', (select id from public.products where code = 'APX-007'), 'M', null, 7, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-007-G', (select id from public.products where code = 'APX-007'), 'G', null, 9, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-007-GG', (select id from public.products where code = 'APX-007'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-007') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-007'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Ferrari 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-007'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Ferrari 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-008-UN', (select id from public.products where code = 'APX-008'), 'Único', null, 13, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-008') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-008'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Ferrari', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-008'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Ferrari, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-009-P', (select id from public.products where code = 'APX-009'), 'P', null, 8, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-009-M', (select id from public.products where code = 'APX-009'), 'M', null, 10, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-009-G', (select id from public.products where code = 'APX-009'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-009-GG', (select id from public.products where code = 'APX-009'), 'GG', null, 3, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-009') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-009'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Ferrari', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-009'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Ferrari em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-010-P', (select id from public.products where code = 'APX-010'), 'P', null, 4, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-010-M', (select id from public.products where code = 'APX-010'), 'M', null, 6, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-010-G', (select id from public.products where code = 'APX-010'), 'G', null, 8, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-010-GG', (select id from public.products where code = 'APX-010'), 'GG', null, 10, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-010') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-010'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Ferrari', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-010'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Ferrari, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-011-P', (select id from public.products where code = 'APX-011'), 'P', null, 0, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-011-M', (select id from public.products where code = 'APX-011'), 'M', null, 2, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-011-G', (select id from public.products where code = 'APX-011'), 'G', null, 4, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-011-GG', (select id from public.products where code = 'APX-011'), 'GG', null, 6, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-011') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-011'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Mercedes 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-011'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Mercedes 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-012-UN', (select id from public.products where code = 'APX-012'), 'Único', null, 8, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-012') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-012'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Mercedes', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-012'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Mercedes, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-013-P', (select id from public.products where code = 'APX-013'), 'P', null, 3, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-013-M', (select id from public.products where code = 'APX-013'), 'M', null, 5, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-013-G', (select id from public.products where code = 'APX-013'), 'G', null, 7, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-013-GG', (select id from public.products where code = 'APX-013'), 'GG', null, 9, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-013') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-013'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Mercedes', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-013'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Mercedes em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-014-P', (select id from public.products where code = 'APX-014'), 'P', null, 10, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-014-M', (select id from public.products where code = 'APX-014'), 'M', null, 0, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-014-G', (select id from public.products where code = 'APX-014'), 'G', null, 3, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-014-GG', (select id from public.products where code = 'APX-014'), 'GG', null, 5, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-014') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-014'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Mercedes', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-014'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Mercedes, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-015-P', (select id from public.products where code = 'APX-015'), 'P', null, 6, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-015-M', (select id from public.products where code = 'APX-015'), 'M', null, 8, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-015-G', (select id from public.products where code = 'APX-015'), 'G', null, 10, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-015-GG', (select id from public.products where code = 'APX-015'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-015') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-015'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta McLaren 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-015'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta McLaren 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-016-UN', (select id from public.products where code = 'APX-016'), 'Único', null, 12, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-016') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-016'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné McLaren', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-016'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné McLaren, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-017-P', (select id from public.products where code = 'APX-017'), 'P', null, 9, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-017-M', (select id from public.products where code = 'APX-017'), 'M', null, 0, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-017-G', (select id from public.products where code = 'APX-017'), 'G', null, 2, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-017-GG', (select id from public.products where code = 'APX-017'), 'GG', null, 4, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-017') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-017'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom McLaren', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-017'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom McLaren em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-018-P', (select id from public.products where code = 'APX-018'), 'P', null, 5, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-018-M', (select id from public.products where code = 'APX-018'), 'M', null, 7, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-018-G', (select id from public.products where code = 'APX-018'), 'G', null, 9, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-018-GG', (select id from public.products where code = 'APX-018'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-018') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-018'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta McLaren', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-018'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta McLaren, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-019-P', (select id from public.products where code = 'APX-019'), 'P', null, 0, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-019-M', (select id from public.products where code = 'APX-019'), 'M', null, 3, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-019-G', (select id from public.products where code = 'APX-019'), 'G', null, 5, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-019-GG', (select id from public.products where code = 'APX-019'), 'GG', null, 7, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-019') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-019'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Red Bull Racing 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-019'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Red Bull Racing 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-020-UN', (select id from public.products where code = 'APX-020'), 'Único', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-020') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-020'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Red Bull Racing', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-020'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Red Bull Racing, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-021-P', (select id from public.products where code = 'APX-021'), 'P', null, 4, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-021-M', (select id from public.products where code = 'APX-021'), 'M', null, 6, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-021-G', (select id from public.products where code = 'APX-021'), 'G', null, 8, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-021-GG', (select id from public.products where code = 'APX-021'), 'GG', null, 10, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-021') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-021'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Red Bull Racing', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-021'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Red Bull Racing em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-022-P', (select id from public.products where code = 'APX-022'), 'P', null, 0, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-022-M', (select id from public.products where code = 'APX-022'), 'M', null, 2, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-022-G', (select id from public.products where code = 'APX-022'), 'G', null, 4, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-022-GG', (select id from public.products where code = 'APX-022'), 'GG', null, 6, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-022') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-022'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Red Bull Racing', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-022'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Red Bull Racing, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-023-P', (select id from public.products where code = 'APX-023'), 'P', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-023-M', (select id from public.products where code = 'APX-023'), 'M', null, 9, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-023-G', (select id from public.products where code = 'APX-023'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-023-GG', (select id from public.products where code = 'APX-023'), 'GG', null, 2, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-023') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-023'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Aston Martin 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-023'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Aston Martin 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-024-UN', (select id from public.products where code = 'APX-024'), 'Único', null, 11, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-024') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-024'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Aston Martin', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-024'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Aston Martin, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-025-P', (select id from public.products where code = 'APX-025'), 'P', null, 10, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-025-M', (select id from public.products where code = 'APX-025'), 'M', null, 0, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-025-G', (select id from public.products where code = 'APX-025'), 'G', null, 3, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-025-GG', (select id from public.products where code = 'APX-025'), 'GG', null, 5, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-025') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-025'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Aston Martin', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-025'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Aston Martin em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-026-P', (select id from public.products where code = 'APX-026'), 'P', null, 6, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-026-M', (select id from public.products where code = 'APX-026'), 'M', null, 8, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-026-G', (select id from public.products where code = 'APX-026'), 'G', null, 10, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-026-GG', (select id from public.products where code = 'APX-026'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-026') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-026'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Aston Martin', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-026'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Aston Martin, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-027-P', (select id from public.products where code = 'APX-027'), 'P', null, 2, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-027-M', (select id from public.products where code = 'APX-027'), 'M', null, 4, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-027-G', (select id from public.products where code = 'APX-027'), 'G', null, 6, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-027-GG', (select id from public.products where code = 'APX-027'), 'GG', null, 8, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-027') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-027'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Williams 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-027'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Williams 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-028-UN', (select id from public.products where code = 'APX-028'), 'Único', null, 6, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-028') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-028'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Williams', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-028'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Williams, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-029-P', (select id from public.products where code = 'APX-029'), 'P', null, 5, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-029-M', (select id from public.products where code = 'APX-029'), 'M', null, 7, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-029-G', (select id from public.products where code = 'APX-029'), 'G', null, 9, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-029-GG', (select id from public.products where code = 'APX-029'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-029') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-029'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Williams', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-029'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Williams em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-030-P', (select id from public.products where code = 'APX-030'), 'P', null, 0, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-030-M', (select id from public.products where code = 'APX-030'), 'M', null, 3, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-030-G', (select id from public.products where code = 'APX-030'), 'G', null, 5, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-030-GG', (select id from public.products where code = 'APX-030'), 'GG', null, 7, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-030') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-030'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Williams', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-030'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Williams, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-031-P', (select id from public.products where code = 'APX-031'), 'P', null, 8, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-031-M', (select id from public.products where code = 'APX-031'), 'M', null, 10, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-031-G', (select id from public.products where code = 'APX-031'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-031-GG', (select id from public.products where code = 'APX-031'), 'GG', null, 3, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-031') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-031'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Alpine 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-031'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Alpine 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-032-UN', (select id from public.products where code = 'APX-032'), 'Único', null, 10, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-032') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-032'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Alpine', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-032'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Alpine, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-033-P', (select id from public.products where code = 'APX-033'), 'P', null, 0, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-033-M', (select id from public.products where code = 'APX-033'), 'M', null, 2, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-033-G', (select id from public.products where code = 'APX-033'), 'G', null, 4, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-033-GG', (select id from public.products where code = 'APX-033'), 'GG', null, 6, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-033') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-033'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Alpine', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-033'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Alpine em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-034-P', (select id from public.products where code = 'APX-034'), 'P', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-034-M', (select id from public.products where code = 'APX-034'), 'M', null, 9, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-034-G', (select id from public.products where code = 'APX-034'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-034-GG', (select id from public.products where code = 'APX-034'), 'GG', null, 2, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-034') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-034'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Alpine', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-034'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Alpine, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-035-P', (select id from public.products where code = 'APX-035'), 'P', null, 3, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-035-M', (select id from public.products where code = 'APX-035'), 'M', null, 5, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-035-G', (select id from public.products where code = 'APX-035'), 'G', null, 7, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-035-GG', (select id from public.products where code = 'APX-035'), 'GG', null, 9, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-035') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-035'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Haas 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-035'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Haas 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-036-UN', (select id from public.products where code = 'APX-036'), 'Único', null, 5, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-036') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-036'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Haas', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-036'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Haas, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-037-P', (select id from public.products where code = 'APX-037'), 'P', null, 6, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-037-M', (select id from public.products where code = 'APX-037'), 'M', null, 8, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-037-G', (select id from public.products where code = 'APX-037'), 'G', null, 10, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-037-GG', (select id from public.products where code = 'APX-037'), 'GG', null, 0, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-037') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-037'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Haas', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-037'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Haas em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-038-P', (select id from public.products where code = 'APX-038'), 'P', null, 2, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-038-M', (select id from public.products where code = 'APX-038'), 'M', null, 4, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-038-G', (select id from public.products where code = 'APX-038'), 'G', null, 6, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-038-GG', (select id from public.products where code = 'APX-038'), 'GG', null, 8, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-038') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-038'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Haas', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-038'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Haas, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-039-P', (select id from public.products where code = 'APX-039'), 'P', null, 9, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-039-M', (select id from public.products where code = 'APX-039'), 'M', null, 0, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-039-G', (select id from public.products where code = 'APX-039'), 'G', null, 2, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-039-GG', (select id from public.products where code = 'APX-039'), 'GG', null, 4, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-039') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-039'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Racing Bulls 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-039'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Racing Bulls 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-040-UN', (select id from public.products where code = 'APX-040'), 'Único', null, 9, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-040') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-040'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Racing Bulls', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-040'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Racing Bulls, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-041-P', (select id from public.products where code = 'APX-041'), 'P', null, 0, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-041-M', (select id from public.products where code = 'APX-041'), 'M', null, 3, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-041-G', (select id from public.products where code = 'APX-041'), 'G', null, 5, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-041-GG', (select id from public.products where code = 'APX-041'), 'GG', null, 7, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-041') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-041'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Racing Bulls', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-041'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Racing Bulls em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-042-P', (select id from public.products where code = 'APX-042'), 'P', null, 8, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-042-M', (select id from public.products where code = 'APX-042'), 'M', null, 10, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-042-G', (select id from public.products where code = 'APX-042'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-042-GG', (select id from public.products where code = 'APX-042'), 'GG', null, 3, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-042') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-042'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Racing Bulls', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-042'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Racing Bulls, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-043-P', (select id from public.products where code = 'APX-043'), 'P', null, 4, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-043-M', (select id from public.products where code = 'APX-043'), 'M', null, 6, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-043-G', (select id from public.products where code = 'APX-043'), 'G', null, 8, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-043-GG', (select id from public.products where code = 'APX-043'), 'GG', null, 10, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-043') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-043'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Audi 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-043'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Audi 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-044-UN', (select id from public.products where code = 'APX-044'), 'Único', null, 13, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-044') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-044'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Audi', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-044'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Audi, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-045-P', (select id from public.products where code = 'APX-045'), 'P', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-045-M', (select id from public.products where code = 'APX-045'), 'M', null, 9, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-045-G', (select id from public.products where code = 'APX-045'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-045-GG', (select id from public.products where code = 'APX-045'), 'GG', null, 2, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-045') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-045'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Audi', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-045'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Audi em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-046-P', (select id from public.products where code = 'APX-046'), 'P', null, 3, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-046-M', (select id from public.products where code = 'APX-046'), 'M', null, 5, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-046-G', (select id from public.products where code = 'APX-046'), 'G', null, 7, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-046-GG', (select id from public.products where code = 'APX-046'), 'GG', null, 9, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-046') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-046'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Audi', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-046'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Audi, inspiração', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-047-P', (select id from public.products where code = 'APX-047'), 'P', null, 10, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-047-M', (select id from public.products where code = 'APX-047'), 'M', null, 0, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-047-G', (select id from public.products where code = 'APX-047'), 'G', null, 3, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-047-GG', (select id from public.products where code = 'APX-047'), 'GG', null, 5, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-047') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-047'), 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85', 'Camiseta Cadillac 2026', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-047'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Camiseta Cadillac 2026 em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-048-UN', (select id from public.products where code = 'APX-048'), 'Único', null, 8, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-048') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-048'), 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85', 'Boné Cadillac', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-048'), 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=85', 'Boné Cadillac, detalhe', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-049-P', (select id from public.products where code = 'APX-049'), 'P', null, 2, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-049-M', (select id from public.products where code = 'APX-049'), 'M', null, 4, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-049-G', (select id from public.products where code = 'APX-049'), 'G', null, 6, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-049-GG', (select id from public.products where code = 'APX-049'), 'GG', null, 8, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-049') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-049'), 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85', 'Moletom Cadillac', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-049'), 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=85', 'Moletom Cadillac em uso', true, 1);
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-050-P', (select id from public.products where code = 'APX-050'), 'P', null, 9, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-050-M', (select id from public.products where code = 'APX-050'), 'M', null, 0, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-050-G', (select id from public.products where code = 'APX-050'), 'G', null, 2, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-050-GG', (select id from public.products where code = 'APX-050'), 'GG', null, 4, 3) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
+delete from public.product_images where product_id = (select id from public.products where code = 'APX-050') and storage_path is null;
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-050'), 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85', 'Jaqueta Cadillac', false, 0);
+insert into public.product_images (product_id, src, alt, illustrative, position) values ((select id from public.products where code = 'APX-050'), 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png', 'Jaqueta Cadillac, inspiração', true, 1);
+commit;
+
+-- =====================================================================================================
+-- Administradores do painel: troque pelo(s) seu(s) e-mail(s) (em minúsculas) e rode esta linha.
+-- =====================================================================================================
+-- insert into public.admin_emails (email) values ('seu-email@exemplo.com') on conflict do nothing;
