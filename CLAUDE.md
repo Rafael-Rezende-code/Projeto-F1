@@ -180,6 +180,19 @@ interna e sem arredondamento).
   `pnpm` direto: sem pnpm no PATH, criar um atalho `pnpm.cmd` com `corepack pnpm %*`. Já vêm com `motion/react`.
   O Signature voltou em feat/ajustes (ver "Páginas dos pilotos").
 
+## Política comercial, newsletter e Supabase local (feat/carros)
+
+- **Política comercial (`lib/store-policy.ts`):** parcelas, frete grátis, envio, trocas, garantia, área de entrega e avisos por
+  e-mail vêm de variáveis de ambiente; **sem a variável, o item não aparece** (nada de promessa escrita à mão). Tabela de
+  variáveis e lista do que foi encontrado em `docs/politica-comercial.md`. Entrega local é opt-in (`LOCAL_DELIVERY_*`).
+- **Newsletter:** tabela `newsletter_subscribers` (RLS: anon só insere, admin lê), consentimento + frase de finalidade,
+  honeypot, limite por IP (hash) no banco; sem Supabase o botão fica "Em breve". Admin em `/admin/newsletter` (lista + CSV).
+  Detalhes em `docs/backend/newsletter.md`.
+- **Redes sociais:** `lib/social.ts` lê `NEXT_PUBLIC_SOCIAL_*` (só https); o ícone só aparece com URL.
+- **Supabase local:** `pnpm supabase:ativar` (`scripts/supabase/ativar.ts`) lê o `.env.local` e confere conexão, tabelas,
+  admin_emails, permissões do anon, estoque e importador. Roteiro do login por link mágico e variáveis da Vercel (Preview) em
+  `docs/backend/roteiro-teste-admin.md`. O importador tem camada sem login em `lib/admin/import-run.ts`.
+
 ## Decisões já tomadas
 
 - TechText: descartado por ora. KineticText: só no título "Luzes apagadas." (ver Estado atual).

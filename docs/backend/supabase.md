@@ -14,6 +14,7 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
 | --- | --- |
 | **`supabase/setup-completo.sql`** | **Tudo num arquivo só** (migrations + seed), reexecutável: é o que você cola no SQL Editor. Gerado por `pnpm supabase:setup` |
 | `supabase/migrations/20261022000000_loja.sql` | Tabelas (categorias, equipes, pilotos, produtos, variantes, imagens, clientes, pedidos, itens, eventos de pagamento, e-mails de admin), RLS, funções `create_order` / `release_order_stock` / `is_admin` e o bucket `produtos` |
+| `supabase/migrations/20261025000000_newsletter.sql` | Lista da newsletter (`newsletter_subscribers`): inserção pública limitada, leitura só do admin (ver `docs/backend/newsletter.md`) |
 | `supabase/migrations/20261023000000_modelo_de_venda.sql` | Modelo de venda (sob encomenda, prazos, origem, pacote), tabela privada `product_private`, status por item do pedido |
 | `supabase/seed.sql` | Catálogo atual em SQL (gerado por `pnpm supabase:seed`) |
 | `scripts/supabase/seed.ts` | Gera o `seed.sql` ou grava direto no projeto (`--push`) |

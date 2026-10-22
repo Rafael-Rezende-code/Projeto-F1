@@ -14,6 +14,9 @@ import path from "node:path";
 const root = path.resolve(import.meta.dirname, "../..");
 const dir = path.join(root, "supabase/migrations");
 const files = readdirSync(dir).filter((file) => file.endsWith(".sql")).sort();
+// No Windows o git converte as quebras de linha da cópia local (CRLF): normaliza para LF, senão as regras de idempotência
+// (que casam "\n") não pegam e o arquivo gerado quebra na segunda execução.
+const lf = (text) => text.replace(/\r\n/g, "\n");
 
 export function idempotent(sql) {
   let out = sql
@@ -48,8 +51,8 @@ const header = `-- Apex: SETUP COMPLETO do Supabase (gerado por scripts/supabase
 `;
 
 const parts = [header];
-for (const file of files) parts.push(`\n-- =====================================================================================================\n-- ${file}\n-- =====================================================================================================\n`, idempotent(readFileSync(path.join(dir, file), "utf8")));
-parts.push(`\n-- =====================================================================================================\n-- seed.sql (catálogo de demonstração)\n-- =====================================================================================================\n`, readFileSync(path.join(root, "supabase/seed.sql"), "utf8"));
+for (const file of files) parts.push(`\n-- =====================================================================================================\n-- ${file}\n-- =====================================================================================================\n`, idempotent(lf(readFileSync(path.join(dir, file), "utf8"))));
+parts.push(`\n-- =====================================================================================================\n-- seed.sql (catálogo de demonstração)\n-- =====================================================================================================\n`, lf(readFileSync(path.join(root, "supabase/seed.sql"), "utf8")));
 parts.push(`
 -- =====================================================================================================
 -- Administradores do painel: troque pelo(s) seu(s) e-mail(s) (em minúsculas) e rode esta linha.
