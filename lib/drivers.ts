@@ -39,7 +39,10 @@ export type Driver = {
    * mostra miniaturas de produtos do piloto. PLACEHOLDERS de imprensa: ver CLAUDE.md antes do lançamento.
    */
   carImage?: string;
-  /** Para que lado o carro aponta NO ARQUIVO. A página quer o carro apontando para CAR_FACING e espelha se precisar. */
+  /**
+   * Para que lado o carro aponta NO ARQUIVO. A página NÃO espelha (espelhar inverteria os textos dos patrocinadores):
+   * o carro entra pelo lado de trás dele, andando para a frente. Padrão: "right". Gerado por scripts/carros/padronizar.mjs.
+   */
   carFacing?: "left" | "right";
   href: string;
   /** Efeito do HoverTransition e direção de entrada. */
@@ -51,9 +54,6 @@ export type Driver = {
   easing?: string;
 };
 
-/** Lado para onde o carro deve apontar no topo da página do piloto (para a foto, à direita no desktop). */
-export const CAR_FACING: "left" | "right" = "right";
-
 // Transição compartilhada pelos cards: duração em segundos e curva ease-out expo.
 export const driverHoverTransition = {
   duration: 0.5,
@@ -64,6 +64,7 @@ export const driverHoverTransition = {
 export const drivers: Driver[] = [
   {
     slug: "norris",
+    carFacing: "right",
     name: "Lando Norris",
     team: "McLaren",
     color: "#FF8000",
@@ -79,6 +80,7 @@ export const drivers: Driver[] = [
   },
   {
     slug: "verstappen",
+    carFacing: "left",
     name: "Max Verstappen",
     team: "Red Bull Racing",
     color: "#1B2A5C",
@@ -94,6 +96,7 @@ export const drivers: Driver[] = [
   },
   {
     slug: "hamilton",
+    carFacing: "right",
     name: "Lewis Hamilton",
     team: "Ferrari",
     color: "#DC0000",
@@ -113,6 +116,7 @@ export const drivers: Driver[] = [
   },
   {
     slug: "bortoleto",
+    carFacing: "right",
     name: "Gabriel Bortoleto",
     team: "Audi",
     color: "#0B0B0B",

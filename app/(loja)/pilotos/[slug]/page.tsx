@@ -16,16 +16,16 @@ import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
 import { getDriverContent } from "@/lib/content/drivers";
 import { contrastRatio, readableTextOn } from "@/lib/contrast";
-import { CAR_FACING } from "@/lib/drivers";
 import { blurProps, findLocalImage, localImage } from "@/lib/local-images";
+import { choreography } from "@/lib/motion";
 import { signaturePaths } from "@/lib/signature-paths";
 
 type Params = { params: Promise<{ slug: string }> };
 
-// Coreografia do topo (segundos depois do sinal da foto principal): a assinatura começa em 0,45 s e termina em ~3 s;
-// carro (ou o bloco de abertura) entra quando o nome já está quase todo escrito.
-const CAR_DELAY = 1.9;
-const INTRO_DELAY = 2.1;
+// Coreografia do topo (segundos depois do sinal da foto principal, lib/motion.ts): foto → assinatura (0,45 s a ~3 s) →
+// carro (ou o bloco de abertura, sem carro) quando o nome já está quase todo escrito.
+const CAR_DELAY = choreography.carStart;
+const INTRO_DELAY = choreography.introStart;
 
 const SECOND_SIZES = "(min-width: 1480px) 680px, (min-width: 768px) calc(50vw - 72px), calc(100vw - 40px)";
 
@@ -70,14 +70,17 @@ export default async function DriverPage({ params }: Params) {
   // "Ver a coleção ↓" (refino 2). As miniaturas de produto do topo saíram: os produtos vêm logo depois do topo.
   const carSrc = driver.carImage ?? `/images/pilotos/carros/${driver.slug}.png`;
   const carFile = localImage(carSrc);
+  // Rastro de movimento (scripts/carros/padronizar.mjs): {slug}-motion.webp, se existir.
+  const ghostSrc = carSrc.replace(/.png$/, "-motion.webp");
+  const ghostSoftSrc = carSrc.replace(/.png$/, "-motion-soft.webp");
   const slot = carFile ? (
     <DriverCar
       src={carSrc}
       width={carFile.w}
       height={carFile.h}
-      alt=""
-      mirror={(driver.carFacing ?? CAR_FACING) !== CAR_FACING}
-      from={CAR_FACING === "right" ? "left" : "right"}
+      ghost={localImage(ghostSrc) ? ghostSrc : undefined}
+      ghostSoft={localImage(ghostSoftSrc) ? ghostSoftSrc : undefined}
+      facing={driver.carFacing ?? "right"}
       cue={photoCue}
       delay={CAR_DELAY}
       blur={carFile.blur}
@@ -184,7 +187,7 @@ export default async function DriverPage({ params }: Params) {
 
       {story && (
         <div className="px-5 pt-20 sm:px-10 sm:pt-28">
-          <DriverCareer content={story} color={teamColor} name={driver.name} />
+          <DriverCareer content={story} color={teamColor} name={driver.name} numbersFirst={Boolean(carFile)} />
         </div>
       )}
 

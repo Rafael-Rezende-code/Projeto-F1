@@ -768,6 +768,37 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   favicon/OG, produtos, fotos, jurídico, roteiro de teste de compra e indexação). `pnpm qa:marcadores`
   (`scripts/qa/marcadores.mjs`) percorre o site em produção e lista os marcadores `[...]` visíveis por página.
 
+## Carros na página do piloto (feat/carros, a partir da feat/lancamento)
+
+- **Arquivos:** os PNGs enviados (já recortados, fundo transparente) ficam em `assets/carros-brutos/enviados-2026-10-22/`
+  (fora do deploy; um quinto Red Bull com o xadrez de transparência "queimado" nos pixels, sem alfa, foi descartado).
+  `node scripts/carros/padronizar.mjs` gera em `public/images/pilotos/carros/`: `{slug}.png` com **trim justo** pelo alfa
+  (ignora respingos), **mesma altura nos quatro (431 px, só reduz)** e a base do arquivo = base do pneu mais baixo, ou seja,
+  a mesma linha do chão; `{slug}-motion.webp` (rastro forte) e `{slug}-motion-soft.webp` (rastro leve), 640 px, usados no
+  motion blur falso. Prévias com a linha do chão em `docs/carros/previas/`. Depois: `pnpm images:blur`. Sem Python:
+  `scripts/carros/recortar.py` (rembg) continua para fotos com fundo.
+- **`carFacing`** (`lib/drivers.ts`): lado para onde o carro aponta NO ARQUIVO. norris, hamilton e bortoleto "right";
+  **verstappen "left"** (o arquivo do Red Bull aponta para a esquerda). A página **não espelha** (espelhar inverteria os
+  textos dos patrocinadores): o carro **entra pela traseira, andando para a frente** (direita: vem da esquerda).
+- **Slot (`.driver-car`):** proporção fixa 5:1 (mais largo que o carro mais comprido, 4,8:1), `overflow-x: clip` (corta o
+  que está fora, sem scroll horizontal) e `overflow-y` visível (sombra). Os quatro ficam com a mesma altura e a mesma
+  linha do chão (base do slot). A página renderiza o slot duas vezes (desktop e celular); as imagens são lazy, então a
+  cópia com display:none não baixa nada.
+- **Coreografia (`choreography` em `lib/motion.ts`):** foto (sinal) → assinatura (0,45 s a 2,95 s) → carro em 2,7 s, e só
+  com o slot visível (celular: abaixo da foto; começa quando entra na tela). Entrada de **1,3 s** (`duration.car`,
+  `--motion-car`): `car-drive` com ease-out forte `cubic-bezier(0.25, 1, 0.5, 1)` até 70% passando **7 px** da posição e
+  assentando em 30%; motion blur falso por camadas (rastro forte 0–42%, leve 20–62% e nítida a partir de 62%, no último
+  terço); sombra no chão (`scaleX` 0,4 → 1 e opacidade 0,15 → 1) que cresce e escurece. Só `transform` e `opacity`.
+  Reduced motion: só opacidade (sem rastro, deslocamento nem inclinação).
+- **Inclinação:** só depois de parado (`data-state="done"`, no fim da animação `car-drive`), máx. 6° (medido 5,99°),
+  só desktop com mouse (`hover: hover`, `pointer: fine`, ≥ 768px). Celular: mesma entrada, sem inclinação.
+- **Com o carro:** o bloco "frase + 3 números + botão" (`DriverIntro`) não existe no topo; a frase de abertura vai para o
+  bloco editorial e **os números abrem a seção de história** (`DriverCareer numbersFirst`, antes de "A história de…").
+  Sem carro, tudo como antes (miniaturas ou intro no topo).
+- GIFs da entrada (desktop e celular, câmera lenta 0,25× refeita em tempo real) em `docs/carros/gifs/`; prints em
+  `docs/carros/prints/`. Verstappen: carro azul-marinho sobre a cor azul-marinho da equipe tem pouco contraste (a sombra
+  some); sugestão (não aplicada): um brilho claro sob o carro.
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete
@@ -779,7 +810,8 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 - **Refino 2:** rodar a migração `20261023000000_modelo_de_venda.sql` no Supabase; e-mail de contato
   (`NEXT_PUBLIC_CONTACT_EMAIL`); dados da empresa em `lib/company.ts`; entrega local e calculadora com valores reais;
   conta/token do Melhor Envio; questões de `docs/operacao/modelo-de-venda.md` com advogado e contador.
-- **Fotos dos carros:** nenhuma no repositório; recortar com `scripts/carros/recortar.py` quando chegarem (placeholders).
+- **Fotos dos carros:** os 4 carros entraram em feat/carros (ver "Carros na página do piloto"); são PLACEHOLDERS de imprensa
+  (logos de patrocinadores e números de outros pilotos): licenciar ou trocar por carros sem logos antes de vender.
 - **Contraste do cabeçalho do piloto** (anterior à rodada): caminho `white/70`, link da equipe `white/80` e frase
   `white/85` sobre cores como o vermelho da Ferrari (2,9–4,0:1). Sugestão: branco sólido. Não aplicado.
 - **Depende do responsável:** contas e chaves do Supabase e do Mercado Pago (lista exata em `docs/relatorio-final.md`),

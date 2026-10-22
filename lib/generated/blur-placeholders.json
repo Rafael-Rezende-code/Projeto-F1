@@ -39,6 +39,66 @@
     "h": 1536,
     "blur": "data:image/webp;base64,UklGRuIAAABXRUJQVlA4INYAAAAwBQCdASoQABgAPtFUo0uoJKMhsAgBABoJbACdMoMYJn/YoCzw11bcqiGu2pFpquiZ7AD8VQAJBIK+PUKCPrJmug4MJaRf3CTwycP/NSDI4Cn6/Zp+IXG/1q9NERcd/e25mddn5pnMCErEPwHwVCGfofYSZyD5Dm1rTfVYv0FS+5JNqXZvBVUBb3GvX2fS07DxNGC9Our+kW/J2sbuxwH79GK7TfP/vAq3af858/z63+72iX51Qw3BQMqQ6tB5u2fp1wtAD8G8XFx952Iy1YQbSek+KAAA"
   },
+  "/images/pilotos/carros/bortoleto-motion-soft.webp": {
+    "w": 717,
+    "h": 133,
+    "blur": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAAAD6XZlKPtqM3NAIABgAAAAB0/ez8/f396PPgy/SHHAEAF9vMvry4ur/FxZbssrtdAFZQOCA4AAAAkAEAnQEqEAADAALATCWUAAKScqoAAP74fDUdxk1YF5L6M8AVwvLv1vn6qddKRDeRmKhjxScAAAA="
+  },
+  "/images/pilotos/carros/bortoleto-motion.webp": {
+    "w": 717,
+    "h": 133,
+    "blur": "data:image/webp;base64,UklGRo4AAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAADW6MUmqhvWw3HgECAwAAABrA+PH9/f326u7U39JUDgACZ9/Cvbq5vMLGrbrbsKQqAFZQOCA2AAAAsAEAnQEqEAADAALATCWUAAKf1l3MgAD++UzsJ/oWPC5e+uGPtjEsq1eqAoIdgvIzFQx4gAAA"
+  },
+  "/images/pilotos/carros/bortoleto.png": {
+    "w": 2073,
+    "h": 431,
+    "blur": "data:image/webp;base64,UklGRpwAAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAAmLVgZKbGzE1KLAAJGAEAAOz/8v7////38vXU2/eNJgh3/9PNzMnL0tbgyr7/ysiBAFZQOCBEAAAA8AEAnQEqEAADAALATCWMAnQBHptJHtqgAP73kdOAlTkyl9GmUtgq5jcX2y7xmayg7pkEy/NW1dB6xK+5W701d6+AAAA="
+  },
+  "/images/pilotos/carros/hamilton-motion-soft.webp": {
+    "w": 717,
+    "h": 150,
+    "blur": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAAAEG/fluBpMtPQy0DIBAAAABZ/f39/f39/Pj9+/vqbxcACarSs7m6u7q7wJTS0q2BAFZQOCA8AAAAEAIAnQEqEAADAALATCWMAsQvABmJmS4UGAD+967NOCwCrQMsAGLhjtGTQN9VdIjo7/cmhPqfRes+wAAA"
+  },
+  "/images/pilotos/carros/hamilton-motion.webp": {
+    "w": 717,
+    "h": 150,
+    "blur": "data:image/webp;base64,UklGRo4AAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAADn6wY2qQtZ1FQxYLIAcAABGu/f39/f39+fv9+vq4SgoBQsnAtrm7u7m+taDht61AAFZQOCA2AAAAEAIAnQEqEAADAALATCWMAsQvABl/fIfqwAD++VyLhdD7WB9Ra7b+gukYGSGTOpoT4GKhgAAA"
+  },
+  "/images/pilotos/carros/hamilton.png": {
+    "w": 1839,
+    "h": 431,
+    "blur": "data:image/webp;base64,UklGRr4AAABXRUJQVlA4WAoAAAAQAAAADwAAAwAAQUxQSEEAAAAAaKs2G0tlsFQRLgEAAgEAA+D/4u/+///vvs6wlMmZCwCk//3//////////fn//OyPGbKZfImJi4mDjo9QuqZ6jgBWUDggVgAAABACAJ0BKhAABAACwEwlqAJ0BipdtWsE/NAA/vXvwB5ul00n9LM11pWjUJlcZ3FAMRKTLRcn3muYIhSFo3vR0DR0fg7pRScRwAUHfzweBfMiPthlBYAA"
+  },
+  "/images/pilotos/carros/norris-motion-soft.webp": {
+    "w": 717,
+    "h": 151,
+    "blur": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAAAEKNXj18tLs8NBQBAQAAAAB0/fX9/f399Orlu8u/NQYAENPbx8jHx8nMysDP4c6IAFZQOCA8AAAAEAIAnQEqEAADAALATCWMAnR/ABghhuJTQAD+9YyvkjcNS3ZeJ5DiUaoY5aWcsJXzfC5f02cxscASAAAA"
+  },
+  "/images/pilotos/carros/norris-motion.webp": {
+    "w": 717,
+    "h": 151,
+    "blur": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAAEGqFRFWVwII2LQkBAAAAABrA+/f9/f386+3TutSDHgIBXOHPx8fHx8rLyL3i0MZBAFZQOCA6AAAAEAIAnQEqEAADAALATCWMAnR/ABgBdQG8AAD+9t5kEi21oDEvJwDtJ1djPPuW2ozBp0JfXkizUXIAAA=="
+  },
+  "/images/pilotos/carros/norris.png": {
+    "w": 1829,
+    "h": 431,
+    "blur": "data:image/webp;base64,UklGRroAAABXRUJQVlA4WAoAAAAQAAAADwAAAwAAQUxQSEEAAAAASV8gBESEuysFFgAAAAADA+3/y9T9//zjqrh0PG5aAAC9//3//////////////rddNtWolZ2bm5qdnp+CsryuqwBWUDggUgAAABACAJ0BKhAABAACwEwlkAJ0fwAWMeUO9YAA/u8uGrRkm4i49CNqdOYA0KM6LHdjwYteXVrATVgMND5DpVH3DJWQYJy4crpidPMexRmQUAfwAAA="
+  },
+  "/images/pilotos/carros/verstappen-motion-soft.webp": {
+    "w": 717,
+    "h": 144,
+    "blur": "data:image/webp;base64,UklGRogAAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAAAAAAAQAAKzqLuY1aT6BJAAQ4lezP5/Xm/f39/fX9UAB6zL3mpsDAvby8urfP1xUAAFZQOCAwAAAAkAEAnQEqEAADAALATCWcAALfjMkkAP73h9sMg+OBIoc2zWLuo99fWECU1MAqeoAA"
+  },
+  "/images/pilotos/carros/verstappen-motion.webp": {
+    "w": 717,
+    "h": 144,
+    "blur": "data:image/webp;base64,UklGRogAAABXRUJQVlA4WAoAAAAQAAAADwAAAgAAQUxQSDEAAAAAAAAAAQEAFzZet59vSYd3EgIga9LX3vLo9/39/ff6pw46u7vgubnAvry8u7nA32MCAFZQOCAwAAAA0AEAnQEqEAADAALATCWcAALtCc9t5gAA/vebzRrLE44XkWcYfE4eG9CCXAHszaAA"
+  },
+  "/images/pilotos/carros/verstappen.png": {
+    "w": 1922,
+    "h": 431,
+    "blur": "data:image/webp;base64,UklGRqoAAABXRUJQVlA4WAoAAAAQAAAADwAAAwAAQUxQSEEAAAAAAwMAAAAAAhIFjYlFGA9dTwEAJ4ZfbaGjwPH//erC/9Jmu+///f7/////////+/+ghZl9ul92fnp6enp5b4G+NQBWUDggQgAAABACAJ0BKhAABAACwEwllAJ0yfwGBwomCbAA/vR3ydroe54ZwHVtFBeMLvh1gWJz4M1fulCLERsbyPj9rAcTeIgAAA=="
+  },
   "/images/pilotos/hamilton.png": {
     "w": 1024,
     "h": 1536,

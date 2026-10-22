@@ -18,6 +18,8 @@ export const duration = {
   long: 0.8,
   /** revelação das fotos (cortina + foco da foto de piloto, components/motion/image-reveal.tsx) */
   reveal: 1,
+  /** entrada do carro no topo da página do piloto (components/driver-car.tsx): ~1,1–1,4 s, com assentamento no fim */
+  car: 1.3,
 } as const;
 
 /** Curvas cubic-bezier (formato do motion). */
@@ -25,6 +27,19 @@ export const ease = {
   out: [0.16, 1, 0.3, 1] as [number, number, number, number],
   inOut: [0.65, 0, 0.35, 1] as [number, number, number, number],
 };
+
+/**
+ * Coreografia do topo da página do piloto, em segundos depois do sinal da foto principal: foto → assinatura → carro.
+ * A assinatura começa em `signatureStart` e termina em `signatureEnd` (TOTAL de components/driver-signature.tsx); o carro
+ * começa um instante antes do fim, quando o nome já está quase todo escrito.
+ */
+export const choreography = {
+  signatureStart: 0.45,
+  signatureEnd: 2.95,
+  carStart: 2.7,
+  /** bloco de abertura (sem carro) */
+  introStart: 2.1,
+} as const;
 
 /** Intervalo entre itens de uma sequência (palavras, cards), em segundos. */
 export const stagger = 0.05;

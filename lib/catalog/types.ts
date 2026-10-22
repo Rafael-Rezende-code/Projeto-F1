@@ -97,6 +97,7 @@ export type Driver = {
   photoSecondary: DriverPhoto;
   /** Carro do topo da página (PNG transparente) e para que lado ele aponta no arquivo (lib/drivers.ts). */
   carImage?: string;
+  /** Para que lado o carro aponta no arquivo (a página não espelha: o carro entra pelo lado de trás dele). */
   carFacing?: "left" | "right";
 };
 

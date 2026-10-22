@@ -3,6 +3,7 @@
 import { useReducedMotion } from "motion/react";
 import { useCue } from "@/components/motion/cue";
 import { Signature } from "@/components/ui/signature";
+import { choreography } from "@/lib/motion";
 import type { SignatureData } from "@/lib/signature-paths";
 
 // Nome do piloto "escrito à mão" com o Signature da Spell UI (components/ui/signature.tsx): o contorno de cada letra é
@@ -17,7 +18,7 @@ import type { SignatureData } from "@/lib/signature-paths";
 const TOTAL = 2.6;
 const DRAW = 1.1;
 const DELAY = 0.1;
-const AFTER_DELAY = 0.45;
+const AFTER_DELAY = choreography.signatureStart;
 
 export function DriverSignature({ signature, className = "", after }: { signature: SignatureData; className?: string; after?: string }) {
   const reduced = useReducedMotion();

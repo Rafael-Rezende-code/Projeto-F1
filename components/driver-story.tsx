@@ -19,11 +19,29 @@ export function DriverOpening({ text }: { text: string }) {
   );
 }
 
-/** História e números (logo depois dos produtos). */
-export function DriverCareer({ content, color, name }: { content: DriverContent; color: string; name: string }) {
+/**
+ * História e números (logo depois dos produtos). Com o carro no topo (`numbersFirst`), o bloco "frase + 3 números +
+ * botão" não existe lá em cima e os números abrem esta seção, antes da trajetória; sem carro, ficam depois dela.
+ */
+export function DriverCareer({ content, color, name, numbersFirst = false }: { content: DriverContent; color: string; name: string; numbersFirst?: boolean }) {
+  const numbers = (
+    // Números: grandes, na Archivo, com o fio na cor da equipe. dt antes dos dd no HTML; o número aparece primeiro.
+    <section aria-label={`${name} em números`} className={numbersFirst ? "" : "mt-16 sm:mt-24"}>
+      <dl className={`grid grid-cols-2 gap-x-6 gap-y-10 ${content.facts.length > 3 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+        {content.facts.map((fact) => (
+          <div key={fact.label} className="flex flex-col border-t-2 pt-5" style={{ borderColor: "var(--team)" }}>
+            <dt className="order-2 mt-3 text-sm font-semibold text-black">{fact.label}</dt>
+            <dd className="order-1 font-display text-5xl leading-none tracking-[-0.05em] text-black sm:text-6xl lg:text-7xl">{fact.value}</dd>
+            {fact.detail && <dd className="order-3 mt-1 text-sm leading-6 text-black/60">{fact.detail}</dd>}
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
   return (
     <div className="mx-auto max-w-[1400px]" style={{ "--team": color } as CSSProperties}>
-      <section aria-labelledby="trajetoria" className="grid gap-8 border-t border-black/10 pt-12 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-16 md:pt-16">
+      {numbersFirst && numbers}
+      <section aria-labelledby="trajetoria" className={`grid gap-8 border-t border-black/10 pt-12 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-16 md:pt-16 ${numbersFirst ? "mt-16 sm:mt-24" : ""}`}>
         <div>
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-black/60">Trajetória</p>
           <BlurReveal as="h2" inView once className={title}>
@@ -38,18 +56,7 @@ export function DriverCareer({ content, color, name }: { content: DriverContent;
         </div>
       </section>
 
-      {/* Números: grandes, na Archivo, com o fio na cor da equipe. dt antes dos dd no HTML; o número aparece primeiro. */}
-      <section aria-label={`${name} em números`} className="mt-16 sm:mt-24">
-        <dl className={`grid grid-cols-2 gap-x-6 gap-y-10 ${content.facts.length > 3 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
-          {content.facts.map((fact) => (
-            <div key={fact.label} className="flex flex-col border-t-2 pt-5" style={{ borderColor: "var(--team)" }}>
-              <dt className="order-2 mt-3 text-sm font-semibold text-black">{fact.label}</dt>
-              <dd className="order-1 font-display text-5xl leading-none tracking-[-0.05em] text-black sm:text-6xl lg:text-7xl">{fact.value}</dd>
-              {fact.detail && <dd className="order-3 mt-1 text-sm leading-6 text-black/60">{fact.detail}</dd>}
-            </div>
-          ))}
-        </dl>
-      </section>
+      {!numbersFirst && numbers}
     </div>
   );
 }
