@@ -1,8 +1,10 @@
 import sharp from "sharp";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { importImage } from "./import-images";
+
+// vi.mock é içado para antes dos imports: "server-only" vira um módulo vazio no teste.
 vi.mock("server-only", () => ({}));
-const { importImage } = await import("./import-images");
 
 // Storage falso: guarda o que foi enviado.
 function fakeSupabase() {
