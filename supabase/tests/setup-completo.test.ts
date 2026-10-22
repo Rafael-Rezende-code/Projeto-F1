@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
 // supabase/setup-completo.sql (gerado por `pnpm supabase:setup`): roda num Postgres limpo e RODA DE NOVO sem erro, com
 // o catálogo completo e o modelo de venda preenchido. Stubs do que o Supabase já traz (papéis, auth.jwt, storage).
 const root = path.resolve(import.meta.dirname, "../..");
-const setup = readFileSync(path.join(root, "supabase/setup-completo.sql"), "utf8");
+// CRLF → LF: no Windows o git converte as quebras de linha da cópia local (core.autocrlf) e o teste compara com "\n".
+const setup = readFileSync(path.join(root, "supabase/setup-completo.sql"), "utf8").replace(/\r\n/g, "\n");
 
 describe("setup completo do Supabase", () => {
   it("está em dia: contém todas as migrations (rode `pnpm supabase:setup` depois de criar uma)", () => {

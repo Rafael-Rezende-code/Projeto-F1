@@ -13,6 +13,7 @@
     "qa:varredura": "node scripts/qa/varredura.mjs",
     "images:blur": "node scripts/images/blur-placeholders.mjs",
     "supabase:seed": "tsx scripts/supabase/seed.ts",
+    "supabase:ativar": "tsx --tsconfig tsconfig.scripts.json scripts/supabase/ativar.ts",
     "supabase:setup": "pnpm supabase:seed && node scripts/supabase/setup-completo.mjs",
     "qa:marcadores": "node scripts/qa/marcadores.mjs"
   },
