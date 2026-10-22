@@ -763,6 +763,9 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   fotos `lib/admin/import-images.ts` (sharp, agora em `dependencies`), RPC `import_products` (migração
   `20261024000000_importador.sql`, security invoker + `is_admin()`, uma transação). Slug existente = atualização;
   privados em `product_private`; foto que falha → rascunho.
+- **Checklist de lançamento:** `docs/lancamento.md` (contas, variáveis, domínio, empresa, textos provisórios por página,
+  favicon/OG, produtos, fotos, jurídico, roteiro de teste de compra e indexação). `pnpm qa:marcadores`
+  (`scripts/qa/marcadores.mjs`) percorre o site em produção e lista os marcadores `[...]` visíveis por página.
 
 ## Pendências (atualizado em 22/10/2026)
 
