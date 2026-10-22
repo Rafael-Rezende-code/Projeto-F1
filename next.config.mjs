@@ -1,3 +1,13 @@
+// Fotos enviadas pelo painel admin (Supabase Storage, fase 11): o host do projeto entra nos remotePatterns quando a
+// variável existe. Sem Supabase, nada muda.
+const supabaseHost = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname : null
+  } catch {
+    return null
+  }
+})()
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // O `next dev` do Next 16.3 acrescenta um bloco próprio ao CLAUDE.md a cada início; o CLAUDE.md é do projeto.
@@ -13,6 +23,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'hebbkx1anhila5yf.public.blob.vercel-storage.com' },
+      ...(supabaseHost ? [{ protocol: 'https', hostname: supabaseHost, pathname: '/storage/v1/object/public/**' }] : []),
     ],
   },
 }

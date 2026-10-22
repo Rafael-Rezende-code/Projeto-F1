@@ -543,6 +543,8 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   assinatura" lido como "quando o nome já está quase todo escrito", para não esperar 3 s por links de produto. Rótulo
   das miniaturas: "Destaques {sobrenome}". Miniaturas em cartões brancos (contraste garantido sobre qualquer cor de
   equipe). Sem fotos de carro no repositório, nenhum recorte foi feito (ver Estado).
+- **Fase 11:** admin com link mágico (sem senha para guardar); só cartão de crédito no Brick. Remover foto do produto não
+  apaga o arquivo do Storage. "Tamanhos sem estoque" no início do painel conta variantes com estoque 0.
 - **Fase 10:** HTTP direto na API do Mercado Pago (fetch) em vez do SDK Node `mercadopago` (menos dependência; o
   contrato usado é pequeno). Só cartão de CRÉDITO no Brick (débito e carteira Mercado Pago desligados: os rótulos da
   loja são Pix, cartão de crédito e boleto). Webhook com tolerância de 15 min no `ts` e `data.id` em minúsculas no
@@ -668,6 +670,17 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   Cartão decorativo: bandeira pelo BIN (SDK) e últimos 4 dígitos devolvidos pelo Brick no envio (prop `simulated`).
   Páginas de status em `OrderView` (prints com pedidos de exemplo em `docs/fase-10/`). O modo do checkout é decidido
   no build: depois de mudar as variáveis, novo deploy. **Não testado contra o Mercado Pago real** (sem credenciais).
+- **Fase 11, painel admin (pronto, desligado):** `/admin` (layout próprio, `noindex`, `X-Robots-Tag` pelo
+  `proxy.ts`, `Disallow: /admin`, fora do sitemap, sem dock). Sem Supabase, todas as rotas mostram como ativar
+  (`adminDisabled()` nas páginas). Login por link mágico do Supabase Auth (`/admin/entrar`, callback PKCE em
+  `/admin/entrar/callback`, só para `ADMIN_EMAILS`, sem criar usuário); sessão renovada pelo `proxy.ts` (Next 16, ex-
+  middleware, matcher só `/admin`). Duas travas: `ADMIN_EMAILS` (app, `lib/admin/auth.ts`) e `admin_emails` (RLS).
+  Produtos: lista com busca/filtro, criar/editar (`components/admin/product-form.tsx`; validação em
+  `lib/admin/product-schema.ts` com testes; preços em reais → centavos; SKU não pode ser de outro produto; publicar
+  exige foto), fotos enviadas do navegador para o bucket `produtos`, arquivar. Salvar limpa o cache do catálogo e
+  revalida a loja. Pedidos: lista por status, detalhe, "marcar como enviado" com rastreio (só pagos). Guia em
+  `docs/backend/admin.md`. **Fluxo logado não testado contra um Supabase real** (print do formulário em
+  `docs/fase-11/` foi feito com dados de exemplo).
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**

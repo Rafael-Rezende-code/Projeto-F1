@@ -7,10 +7,10 @@ import { useSiteUI } from "@/components/site-ui";
 import { MagneticDock, type DockItemData } from "@/components/ui/magnetic-dock";
 
 // Dock fixo embaixo, só no celular (< 768px), variante glass, acima da área segura do iPhone.
-// Escondido no checkout e na confirmação do pedido. Um espaçador na cor do rodapé, no fim da página, garante que o
+// Escondido no checkout, na confirmação do pedido e no painel admin. Um espaçador na cor do rodapé, no fim da página, garante que o
 // dock não cubra o rodapé; a variável --dock-space (globals.css) posiciona o que precisa ficar acima dele
 // (aviso da sacola, barra fixa de compra do produto).
-const HIDDEN_ON = ["/checkout", "/pedido"];
+const HIDDEN_ON = ["/checkout", "/pedido", "/admin"];
 
 export function MobileDock() {
   const pathname = usePathname();
