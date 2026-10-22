@@ -346,3 +346,11 @@ h1, h2, .font-display {
   /* o texto do menor começa depois da sobreposição (não encosta na foto grande) */
   .vel-card--side .vel-text { padding-left: calc(var(--vel-h) * 0.08 + 12px); max-width: calc(var(--vel-h) * 0.56); }
 }
+
+/* Diário (refino 2, item 3): parágrafos do artigo justificados a partir de 640px, com hifenização automática em
+   português (lang="pt-BR" no <html> e na coluna). Só palavras de 6+ letras quebram (3 letras antes, 2 depois), para não
+   picotar o texto; `text-wrap: pretty` evita viúvas. Abaixo de 640px, alinhado à esquerda. */
+.article-p { text-wrap: pretty; }
+@media (min-width: 640px) {
+  .article-p { text-align: justify; hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 6 3 2; }
+}

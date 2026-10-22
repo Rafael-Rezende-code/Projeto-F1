@@ -2,6 +2,8 @@
 // português, com fatos verificados (fontes em docs/conteudo/fontes-diario.md), SEM citações inventadas e sem sugerir
 // vínculo oficial com pilotos ou equipes. Fotos: as editoriais e de piloto do site (PLACEHOLDERS, licenciar antes da
 // venda; ver CLAUDE.md).
+/** `position`: object-position da foto (enquadramento). As fotos são verticais (~0,82) e aparecem em 4:5 (celular),
+ * 16:10 (desktop) e 4:3 (cards do índice); o valor vertical põe rosto e cabeça dentro do recorte nas três. */
 export type ArticleImage = { src: string; alt: string; position?: string; caption?: string };
 
 export type ArticleBlock =

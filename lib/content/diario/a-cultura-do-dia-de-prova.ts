@@ -8,7 +8,7 @@ export const aCulturaDoDiaDeProva: Article = {
   cover: {
     src: "/images/editorial/verstappen-capacete.jpeg",
     alt: "Max Verstappen de capacete, com o macacão da Red Bull",
-    position: "50% 15%",
+    position: "50% 4%",
   },
   related: { slugs: ["ferrari-team-cap", "pit-lane-overshirt", "classic-racing-hoodie", "monaco-racing-tee"] },
   body: [
@@ -18,7 +18,7 @@ export const aCulturaDoDiaDeProva: Article = {
     { type: "p", text: "Depois vem a classificação, talvez a hora mais pura da Fórmula 1. São três etapas eliminatórias: no Q1 todos andam e os mais lentos saem; no Q2, mais uma rodada de cortes; no Q3, os dez mais rápidos disputam a pole position. É uma volta só, sem margem para erro, com o carro no limite e o piloto também." },
     { type: "p", text: "A partir da classificação, os carros entram em regime de parque fechado: as equipes não podem mais mexer livremente no acerto. Na prática, o carro que larga no domingo é o mesmo que classificou no sábado. Por isso cada escolha feita nos treinos pesa tanto, e por isso os engenheiros passam a noite de sexta debruçados sobre os dados. Uma asa um pouco mais carregada, uma suspensão um pouco mais dura: decisões pequenas que só vão mostrar o efeito na hora em que não dá mais para voltar atrás." },
     { type: "p", text: "Em alguns fins de semana, o formato muda. Nas etapas com corrida sprint, há uma classificação própria para ela, com sessões mais curtas, e a sprint acontece no sábado, antes da classificação do Grande Prêmio. O fim de semana fica mais intenso, e quase toda sessão passa a valer alguma coisa." },
-    { type: "image", image: { src: "/images/editorial/abraco-redbull-ferrari.jpeg", alt: "Pilotos da Red Bull e da Ferrari se abraçam depois da corrida", position: "50% 22%", caption: "Rivais na pista, colegas no fim do dia: a corrida também é feita de encontros." } },
+    { type: "image", image: { src: "/images/editorial/abraco-redbull-ferrari.jpeg", alt: "Pilotos da Red Bull e da Ferrari se abraçam depois da corrida", position: "50% 8%", caption: "Rivais na pista, colegas no fim do dia: a corrida também é feita de encontros." } },
     { type: "h2", text: "Domingo: o ritual da largada" },
     { type: "p", text: "Horas antes da largada, o grid vira uma pequena cidade: carros alinhados, mecânicos em volta, convidados circulando, câmeras por todo lado. Aos poucos, a pista se esvazia, e só fica o essencial." },
     { type: "p", text: "A luz verde abre a volta de apresentação, mais lenta, em que os pilotos aquecem pneus e freios e voltam às posições de largada. Então começa o momento que todo fã conhece de cor: acima da linha de largada, as luzes vermelhas acendem, uma de cada vez. Quando todas se apagam, a corrida começa. As luzes se apagam, e o silêncio de um segundo vira rugido." },

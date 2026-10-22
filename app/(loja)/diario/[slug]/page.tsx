@@ -90,10 +90,12 @@ export default async function ArticlePage({ params }: Params) {
           <Figure image={article.cover} priority sizes="(min-width: 1180px) 1100px, calc(100vw - 40px)" />
         </div>
 
-        <div className="mx-auto mt-12 max-w-[65ch] text-[17px] leading-8 text-black/85 sm:mt-16 sm:text-lg sm:leading-[1.8]">
+        {/* Texto justificado a partir de 640px, com hifenização em português (o lang vem do <html>, reforçado aqui);
+            abaixo disso, alinhado à esquerda (coluna estreita demais para justificar sem buracos). */}
+        <div lang="pt-BR" className="article-body mx-auto mt-12 max-w-[65ch] text-[17px] leading-8 text-black/85 sm:mt-16 sm:text-lg sm:leading-[1.8]">
           {article.body.map((block, index) =>
             block.type === "p" ? (
-              <p key={index} className="mt-6 first:mt-0">{block.text}</p>
+              <p key={index} className="article-p mt-6 first:mt-0">{block.text}</p>
             ) : block.type === "h2" ? (
               <h2 key={index} className="mt-14 text-2xl leading-tight tracking-[-0.04em] text-black sm:text-3xl">{block.text}</h2>
             ) : (

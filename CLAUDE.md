@@ -631,7 +631,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `lib/content/diario/` (tipo `Article` em `types.ts`: título, linha fina, data, capa, corpo em blocos p/h2/imagem e
   `related` = slugs ou filtro de piloto/equipe); tempo de leitura a 200 palavras/min (`readingMinutes`). Fontes por fato
   em `docs/conteudo/fontes-diario.md`. Layout de leitura: título grande centralizado, coluna `max-w-[65ch]` a 17–18px,
-  imagens do corpo um pouco mais largas que o texto (`lg:-mx-24`), JSON-LD Article, nota de texto independente e
+  imagens do corpo um pouco mais largas que o texto (`lg:-mx-24`). **Refino 2, item 3:** `position` (object-position) de
+  cada foto em `lib/content/diario` acertado para não cortar rosto nem cabeça nos 3 recortes (4:5 celular, 16:10 desktop,
+  4:3 cards; as fotos são verticais, então um valor serve aos três). Parágrafos justificados a partir de 640px
+  (`.article-p` no globals.css: `hyphens: auto`, `hyphenate-limit-chars: 6 3 2`, `text-wrap: pretty`; `lang="pt-BR"` no
+  `<html>` e na coluna); abaixo, à esquerda. O Chromium headless da nuvem não tem dicionário de hifenização: medido sem
+  ela, o maior espaço entre palavras é 0,88em a 640px e 0,74em a 1440px (média 0,37–0,42em). Prints em
+  `docs/refino-2/3-diario/`. JSON-LD Article, nota de texto independente e
   produtos relacionados. Artigos: Senna e a McLaren (usa `senna-sentado` e `senna-champanhe`), O Brasil de volta ao
   grid (Bortoleto) e A cultura do dia de prova. "Diário" no cabeçalho, no menu (aberto pelo dock) e no rodapé (coluna
   Explorar) aponta para `/diario`; em "Luzes apagadas." entrou só o link "Ler o Diário →" abaixo do botão. Sitemap

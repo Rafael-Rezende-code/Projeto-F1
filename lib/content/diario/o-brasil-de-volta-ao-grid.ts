@@ -8,7 +8,7 @@ export const oBrasilDeVoltaAoGrid: Article = {
   cover: {
     src: "/images/pilotos/paginas/bortoleto-principal.jpg",
     alt: "Gabriel Bortoleto de macacão escuro, com um círculo vermelho ao fundo",
-    position: "50% 30%",
+    position: "50% 24%",
   },
   related: { driver: "bortoleto" },
   body: [
@@ -19,7 +19,7 @@ export const oBrasilDeVoltaAoGrid: Article = {
     { type: "p", text: "Gabriel Bortoleto nasceu em 2004, em São Paulo. Como quase todo piloto da geração dele, começou no kart e construiu a carreira nas categorias de base europeias, que formam a escada de acesso à Fórmula 1. É um caminho caro, longo e implacável: a cada degrau, a maioria fica pelo caminho." },
     { type: "p", text: "Bortoleto subiu os degraus de dois em dois. Em 2023 foi campeão da Fórmula 3, pela Trident. Em 2024, campeão da Fórmula 2, pela Invicta. Dois títulos seguidos nas duas categorias que antecedem a F1 colocam qualquer piloto numa lista curta, e foi exatamente isso que aconteceu." },
     { type: "p", text: "Naquele período, ele fez parte do programa de desenvolvimento de pilotos da McLaren e passou a ser empresariado pela A14 Management, a empresa de Fernando Alonso. Quando surgiu a vaga na Sauber para 2025, a McLaren o liberou do contrato. O Brasil tinha, de novo, um titular." },
-    { type: "image", image: { src: "/images/pilotos/paginas/bortoleto-secundaria.jpg", alt: "Retrato de Gabriel Bortoleto", position: "50% 40%", caption: "Bortoleto chegou à F1 com dois títulos seguidos na escada de acesso." } },
+    { type: "image", image: { src: "/images/pilotos/paginas/bortoleto-secundaria.jpg", alt: "Retrato de Gabriel Bortoleto", position: "50% 28%", caption: "Bortoleto chegou à F1 com dois títulos seguidos na escada de acesso." } },
     { type: "h2", text: "A estreia e os primeiros pontos" },
     { type: "p", text: "A estreia veio no GP da Austrália de 2025. Era o primeiro brasileiro a disputar a categoria em tempo integral desde Massa. Num carro que não brigava na frente, o trabalho era outro: aprender rápido, errar pouco e aproveitar cada chance. Os primeiros pontos chegaram no GP da Áustria, com um sétimo lugar, e com eles o fim de um jejum: nenhum brasileiro pontuava na F1 desde 2017." },
     { type: "p", text: "Em 2026, a equipe de Hinwil deixou de ser Sauber e virou Audi, que estreou como equipe de fábrica na F1. Bortoleto ficou no centro do novo projeto, ao lado de Nico Hülkenberg. Para um piloto jovem, poucas coisas valem tanto quanto crescer junto com uma montadora que está começando. O projeto é de longo prazo, com chassi na Suíça e motor na Alemanha, e o tempo joga a favor de quem chegou cedo." },
