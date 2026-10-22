@@ -8,11 +8,16 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
 - a página do pedido (`/pedido/[id]?t=<chave>`) lê do banco, em qualquer aparelho;
 - o painel `/admin` (fase 11) passa a funcionar.
 
+> **⚠️ `supabase/setup-completo.sql`: Contém o seed de demonstração: reaplicar repõe produtos de teste e estoque. NÃO rode
+> de novo depois de cadastrar produtos reais.** Banco que já está no ar: rode só `supabase/atualizacao-2.sql` (abaixo).
+
 ## O que está no repositório
 
 | Arquivo | O quê |
 | --- | --- |
 | **`supabase/setup-completo.sql`** | **Tudo num arquivo só** (migrations + seed), reexecutável: é o que você cola no SQL Editor. Gerado por `pnpm supabase:setup` |
+| **`supabase/atualizacao-2.sql`** | **Só as migrations novas** (depois de `20261025000000`), SEM seed: é o que se roda no banco que já está ativo. Reexecutável. Gerado junto pelo `pnpm supabase:setup` |
+| `supabase/migrations/20261026000000_cupons.sql` | Cupons (`coupons`, `coupon_redemptions`), colunas de desconto em `orders`, `quote_coupon`, `create_order` com cupom (uso contado na mesma transação) e `release_order_stock` devolvendo o uso |
 | `supabase/migrations/20261022000000_loja.sql` | Tabelas (categorias, equipes, pilotos, produtos, variantes, imagens, clientes, pedidos, itens, eventos de pagamento, e-mails de admin), RLS, funções `create_order` / `release_order_stock` / `is_admin` e o bucket `produtos` |
 | `supabase/migrations/20261025000000_newsletter.sql` | Lista da newsletter (`newsletter_subscribers`): inserção pública limitada, leitura só do admin (ver `docs/backend/newsletter.md`) |
 | `supabase/migrations/20261023000000_modelo_de_venda.sql` | Modelo de venda (sob encomenda, prazos, origem, pacote), tabela privada `product_private`, status por item do pedido |
@@ -33,6 +38,9 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
    encomenda**, com prazo e origem, o resto em **estoque próprio**). Deve terminar com "Success. No rows returned".
    - Pode rodar de novo sem erro (só cria o que falta e atualiza o catálogo do seed), mas **rodar de novo devolve o
      estoque dos produtos do seed aos valores de exemplo**. Depois que a loja estiver vendendo, rode só migrations novas.
+   - **Banco já ativo (atualização 2):** SQL Editor → New query → cole TODO o `supabase/atualizacao-2.sql` → Run. Não
+     tem seed (não mexe em produtos nem estoque) e pode rodar de novo. Testado só no PGlite (Postgres em memória),
+     **não contra o Supabase real**.
    - Alternativa pela CLI: `supabase link --project-ref <ref>`, `supabase db push` (migrations) e, para o catálogo,
      `node --env-file=.env.local node_modules/tsx/dist/cli.mjs scripts/supabase/seed.ts --push`.
 3. **Conferir.** Table Editor → `products` deve ter 66 linhas; a coluna `fulfillment` mostra `estoque_proprio` e

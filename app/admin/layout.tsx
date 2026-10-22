@@ -19,10 +19,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="text-[#b94f01]">{BRAND.mark}</span> <span className="font-sans text-xs not-italic tracking-normal text-black/60">painel</span>
           </Link>
           {isSupabaseConfigured() && (
-            <nav aria-label="Painel" className="flex items-center gap-1 text-sm">
+            <nav aria-label="Painel" className="flex flex-wrap items-center justify-end gap-1 text-sm">
               <Link href="/admin/produtos" className="rounded-xl px-3 py-2 hover:bg-black/5">Produtos</Link>
               <Link href="/admin/pedidos" className="rounded-xl px-3 py-2 hover:bg-black/5">Pedidos</Link>
               <Link href="/admin/fornecedor" className="rounded-xl px-3 py-2 hover:bg-black/5">Fornecedor</Link>
+              <Link href="/admin/cupons" className="rounded-xl px-3 py-2 hover:bg-black/5">Cupons</Link>
               <Link href="/admin/newsletter" className="rounded-xl px-3 py-2 hover:bg-black/5">Newsletter</Link>
               <form action="/admin/sair" method="post">
                 <button type="submit" className="rounded-xl px-3 py-2 text-black/60 hover:bg-black/5 hover:text-black">Sair</button>

@@ -56,6 +56,8 @@ export const checkoutSchema = z.object({
   shipping: shippingSchema,
   payment: paymentSchema,
   items: z.array(orderItemSchema).min(1, "A sacola está vazia."),
+  // Cupom (opcional): só o código; o banco valida e calcula (operação, fase 1c).
+  coupon: z.string().trim().max(40).optional(),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

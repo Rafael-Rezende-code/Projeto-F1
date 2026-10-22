@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { PageIntro } from "@/components/page-intro";
 import { mercadoPagoConfigured } from "@/lib/payments/mercado-pago";
+import { isOrderStoreConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Finalizar compra", robots: privateRobots };
 
@@ -17,7 +18,7 @@ export default function CheckoutPage() {
         <div className="mb-10 mt-8">
           <PageIntro eyebrow="Checkout" title="Finalizar compra" body={live ? "Pagamento processado pelo Mercado Pago, em ambiente seguro." : "Ambiente de demonstração: nenhum pagamento é cobrado e nenhum pedido é enviado."} />
         </div>
-        <CheckoutForm mpPublicKey={live ? process.env.NEXT_PUBLIC_MP_PUBLIC_KEY : undefined} />
+        <CheckoutForm mpPublicKey={live ? process.env.NEXT_PUBLIC_MP_PUBLIC_KEY : undefined} couponsEnabled={isOrderStoreConfigured()} />
       </div>
     </div>
   );

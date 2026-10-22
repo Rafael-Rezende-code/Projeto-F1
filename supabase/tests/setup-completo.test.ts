@@ -38,3 +38,18 @@ describe("setup completo do Supabase", () => {
     expect(await count("select count(*)::int n from pg_constraint where conname = 'products_dispatch_range'")).toBe(1);
   }, 60_000);
 });
+
+describe("atualização 2 (banco já ativo)", async () => {
+  const { createDb, read } = await import("./db");
+  it("aplica só as migrations novas sobre o banco ativo, duas vezes, sem mexer em produtos nem estoque", async () => {
+    const db = await createDb({ upTo: "20261025000000" });
+    const before = (await db.query<{ n: number; s: number }>("select count(*)::int n, sum(stock)::int s from product_variants")).rows[0];
+    const update = read("supabase/atualizacao-2.sql");
+    expect(update).not.toMatch(/insert into public\.products/);
+    await db.exec(update);
+    await db.exec(update);
+    const after = (await db.query<{ n: number; s: number }>("select count(*)::int n, sum(stock)::int s from product_variants")).rows[0];
+    expect(after).toEqual(before);
+    expect((await db.query<{ n: number }>("select count(*)::int n from information_schema.tables where table_name = 'coupons'")).rows[0].n).toBe(1);
+  }, 60_000);
+});

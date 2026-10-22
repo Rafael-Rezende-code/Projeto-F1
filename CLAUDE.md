@@ -853,6 +853,21 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   lido no foco do campo para não divergir da hidratação) e o checkout o preenche ao chegar no Endereço. Teste em
   `e2e/modelo-de-venda.spec.ts`.
 
+- **Banco (regras da parte B):** só migrations NOVAS e idempotentes. `pnpm supabase:setup` gera o
+  `setup-completo.sql` (com o aviso do seed no topo: reaplicar repõe produtos de teste e estoque) e o
+  **`supabase/atualizacao-2.sql`** (só migrations depois de `ACTIVE_UNTIL` = 20261025000000, sem seed: é o que se roda no
+  banco ativo). Helpers de teste em `supabase/tests/db.ts` (`createDb`, `asRole`, `orderPayload`). Testado só no PGlite.
+- **Cupons (fase 1c):** migração `20261026000000_cupons.sql`: `coupons` (código único sem caixa, percentual | valor fixo |
+  frete grátis, mínimo, validade, limite total e por e-mail, ativo), `coupon_redemptions`, colunas `coupon_code`,
+  `discount_cents`, `shipping_discount_cents` em `orders`. `quote_coupon` (anon pode executar; só devolve o benefício)
+  para a prévia; `create_order` revalida e conta o uso com `update ... where uses < max_uses` NA MESMA transação (dois
+  pedidos no último uso: só um passa; erro `CUPOM_INVALIDO` com o motivo no DETAIL); `release_order_stock` devolve o
+  uso. RLS: tabelas só admin. Regras puras e mensagens em `lib/coupons.ts`; campo `components/coupon-field.tsx` na sacola
+  e no checkout (código em `apex:cupom:v1`); `previewCoupon`/`placeOrder` em `app/(loja)/checkout/actions.ts`. Sem
+  Supabase o campo não aparece (cupom precisa do banco). Admin `/admin/cupons` (lista com situação, criar/editar,
+  ativar/desativar, usos). Testes: `lib/coupons.test.ts`, `lib/admin/coupon-schema.test.ts`, `supabase/tests/cupons.test.ts`
+  (vencido, mínimo, esgotado, concorrência no limite, devolução).
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete

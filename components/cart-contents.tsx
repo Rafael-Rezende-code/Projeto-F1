@@ -10,12 +10,16 @@ import { freeShippingRemaining } from '@/lib/cart/reducer'
 import { formatPrice } from '@/lib/format'
 import { DispatchSummary } from '@/components/dispatch-summary'
 import { ShippingEstimator } from '@/components/shipping-estimator'
+import { CouponField } from '@/components/coupon-field'
+import { useState } from 'react'
 import { daysLabel } from '@/lib/catalog/fulfillment'
 
 // Conteúdo da sacola, usado na gaveta (variant="drawer") e na página /carrinho (variant="page").
 // `empty`: conteúdo extra abaixo da sacola vazia (na página: "Mais desejados", components/most-wanted.tsx).
-export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer' | 'page'; onNavigate?: () => void; empty?: ReactNode }) {
+// `couponsEnabled`: campo de cupom (só com pedidos gravados no Supabase; a página decide no servidor).
+export function CartContents({ variant, onNavigate, empty, couponsEnabled = false }: { variant: 'drawer' | 'page'; onNavigate?: () => void; empty?: ReactNode; couponsEnabled?: boolean }) {
   const { items, subtotalCents, setQuantity, removeItem, ready } = useCart()
+  const [coupon, setCoupon] = useState<{ code: string; discountCents: number } | null>(null)
   const remaining = freeShippingRemaining(subtotalCents)
   // Barra de frete grátis só existe se a loja configurou o limite (NEXT_PUBLIC_FREE_SHIPPING_FROM_CENTS).
   const threshold = FREE_SHIPPING_THRESHOLD_CENTS
@@ -96,9 +100,15 @@ export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer'
           </div>
         </div>
         )}
-        <dl className="mt-5 flex items-center justify-between text-sm">
-          <dt>Subtotal</dt>
-          <dd className="text-lg font-medium tracking-[-0.03em]">{formatPrice(subtotalCents)}</dd>
+        {variant === 'page' && couponsEnabled && <CouponField items={items.map((item) => ({ sku: item.sku, quantity: item.quantity }))} onApplied={(applied) => setCoupon(applied)} className="mt-5" />}
+        <dl className="mt-5 flex flex-col gap-1 text-sm">
+          {coupon && coupon.discountCents > 0 && (
+            <div className="flex items-center justify-between text-black/70"><dt>Cupom {coupon.code}</dt><dd>−{formatPrice(coupon.discountCents)}</dd></div>
+          )}
+          <div className="flex items-center justify-between">
+            <dt>Subtotal</dt>
+            <dd className="text-lg font-medium tracking-[-0.03em]">{formatPrice(subtotalCents - (coupon?.discountCents ?? 0))}</dd>
+          </div>
         </dl>
         <p className="mt-1 text-xs text-black/60">Frete calculado no checkout.</p>
         <DispatchSummary items={items} className="mt-3" />

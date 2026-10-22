@@ -70,6 +70,8 @@ export type Order = {
   payment: { method: "pix" | "cartao" | "boleto"; provider: string; reference: string; instructions?: string; details?: PaymentDetails };
   lines: OrderLine[];
   subtotalCents: number;
+  /** Cupom aplicado pelo banco (operação, fase 1c): desconto nos itens e no frete. */
+  coupon?: { code: string; discountCents: number; shippingDiscountCents: number };
   totalCents: number;
   tracking?: { code: string; shippedAt?: string };
   /** true no modo simulado (nada foi cobrado). */

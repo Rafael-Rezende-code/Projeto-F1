@@ -1,6 +1,7 @@
 "use client";
 
 import { DispatchSummary } from "@/components/dispatch-summary";
+import { CouponField } from "@/components/coupon-field";
 import { daysLabel } from "@/lib/catalog/fulfillment";
 import { useId, useRef, useState, useTransition, type ReactNode } from "react";
 import dynamic from "next/dynamic";
@@ -54,7 +55,7 @@ const MercadoPagoBrick = dynamic(() => import("@/components/checkout/mercado-pag
 });
 
 /** `mpPublicKey`: Mercado Pago ligado (vem do servidor só quando o access token também existe). */
-export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
+export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublicKey?: string; couponsEnabled?: boolean }) {
   const router = useRouter();
   const { items, subtotalCents, ready, clear } = useCart();
   const [step, setStep] = useState<Step>(0);
@@ -65,6 +66,8 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
   const [submitError, setSubmitError] = useState("");
   const [pending, startTransition] = useTransition();
   const [cardDisplay, setCardDisplay] = useState<CardDisplay>({});
+  // Cupom (prévia do servidor; o desconto que vale é o do banco, ao confirmar)
+  const [coupon, setCoupon] = useState<{ code: string; discountCents: number; shippingDiscountCents: number } | null>(null);
   const cepRequest = useRef<AbortController | null>(null);
   const headingRefs = useRef<(HTMLHeadingElement | null)[]>([]);
 
@@ -81,6 +84,9 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
   const quotedFor = useRef("");
   const option = quotes?.find((item) => item.id === form.shippingId);
   const shippingCents = option?.priceCents ?? 0;
+  const discountCents = coupon?.discountCents ?? 0;
+  const shippingDiscountCents = Math.min(coupon?.shippingDiscountCents ?? 0, shippingCents);
+  const totalCents = subtotalCents - discountCents + shippingCents - shippingDiscountCents;
 
   const loadQuotes = async () => {
     const key = `${onlyDigits(form.cep)}|${items.map((item) => `${item.sku}:${item.quantity}`).join(",")}`;
@@ -176,6 +182,7 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
     contact: { name: form.name, email: form.email, phone: form.phone },
     address: { cep: form.cep, street: form.street, number: form.number, complement: form.complement || undefined, district: form.district, city: form.city, state: form.state },
     shipping: { shippingId: form.shippingId },
+    coupon: coupon?.code,
     payment: { acceptTerms: form.acceptTerms, ...payment },
     items: items.map((item) => ({ sku: item.sku, quantity: item.quantity })),
   });
@@ -454,7 +461,7 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
                 <div className="mt-6">
                   <MercadoPagoBrick
                     publicKey={mpPublicKey}
-                    amountCents={subtotalCents + shippingCents}
+                    amountCents={totalCents}
                     email={form.email}
                     onCard={(display) => setCardDisplay((current) => ({ ...current, ...display }))}
                     onSubmit={submitBrick}
@@ -463,7 +470,7 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
               ) : (
                 <button type="button" onClick={submit} disabled={pending} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#b94f01] px-6 py-4 text-sm font-medium text-white transition hover:bg-[#9f4300] disabled:opacity-70">
                   {pending && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
-                  {pending ? "Confirmando pedido…" : `Confirmar pedido · ${formatPrice(subtotalCents + shippingCents)}`}
+                  {pending ? "Confirmando pedido…" : `Confirmar pedido · ${formatPrice(totalCents)}`}
                 </button>
               )}
             </div>
@@ -491,10 +498,21 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
             </li>
           ))}
         </ul>
+        {couponsEnabled && (
+          <CouponField
+            items={items.map((item) => ({ sku: item.sku, quantity: item.quantity }))}
+            cep={option ? onlyDigits(form.cep) : undefined}
+            shippingId={option?.id}
+            onApplied={setCoupon}
+            className="mt-6"
+          />
+        )}
         <dl className="mt-6 flex flex-col gap-2 border-t border-black/10 pt-5 text-sm">
           <div className="flex justify-between"><dt className="text-black/60">Subtotal</dt><dd>{formatPrice(subtotalCents)}</dd></div>
           <div className="flex justify-between"><dt className="text-black/60">{option ? `Entrega (${option.label})` : "Entrega"}</dt><dd>{option ? (shippingCents === 0 ? "Grátis" : formatPrice(shippingCents)) : <span className="text-black/60">calculada após o CEP</span>}</dd></div>
-          <div className="mt-2 flex justify-between border-t border-black/10 pt-3 text-base font-medium"><dt>Total</dt><dd>{formatPrice(subtotalCents + shippingCents)}</dd></div>
+          {discountCents > 0 && <div className="flex justify-between"><dt className="text-black/60">Cupom {coupon?.code}</dt><dd>−{formatPrice(discountCents)}</dd></div>}
+          {shippingDiscountCents > 0 && <div className="flex justify-between"><dt className="text-black/60">Frete grátis ({coupon?.code})</dt><dd>−{formatPrice(shippingDiscountCents)}</dd></div>}
+          <div className="mt-2 flex justify-between border-t border-black/10 pt-3 text-base font-medium"><dt>Total</dt><dd>{formatPrice(totalCents)}</dd></div>
         </dl>
         <DispatchSummary items={items} className="mt-4" />
         <Link href="/carrinho" className="mt-5 inline-block text-xs text-black/60 underline underline-offset-4 hover:text-black">Editar sacola</Link>

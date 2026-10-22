@@ -39,7 +39,17 @@ export function idempotent(sql) {
   return out;
 }
 
+// Aviso exigido no topo do setup e em docs/backend/supabase.md (operação, regras de banco).
+export const SEED_WARNING = "Contém o seed de demonstração: reaplicar repõe produtos de teste e estoque. NÃO rode de novo depois de cadastrar produtos reais.";
+
+// Banco JÁ ATIVO: a atualização 2 leva só as migrations depois desta (a última que o banco ativo recebeu).
+const ACTIVE_UNTIL = "20261025000000";
+
 const header = `-- Apex: SETUP COMPLETO do Supabase (gerado por scripts/supabase/setup-completo.mjs; NÃO editar à mão).
+--
+-- !!! ${SEED_WARNING}
+-- !!! Banco que já está no ar: use supabase/atualizacao-2.sql (só as migrations novas, sem seed).
+--
 -- Cole tudo no SQL Editor do projeto e clique em Run. Passo a passo em docs/backend/supabase.md.
 --
 -- Contém, nesta ordem: ${files.join(", ")} e o seed do catálogo (supabase/seed.sql).
@@ -60,8 +70,23 @@ parts.push(`
 -- insert into public.admin_emails (email) values ('seu-email@exemplo.com') on conflict do nothing;
 `);
 
+// Atualização 2: SÓ as migrations novas (depois de ACTIVE_UNTIL), SEM seed, para aplicar sobre o banco já ativo.
+const newer = files.filter((file) => file.slice(0, 14) > ACTIVE_UNTIL);
+const update = [
+  `-- Apex: ATUALIZAÇÃO 2 do Supabase (gerado por scripts/supabase/setup-completo.mjs; NÃO editar à mão).
+-- Para o banco que JÁ ESTÁ NO AR (já recebeu o setup completo até ${ACTIVE_UNTIL}). NÃO contém seed: não mexe em produtos
+-- nem em estoque. Pode rodar mais de uma vez. Cole tudo no SQL Editor e clique em Run (docs/backend/supabase.md).
+--
+-- Contém, nesta ordem: ${newer.join(", ")}.
+`,
+  ...newer.flatMap((file) => [`\n-- =====================================================================================================\n-- ${file}\n-- =====================================================================================================\n`, idempotent(lf(readFileSync(path.join(dir, file), "utf8")))]),
+];
+
 if (process.argv[1] === import.meta.filename) {
   const out = path.join(root, "supabase/setup-completo.sql");
   writeFileSync(out, parts.join(""));
   console.log(`setup-completo.sql: ${files.length} migrations + seed → ${path.relative(process.cwd(), out)}`);
+  const outUpdate = path.join(root, "supabase/atualizacao-2.sql");
+  writeFileSync(outUpdate, update.join(""));
+  console.log(`atualizacao-2.sql: ${newer.length} migrations novas, sem seed → ${path.relative(process.cwd(), outUpdate)}`);
 }

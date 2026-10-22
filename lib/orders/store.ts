@@ -13,9 +13,15 @@ export type NewOrder = {
   shipping: Order["shipping"];
   paymentMethod: Order["payment"]["method"];
   items: { sku: string; quantity: number }[];
+  /** Código do cupom (validado e contado pelo banco, dentro da create_order). */
+  coupon?: string;
 };
 
-export type CreateOrderResult = { ok: true; order: Order } | { ok: false; stockIssues: { sku: string; available: number }[] } | { ok: false; error: string };
+export type CreateOrderResult =
+  | { ok: true; order: Order }
+  | { ok: false; stockIssues: { sku: string; available: number }[] }
+  | { ok: false; couponReason: string }
+  | { ok: false; error: string };
 
 const SELECT = "*, order_items(*)";
 
@@ -30,6 +36,7 @@ export async function createStoredOrder(input: NewOrder): Promise<CreateOrderRes
       shipping: input.shipping,
       payment_method: input.paymentMethod,
       items: input.items,
+      coupon: input.coupon ?? null,
     },
   });
   if (error) {
@@ -40,6 +47,7 @@ export async function createStoredOrder(input: NewOrder): Promise<CreateOrderRes
         return { ok: false, stockIssues: [] };
       }
     }
+    if (error.message.includes("CUPOM_INVALIDO")) return { ok: false, couponReason: error.details ?? "inexistente" };
     return { ok: false, error: error.message };
   }
   const order = await getStoredOrder((data as OrderRow).id);

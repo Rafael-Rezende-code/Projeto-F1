@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { CartContents } from "@/components/cart-contents";
 import { MostWanted } from "@/components/most-wanted";
 import { PageIntro } from "@/components/page-intro";
+import { isOrderStoreConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Sacola", robots: privateRobots };
 
@@ -15,7 +16,7 @@ export default function CarrinhoPage() {
         <div className="mb-10 mt-8">
           <PageIntro eyebrow="Sua compra" title="Sacola" />
         </div>
-        <CartContents variant="page" empty={<MostWanted />} />
+        <CartContents variant="page" empty={<MostWanted />} couponsEnabled={isOrderStoreConfigured()} />
       </div>
     </div>
   );

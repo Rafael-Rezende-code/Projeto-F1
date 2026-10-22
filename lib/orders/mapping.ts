@@ -35,6 +35,9 @@ export type OrderRow = {
   payment_details: PaymentDetails & { instructions?: string };
   subtotal_cents: number;
   shipping_cents: number;
+  coupon_code?: string | null;
+  discount_cents?: number;
+  shipping_discount_cents?: number;
   total_cents: number;
   tracking_code: string | null;
   shipped_at: string | null;
@@ -73,6 +76,7 @@ export function orderFromRow(row: OrderRow): Order {
       tracking: item.tracking_code ?? undefined,
     })),
     subtotalCents: row.subtotal_cents,
+    coupon: row.coupon_code ? { code: row.coupon_code, discountCents: row.discount_cents ?? 0, shippingDiscountCents: row.shipping_discount_cents ?? 0 } : undefined,
     totalCents: row.total_cents,
     tracking: row.tracking_code ? { code: row.tracking_code, shippedAt: row.shipped_at ?? undefined } : undefined,
     simulated: false,

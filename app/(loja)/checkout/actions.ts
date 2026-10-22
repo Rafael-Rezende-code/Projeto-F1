@@ -9,6 +9,8 @@ import { newOrderId, type Order, type OrderLine } from "@/lib/checkout/order";
 import { cancelStoredOrder, createStoredOrder, recordPayment } from "@/lib/orders/store";
 import { getPaymentProvider } from "@/lib/payments";
 import { isOrderStoreConfigured } from "@/lib/supabase/config";
+import { couponMessage, normalizeCouponCode } from "@/lib/coupons";
+import { createPublicClient } from "@/lib/supabase/server";
 import { onlyDigits } from "@/lib/validators/br";
 
 export type PlaceOrderResult =
@@ -23,6 +25,45 @@ const STOCK_MESSAGE = "Alguns itens não têm mais estoque suficiente. Ajuste a 
 // - Com Supabase (fase 9): o pedido é gravado e o estoque baixado numa transação (create_order) ANTES do pagamento; o
 //   total cobrado é o calculado pelo banco. Pagamento recusado ou erro do provedor: o pedido é cancelado e o estoque
 //   volta. Pix e boleto ficam "aguardando pagamento" até o webhook (fase 10) confirmar.
+export type CouponPreview =
+  | { ok: true; code: string; discountCents: number; shippingDiscountCents: number }
+  | { ok: false; message: string };
+
+/**
+ * Prévia do cupom (sacola e checkout). O subtotal vem do CATÁLOGO pelos SKUs e o frete da opção escolhida (cotada de
+ * novo no servidor); o banco responde pelo código digitado (quote_coupon). A validação que vale é a da create_order.
+ */
+export async function previewCoupon(input: unknown): Promise<CouponPreview> {
+  if (!isOrderStoreConfigured()) return { ok: false, message: couponMessage("desligado") };
+  const parsed = z
+    .object({ code: z.string().max(60), items: z.array(orderItemSchema).min(1).max(50), cep: z.string().optional(), shippingId: z.string().max(40).optional() })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Confira o cupom e a sacola." };
+  const code = normalizeCouponCode(parsed.data.code);
+  if (!code) return { ok: false, message: couponMessage("formato") };
+  let subtotalCents = 0;
+  let shippingCents = 0;
+  if (parsed.data.cep && parsed.data.shippingId) {
+    const quote = await quoteForItems(parsed.data.cep, parsed.data.items);
+    if (!quote.ok) return { ok: false, message: quote.message };
+    subtotalCents = quote.subtotalCents;
+    shippingCents = quote.options.find((option) => option.id === parsed.data.shippingId)?.priceCents ?? 0;
+  } else {
+    for (const item of parsed.data.items) {
+      const found = await catalog.getVariantBySku(item.sku);
+      if (found) subtotalCents += found.product.priceCents * item.quantity;
+    }
+  }
+  const { data, error } = await createPublicClient().rpc("quote_coupon", { p_code: code, p_subtotal_cents: subtotalCents, p_shipping_cents: shippingCents });
+  if (error) {
+    console.error("[cupom] prévia:", error.code);
+    return { ok: false, message: "Não foi possível conferir o cupom agora. Tente de novo." };
+  }
+  const result = data as { ok: boolean; reason?: string; discount_cents?: number; shipping_discount_cents?: number; code?: string };
+  if (!result.ok) return { ok: false, message: couponMessage(result.reason) };
+  return { ok: true, code: result.code ?? code, discountCents: result.discount_cents ?? 0, shippingDiscountCents: result.shipping_discount_cents ?? 0 };
+}
+
 /** Cotação de frete para a etapa Entrega do checkout (CEP + itens da sacola; preços e pacotes vêm do catálogo). */
 export async function quoteShipping(input: unknown): Promise<QuoteResult> {
   const parsed = z.object({ cep: addressSchema.shape.cep, items: z.array(orderItemSchema).min(1).max(50) }).safeParse(input);
@@ -82,6 +123,11 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     cep: data.address.cep,
   };
 
+  // Cupom: só com pedidos gravados (o banco valida e conta o uso). No modo simulado não há cupons.
+  const coupon = data.coupon ? normalizeCouponCode(data.coupon) : null;
+  if (data.coupon && !coupon) return { ok: false, message: couponMessage("formato"), errors: { coupon: couponMessage("formato") } };
+  if (coupon && !isOrderStoreConfigured()) return { ok: false, message: couponMessage("desligado"), errors: { coupon: couponMessage("desligado") } };
+
   // Pedido gravado (Supabase): reserva o estoque antes de cobrar.
   const stored = isOrderStoreConfigured()
     ? await createStoredOrder({
@@ -91,10 +137,12 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
         shipping,
         paymentMethod: data.payment.method,
         items: data.items,
+        coupon: coupon ?? undefined,
       })
     : null;
   if (stored && !stored.ok) {
     if ("stockIssues" in stored) return { ok: false, message: STOCK_MESSAGE, stockIssues: stored.stockIssues };
+    if ("couponReason" in stored) return { ok: false, message: couponMessage(stored.couponReason), errors: { coupon: couponMessage(stored.couponReason) } };
     console.error("[checkout] create_order:", stored.error);
     return { ok: false, message: "Não foi possível registrar o pedido agora. Tente de novo em instantes." };
   }
