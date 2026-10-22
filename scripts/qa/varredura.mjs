@@ -11,7 +11,7 @@
 import { chromium } from "@playwright/test";
 
 const [BASE = "http://localhost:3001", WIDTHS = "1440,1280,820,390,360", ROUTES] = process.argv.slice(2);
-const routes = (ROUTES || "/,/equipes,/pilotos/hamilton,/produtos/scuderia-racing-jacket,/produtos,/favoritos,/carrinho,/checkout,/nao-existe").split(",");
+const routes = (ROUTES || "/,/equipes,/equipes/williams,/pilotos/hamilton,/pilotos/bortoleto,/produtos/scuderia-racing-jacket,/produtos,/favoritos,/carrinho,/checkout,/diario,/diario/senna-e-a-mclaren,/sobre,/admin,/nao-existe").split(",");
 
 const check = () => {
   const cw = document.documentElement.clientWidth;
