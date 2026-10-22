@@ -2,8 +2,9 @@
 
 import { BRAND } from "@/lib/brand";
 import { catalog } from "@/lib/catalog";
-import { getShippingOption, shippingPrice } from "@/lib/checkout/shipping";
-import { checkoutSchema, CPF_REQUIRED_METHODS, fieldErrors } from "@/lib/checkout/schema";
+import { quoteForItems, type QuoteResult } from "@/lib/checkout/quote";
+import { addressSchema, checkoutSchema, CPF_REQUIRED_METHODS, fieldErrors, orderItemSchema } from "@/lib/checkout/schema";
+import { z } from "zod";
 import { newOrderId, type Order, type OrderLine } from "@/lib/checkout/order";
 import { cancelStoredOrder, createStoredOrder, recordPayment } from "@/lib/orders/store";
 import { getPaymentProvider } from "@/lib/payments";
@@ -22,6 +23,18 @@ const STOCK_MESSAGE = "Alguns itens não têm mais estoque suficiente. Ajuste a 
 // - Com Supabase (fase 9): o pedido é gravado e o estoque baixado numa transação (create_order) ANTES do pagamento; o
 //   total cobrado é o calculado pelo banco. Pagamento recusado ou erro do provedor: o pedido é cancelado e o estoque
 //   volta. Pix e boleto ficam "aguardando pagamento" até o webhook (fase 10) confirmar.
+/** Cotação de frete para a etapa Entrega do checkout (CEP + itens da sacola; preços e pacotes vêm do catálogo). */
+export async function quoteShipping(input: unknown): Promise<QuoteResult> {
+  const parsed = z.object({ cep: addressSchema.shape.cep, items: z.array(orderItemSchema).min(1).max(50) }).safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Confira o CEP e a sacola." };
+  try {
+    return await quoteForItems(parsed.data.cep, parsed.data.items);
+  } catch (error) {
+    console.error("[frete] cotação:", error);
+    return { ok: false, message: "Não foi possível calcular o frete agora. Tente de novo em instantes." };
+  }
+}
+
 export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const parsed = checkoutSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: "Confira os dados destacados.", errors: fieldErrors(parsed.error) };
@@ -51,9 +64,12 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   if (stockIssues.length) return { ok: false, message: STOCK_MESSAGE, stockIssues };
 
   const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
-  const option = getShippingOption(data.shipping.shippingId);
-  if (!option) return { ok: false, message: "Forma de entrega inválida." };
-  const shippingCents = shippingPrice(option, subtotalCents);
+  // Frete cotado DE NOVO no servidor (lib/shipping): a opção escolhida precisa existir para este CEP e esta sacola.
+  const quote = await quoteForItems(data.address.cep, data.items);
+  if (!quote.ok) return { ok: false, message: quote.stockIssues ? STOCK_MESSAGE : quote.message, stockIssues: quote.stockIssues };
+  const option = quote.options.find((item) => item.id === data.shipping.shippingId);
+  if (!option) return { ok: false, message: "Essa forma de entrega não está mais disponível. Volte à etapa Entrega e escolha de novo.", errors: { "shipping.shippingId": "Escolha de novo." } };
+  const shippingCents = option.priceCents;
   const id = newOrderId();
   const shipping = { id: option.id, label: option.label, days: option.days, priceCents: shippingCents };
   const address = {

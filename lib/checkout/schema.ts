@@ -23,7 +23,8 @@ export const addressSchema = z.object({
 });
 
 export const shippingSchema = z.object({
-  shippingId: z.enum(["economica", "expressa"], { error: "Escolha a forma de entrega." }),
+  // Id da cotação (lib/shipping): "economica", "expressa", "local", "melhorenvio-1"... O servidor cota de novo e confere.
+  shippingId: z.string({ error: "Escolha a forma de entrega." }).regex(/^[a-z0-9-]{2,40}$/, "Escolha a forma de entrega."),
 });
 
 export const PAYMENT_METHODS = ["pix", "cartao", "boleto"] as const;

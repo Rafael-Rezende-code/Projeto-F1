@@ -34,3 +34,29 @@ test("dados privados nunca aparecem nas páginas públicas", async ({ request })
     expect(html, path).not.toMatch(SECRETS);
   }
 });
+
+test("frete: entrega local em São Sebastião do Paraíso e prazo total (envio + transporte)", async ({ page }) => {
+  await page.route("https://viacep.com.br/ws/**", (route) =>
+    route.fulfill({ json: { cep: "37950-000", logradouro: "Praça Comendador João Alves", bairro: "Centro", localidade: "São Sebastião do Paraíso", uf: "MG" } }),
+  );
+  await page.goto("/produtos/camiseta-hamilton");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.locator("label:has(input[name=tamanho]:not([disabled]))").first().click();
+  await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("foi adicionado à sacola");
+  await page.goto("/checkout");
+  await page.getByLabel("Nome completo").fill("Teste da Silva");
+  await page.getByLabel("E-mail").fill("teste@exemplo.com");
+  await page.getByLabel("Telefone").fill("35912345678");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await page.getByLabel("CEP").fill("37950000");
+  await expect(page.getByLabel("Rua")).toHaveValue("Praça Comendador João Alves");
+  await page.getByLabel("Número").fill("10");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  const local = page.locator("label", { hasText: "Entrega local" });
+  await expect(local).toBeVisible();
+  // camiseta: envio em 1 a 2 dias úteis + entrega local 1 a 2 → chega em 2 a 4
+  await expect(local).toContainText("Chega em 2 a 4 dias úteis");
+  await expect(page.locator("label", { hasText: "Econômica" })).toBeVisible();
+});

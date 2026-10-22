@@ -1,17 +1,17 @@
-import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/cart/config";
+import { daysLabel } from "@/lib/catalog/fulfillment";
+import type { DispatchDays } from "@/lib/catalog/types";
+import type { ShippingQuote } from "@/lib/shipping/types";
 
-// Opções de entrega SIMULADAS (sem transportadora real). Para integrar Correios/Melhor Envio, trocar por uma
-// cotação no servidor a partir do CEP e do peso/dimensões dos itens.
-export type ShippingOption = { id: "economica" | "expressa"; label: string; days: string; priceCents: number; freeEligible: boolean };
+// Opção de entrega mostrada no checkout (refino 2, item 7): a cotação do frete (lib/shipping, só no servidor) + o
+// prazo de ENVIO do item mais lento da sacola. "Chega em" = envio + transporte, em dias úteis. Função pura (cliente e
+// servidor).
+export type DeliveryOption = ShippingQuote & {
+  /** Texto do prazo total, ex.: "Chega em 3 a 8 dias úteis". */
+  days: string;
+  totalDays: { min: number; max: number };
+};
 
-export const SHIPPING_OPTIONS: ShippingOption[] = [
-  { id: "economica", label: "Econômica", days: "7 a 10 dias úteis", priceCents: 2490, freeEligible: true },
-  { id: "expressa", label: "Expressa", days: "2 a 4 dias úteis", priceCents: 4990, freeEligible: false },
-];
-
-/** Preço da opção para um subtotal: a econômica é grátis a partir do limite de frete grátis. */
-export function shippingPrice(option: ShippingOption, subtotalCents: number) {
-  return option.freeEligible && subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS ? 0 : option.priceCents;
+export function deliveryOption(quote: ShippingQuote, dispatch: DispatchDays): DeliveryOption {
+  const totalDays = { min: dispatch.min + quote.transitDays.min, max: dispatch.max + quote.transitDays.max };
+  return { ...quote, totalDays, days: `Chega em ${daysLabel(totalDays)}` };
 }
-
-export const getShippingOption = (id: string) => SHIPPING_OPTIONS.find((option) => option.id === id);

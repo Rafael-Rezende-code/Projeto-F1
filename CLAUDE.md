@@ -233,8 +233,7 @@ interna e sem arredondamento).
 ### Checkout (fase 5) — pedidos SIMULADOS
 
 - `/checkout` (`components/checkout/checkout-form.tsx`): etapas Contato (nome, e-mail e telefone; **sem CPF**), Endereço (CEP com máscara e busca no ViaCEP pelo cliente, com timeout de 6 s; falha ou CEP
-  inexistente → preenchimento manual), Entrega (opções simuladas em `lib/checkout/shipping.ts`; a Econômica é grátis
-  acima do limite de frete grátis) e Pagamento (Pix, cartão, boleto) com aceite obrigatório dos Termos e da Política.
+  inexistente → preenchimento manual), Entrega (cotação no servidor por `lib/shipping/`, ver "Frete" na seção Refino 2) e Pagamento (Pix, cartão, boleto) com aceite obrigatório dos Termos e da Política.
   **CPF só no boleto** (boleto registrado exige o CPF do pagador): o campo aparece na etapa de pagamento ao escolher
   Boleto, com máscara e dígitos verificadores; Pix e cartão não pedem. Regra em `CPF_REQUIRED_METHODS`
   (`lib/checkout/schema.ts`), validada no cliente e no servidor (testes em `lib/checkout/schema.test.ts` e no e2e). Se o
@@ -741,6 +740,15 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `lib/admin/supplier.ts`, rastreio do fornecedor, "Marcar comprado" em `app/admin/fornecedor/actions.ts`). "Marcar como
   enviado" também passa os itens para "enviado". Compra manual, sem automação. Desligado sem Supabase (como o resto do
   painel). Prints (com dados de exemplo, página temporária) em `docs/refino-2/6-admin/`. Guia em `docs/backend/admin.md`.
+
+- **Frete (item 7):** `lib/shipping/` com a interface `ShippingProvider`: (a) simulado por região do CEP (a partir de
+  MG) e peso cobrado (real × cúbico), Econômica grátis acima do limite; (b) Melhor Envio pronto e desligado
+  (`MELHOR_ENVIO_TOKEN`; sandbox até `MELHOR_ENVIO_ENV=production`; falha → simulado); (c) entrega local por faixa de CEP
+  (`LOCAL_DELIVERY` em `lib/shipping/config.ts`: 37950-000 a 37959-999, R$ 10, grátis a partir de R$ 150, 1–2 dias;
+  tudo exemplo/[CONFIRMAR]). O checkout cota pela server action `quoteShipping` ao sair da etapa Endereço (preço,
+  pacote e prazo vêm do catálogo pelo SKU) e o `placeOrder` cota DE NOVO e só aceita uma opção existente. Cada opção
+  mostra "Chega em X a Y dias úteis" (envio do item mais lento + transporte; `lib/checkout/shipping.ts`). Guia em
+  `docs/backend/frete.md`; prints em `docs/refino-2/7-frete/`.
 
 ## Pendências (atualizado em 22/10/2026)
 

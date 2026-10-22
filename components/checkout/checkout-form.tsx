@@ -10,10 +10,10 @@ import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { useCart } from "@/components/cart";
 import { DecorativeCard } from "@/components/checkout/decorative-card";
-import { placeOrder } from "@/app/(loja)/checkout/actions";
+import { placeOrder, quoteShipping } from "@/app/(loja)/checkout/actions";
 import { ORDER_STORAGE_PREFIX, orderUrl, PAYMENT_LABELS } from "@/lib/checkout/order";
 import { addressSchema, contactSchema, CPF_REQUIRED_METHODS, fieldErrors, paymentSchema, shippingSchema } from "@/lib/checkout/schema";
-import { SHIPPING_OPTIONS, shippingPrice } from "@/lib/checkout/shipping";
+import type { DeliveryOption } from "@/lib/checkout/shipping";
 import { formatPrice } from "@/lib/format";
 import { methodFromBrick } from "@/lib/payments/brick";
 import type { CardDisplay } from "@/lib/payments/types";
@@ -28,7 +28,7 @@ type Form = {
   cep: string; street: string; number: string; complement: string; district: string; city: string; state: string;
   shippingId: string; method: string; acceptTerms: boolean;
 };
-const EMPTY: Form = { name: "", email: "", phone: "", cpf: "", cep: "", street: "", number: "", complement: "", district: "", city: "", state: "", shippingId: "economica", method: "pix", acceptTerms: false };
+const EMPTY: Form = { name: "", email: "", phone: "", cpf: "", cep: "", street: "", number: "", complement: "", district: "", city: "", state: "", shippingId: "", method: "pix", acceptTerms: false };
 
 const inputClass = (invalid: boolean) =>
   `w-full rounded-xl border bg-white px-4 py-3 text-sm text-black outline-none transition placeholder:text-black/35 focus-visible:border-black focus-visible:ring-2 focus-visible:ring-black/10 ${invalid ? "border-[#b42318]" : "border-black/15 hover:border-black/40"}`;
@@ -72,8 +72,35 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
     setErrors((current) => (current[key] ? { ...current, [key]: "" } : current));
   };
 
-  const option = SHIPPING_OPTIONS.find((item) => item.id === form.shippingId) ?? SHIPPING_OPTIONS[0];
-  const shippingCents = shippingPrice(option, subtotalCents);
+  // Frete (refino 2, item 7): cotado no servidor ao sair da etapa Endereço (CEP + sacola). `quotedFor` evita cotar de
+  // novo se nada mudou.
+  const [quotes, setQuotes] = useState<DeliveryOption[] | null>(null);
+  const [quoteError, setQuoteError] = useState("");
+  const [quoting, setQuoting] = useState(false);
+  const quotedFor = useRef("");
+  const option = quotes?.find((item) => item.id === form.shippingId);
+  const shippingCents = option?.priceCents ?? 0;
+
+  const loadQuotes = async () => {
+    const key = `${onlyDigits(form.cep)}|${items.map((item) => `${item.sku}:${item.quantity}`).join(",")}`;
+    if (quotes && quotedFor.current === key) return true;
+    setQuoting(true);
+    setQuoteError("");
+    const result = await quoteShipping({ cep: form.cep, items: items.map((item) => ({ sku: item.sku, quantity: item.quantity })) });
+    setQuoting(false);
+    if (!result.ok) {
+      setQuoteError(result.message);
+      return false;
+    }
+    quotedFor.current = key;
+    setQuotes(result.options);
+    // mantém a escolha se ela ainda existe; senão, a mais barata
+    setForm((current) => ({
+      ...current,
+      shippingId: result.options.some((item) => item.id === current.shippingId) ? current.shippingId : ([...result.options].sort((a, b) => a.priceCents - b.priceCents)[0]?.id ?? ""),
+    }));
+    return true;
+  };
 
   // Busca de endereço pelo ViaCEP (no cliente). Falha ou CEP inexistente: preenchimento manual, campos sempre editáveis.
   const lookupCep = async (cep: string) => {
@@ -129,8 +156,10 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
     window.requestAnimationFrame(() => headingRefs.current[next]?.focus());
   };
 
-  const next = () => {
-    if (validateStep(step) && step < 3) goTo((step + 1) as Step);
+  const next = async () => {
+    if (!validateStep(step) || step >= 3) return;
+    if (step === 1 && !(await loadQuotes())) return;
+    goTo((step + 1) as Step);
   };
 
   const orderInput = (payment: Record<string, unknown>) => ({
@@ -216,9 +245,13 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
   );
 
   const continueButton = (label = "Continuar") => (
-    <button type="button" onClick={next} className="mt-6 w-full rounded-xl bg-black px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#b94f01] sm:w-auto">
-      {label}
-    </button>
+    <>
+      {step === 1 && quoteError && <p role="alert" className="mt-4 text-sm text-[#b42318]">{quoteError}</p>}
+      <button type="button" onClick={next} disabled={quoting} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-black px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#b94f01] disabled:opacity-70 sm:w-auto">
+        {quoting && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+        {quoting ? "Calculando o frete…" : label}
+      </button>
+    </>
   );
 
   return (
@@ -311,28 +344,32 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
             <fieldset className="mt-6">
               <legend className="sr-only">Forma de entrega</legend>
               <div className="flex flex-col gap-3">
-                {SHIPPING_OPTIONS.map((item) => {
-                  const price = shippingPrice(item, subtotalCents);
+                {(quotes ?? []).map((item) => {
+                  const price = item.priceCents;
                   return (
                     <label key={item.id} className={`flex cursor-pointer items-center justify-between gap-4 rounded-xl border p-4 transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black ${form.shippingId === item.id ? "border-black bg-black/[0.03]" : "border-black/15 hover:border-black/40"}`}>
                       <span className="flex items-center gap-3">
                         <input type="radio" name="entrega" value={item.id} checked={form.shippingId === item.id} onChange={() => set("shippingId", item.id)} className="size-4 accent-[#b94f01]" />
                         <span>
-                          <span className="block text-sm font-medium">{item.label}</span>
+                          <span className="block text-sm font-medium">{item.label}{item.id === "local" && item.carrier ? ` · ${item.carrier}` : ""}</span>
                           <span className="block text-xs text-black/60">{item.days}</span>
                         </span>
                       </span>
-                      <span className="text-sm">{price === 0 ? "Grátis" : formatPrice(price)}</span>
+                      <span className="text-right text-sm">
+                        {price === 0 ? "Grátis" : formatPrice(price)}
+                        {price === 0 && item.fullPriceCents ? <span className="block text-xs text-black/60 line-through">{formatPrice(item.fullPriceCents)}</span> : null}
+                      </span>
                     </label>
                   );
                 })}
               </div>
-              <p className="mt-3 text-xs text-black/60">Prazos e valores simulados (sem transportadora integrada).</p>
+              <p className="mt-3 text-xs text-black/60">&quot;Chega em&quot; soma o prazo de envio do item mais demorado da sacola e o transporte.</p>
+              <DispatchSummary items={items} className="mt-2" />
               {errors.shippingId && <p className="mt-2 text-xs text-[#b42318]">{errors.shippingId}</p>}
               {continueButton()}
             </fieldset>
           ) : step > 2 ? (
-            <p className="mt-3 pl-10 text-sm text-black/60">{option.label} · {option.days} · {shippingCents === 0 ? "Grátis" : formatPrice(shippingCents)}</p>
+            <p className="mt-3 pl-10 text-sm text-black/60">{option ? `${option.label} · ${option.days} · ${shippingCents === 0 ? "Grátis" : formatPrice(shippingCents)}` : "—"}</p>
           ) : null}
         </li>
 
@@ -446,7 +483,7 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
         </ul>
         <dl className="mt-6 flex flex-col gap-2 border-t border-black/10 pt-5 text-sm">
           <div className="flex justify-between"><dt className="text-black/60">Subtotal</dt><dd>{formatPrice(subtotalCents)}</dd></div>
-          <div className="flex justify-between"><dt className="text-black/60">Entrega ({option.label})</dt><dd>{shippingCents === 0 ? "Grátis" : formatPrice(shippingCents)}</dd></div>
+          <div className="flex justify-between"><dt className="text-black/60">{option ? `Entrega (${option.label})` : "Entrega"}</dt><dd>{option ? (shippingCents === 0 ? "Grátis" : formatPrice(shippingCents)) : <span className="text-black/60">calculada após o CEP</span>}</dd></div>
           <div className="mt-2 flex justify-between border-t border-black/10 pt-3 text-base font-medium"><dt>Total</dt><dd>{formatPrice(subtotalCents + shippingCents)}</dd></div>
         </dl>
         <DispatchSummary items={items} className="mt-4" />
