@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { privateRobots } from "@/lib/indexing";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { PageIntro } from "@/components/page-intro";
 import { mercadoPagoConfigured } from "@/lib/payments/mercado-pago";
 
-export const metadata: Metadata = { title: "Finalizar compra", robots: { index: false } };
+export const metadata: Metadata = { title: "Finalizar compra", robots: privateRobots };
 
 // O modo (simulado ou Mercado Pago) vem das variáveis de ambiente no build: depois de configurá-las, faça um novo deploy.
 export default function CheckoutPage() {

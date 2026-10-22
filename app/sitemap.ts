@@ -2,9 +2,12 @@ import type { MetadataRoute } from "next";
 import { catalog } from "@/lib/catalog";
 import { articles } from "@/lib/content/diario";
 import { institutionalPages } from "@/lib/institutional";
+import { ALLOW_INDEXING } from "@/lib/indexing";
 import { SITE_URL } from "@/lib/site";
 
+// Vazio até o lançamento (NEXT_PUBLIC_ALLOW_INDEXING="true"; lib/indexing.ts).
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  if (!ALLOW_INDEXING) return [];
   const [products, teams, drivers, categories] = await Promise.all([catalog.getProducts(), catalog.getTeams(), catalog.getDrivers(), catalog.getCategories()]);
   const url = (path: string) => `${SITE_URL}${path}`;
   return [

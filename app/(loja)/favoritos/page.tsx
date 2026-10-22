@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { privateRobots } from "@/lib/indexing";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { FavoritesList } from "@/components/favorites-list";
 import { MostWanted } from "@/components/most-wanted";
 import { PageIntro } from "@/components/page-intro";
 
-export const metadata: Metadata = { title: "Favoritos", robots: { index: false } };
+export const metadata: Metadata = { title: "Favoritos", robots: privateRobots };
 
 export default function FavoritosPage() {
   return (

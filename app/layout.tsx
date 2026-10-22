@@ -6,6 +6,7 @@ import { SearchRoot } from '@/components/search-root'
 import { SiteUIProvider } from '@/components/site-ui'
 import { fontVariables } from '@/lib/fonts'
 import { BRAND, brandTitle } from '@/lib/brand'
+import { siteRobots } from '@/lib/indexing'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import './globals.css'
 
@@ -17,7 +18,8 @@ export const metadata: Metadata = {
   // usam a própria foto. Favicon e apple-icon também são gerados (app/icon.tsx, app/apple-icon.tsx).
   openGraph: { type: 'website', locale: 'pt_BR', siteName: SITE_NAME },
   twitter: { card: 'summary_large_image' },
-
+  // Fora do índice até o lançamento (NEXT_PUBLIC_ALLOW_INDEXING="true"; lib/indexing.ts).
+  robots: siteRobots,
 }
 
 export const viewport: Viewport = {

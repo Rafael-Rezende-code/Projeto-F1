@@ -8,10 +8,17 @@ const supabaseHost = (() => {
   }
 })()
 
+// Fora do índice até o lançamento (lib/indexing.ts): cabeçalho X-Robots-Tag em TODAS as respostas (páginas, imagens,
+// arquivos), além do robots.txt e da meta tag. Some quando NEXT_PUBLIC_ALLOW_INDEXING="true" (lido no build).
+const allowIndexing = process.env.NEXT_PUBLIC_ALLOW_INDEXING === 'true'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // O `next dev` do Next 16.3 acrescenta um bloco próprio ao CLAUDE.md a cada início; o CLAUDE.md é do projeto.
   agentRules: false,
+  async headers() {
+    return allowIndexing ? [] : [{ source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { privateRobots } from "@/lib/indexing";
 import { OrderConfirmation } from "@/components/checkout/order-confirmation";
 import { OrderView } from "@/components/checkout/order-view";
 import { getOrderForCustomer } from "@/lib/orders/store";
 import { isOrderStoreConfigured } from "@/lib/supabase/config";
 
-export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
+export const metadata: Metadata = { title: "Pedido", robots: privateRobots };
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ t?: string }> };
 
