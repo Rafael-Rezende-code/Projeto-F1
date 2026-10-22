@@ -251,6 +251,12 @@ h1, h2, .font-display {
    Usado pelo espaçador no fim da página, pelo aviso da sacola e pela barra fixa de compra do produto. */
 :root { --dock-space: 0px; }
 @media (max-width: 767px) { :root { --dock-space: calc(84px + env(safe-area-inset-bottom)); } }
+/* Botão do WhatsApp (components/whatsapp.tsx): acima do dock no celular e, na página de produto, acima da barra fixa de
+   compra quando ela aparece (a barra tem [data-buy-bar]; :has evita JS e salto de layout). Desktop: canto inferior. */
+.whatsapp-fab { bottom: calc(var(--dock-space) + 12px); }
+@media (min-width: 768px) { .whatsapp-fab { bottom: 24px; } }
+body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px); }
+@media (min-width: 768px) { body:has([data-buy-bar]) .whatsapp-fab { bottom: 24px; } }
 
 /* Seção VELOCIDADE (components/velocidade-portal.tsx): esconde o seletor de letra que o GlyphPortal mostra em telas de
    toque. !important: a regra interna do componente vem num <style> próprio, com o mesmo peso. */

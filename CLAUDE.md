@@ -839,6 +839,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `e2e/fixtures.ts`, cujo `page.goto` espera essa marca (o clique no card da equipe antes da hidratação se perdia no dev).
   `app/error.tsx` e `app/global-error.tsx`: "Algo saiu da pista." com "Tentar de novo" e volta para a home.
 
+- **WhatsApp (fase 1a):** `NEXT_PUBLIC_WHATSAPP_NUMBER` (só dígitos, com país) em `lib/social.ts` (`whatsappLink`); mensagens
+  em `lib/store-policy.ts` (`whatsappMessages`, configuráveis por `NEXT_PUBLIC_WHATSAPP_MESSAGE*`, marcadores {produto},
+  {link}, {pedido}; nada de prazo de resposta). Botão `components/whatsapp.tsx` no layout raiz (fora do /admin): desktop no
+  canto inferior direito; celular acima do dock e, com a barra fixa de compra (`[data-buy-bar]`), acima dela (CSS `:has`).
+  A página de produto e a do pedido informam o assunto com `<WhatsAppTopic>`. Rodapé e /contato usam o mesmo link. Sem
+  número, nada aparece.
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete

@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
 import { HydrationMark } from '@/components/hydration-mark'
+import { WhatsAppButton } from '@/components/whatsapp'
 import { LazyShell } from '@/components/lazy-shell'
 import { SearchRoot } from '@/components/search-root'
 import { SiteUIProvider } from '@/components/site-ui'
@@ -45,6 +46,7 @@ export default function RootLayout({
             {children}
             <LazyShell />
             <SearchRoot />
+            <WhatsAppButton />
           </CartProvider>
         </SiteUIProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}

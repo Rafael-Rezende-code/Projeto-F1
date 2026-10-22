@@ -9,6 +9,7 @@ import { productTransitionName } from "@/components/motion/view-transition";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductGrid } from "@/components/product-grid";
 import { ProductPurchase } from "@/components/product-purchase";
+import { WhatsAppTopic } from "@/components/whatsapp";
 import { catalog } from "@/lib/catalog";
 import { dispatchNotice, ORIGIN_LABELS } from "@/lib/catalog/fulfillment";
 import { discountPercent, formatPrice } from "@/lib/format";
@@ -143,6 +144,7 @@ export default async function ProductPage({ params }: Params) {
 
             <div className="mt-8">
               <ProductPurchase product={product} />
+              <WhatsAppTopic product={{ name: product.name, slug: product.slug }} />
             </div>
 
             <div className="mt-10 border-t border-black/10">

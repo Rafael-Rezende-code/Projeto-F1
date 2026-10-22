@@ -4,10 +4,14 @@ import { FooterColumn } from "@/components/footer-column";
 import { SocialIcon } from "@/components/social-icons";
 import { company, companyFacts } from "@/lib/company";
 import { footerColumns, legalLinks } from "@/lib/navigation";
-import { socialLinks } from "@/lib/social";
+import { socialLinks, whatsappLink } from "@/lib/social";
+import { whatsappMessages } from "@/lib/store-policy";
+import { MessageCircle } from "lucide-react";
 
 // Rodapé do site (home e páginas internas). Mesmo visual do rodapé original da home; links em lib/navigation.ts.
 export function SiteFooter() {
+  // WhatsApp (lib/social.ts): mesmo link do botão flutuante, com a mensagem geral. Sem número, nada aparece.
+  const whatsapp = whatsappLink(whatsappMessages.generic());
   return (
     <footer className="bg-[#080808] px-5 py-16 text-white sm:px-10 sm:py-20">
       {/* Celular: grupos de links em acordeão (FooterColumn); dados da empresa sempre visíveis, abaixo. */}
@@ -48,8 +52,15 @@ export function SiteFooter() {
           ))}
         </div>
         {/* Redes: só as que têm URL configurada (lib/social.ts, NEXT_PUBLIC_SOCIAL_*); sem nenhuma, nada aparece. */}
-        {socialLinks.length > 0 && (
-          <ul className="flex gap-1" aria-label="Redes sociais">
+        {(socialLinks.length > 0 || whatsapp) && (
+          <ul className="flex gap-1" aria-label="Redes sociais e WhatsApp">
+            {whatsapp && (
+              <li>
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp da loja (abre em outra aba)" className="flex size-11 items-center justify-center rounded-xl transition hover:bg-white/10 hover:text-white">
+                  <MessageCircle size={16} aria-hidden="true" />
+                </a>
+              </li>
+            )}
             {socialLinks.map((link) => (
               <li key={link.network}>
                 <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={`${link.label} (abre em outra aba)`} className="flex size-11 items-center justify-center rounded-xl transition hover:bg-white/10 hover:text-white">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { privateRobots } from "@/lib/indexing";
 import { OrderConfirmation } from "@/components/checkout/order-confirmation";
 import { OrderView } from "@/components/checkout/order-view";
+import { WhatsAppTopic } from "@/components/whatsapp";
 import { getOrderForCustomer } from "@/lib/orders/store";
 import { isOrderStoreConfigured } from "@/lib/supabase/config";
 
@@ -16,6 +17,7 @@ export default async function PedidoPage({ params, searchParams }: Props) {
   const stored = isOrderStoreConfigured() && t ? await getOrderForCustomer(id, t) : null;
   return (
     <div className="px-5 pb-24 pt-12 sm:px-10 sm:pt-16">
+      <WhatsAppTopic order={id} />
       <div className="mx-auto max-w-[1400px]">{stored ? <OrderView order={stored} /> : <OrderConfirmation id={id} />}</div>
     </div>
   );

@@ -40,3 +40,20 @@ export const socialLinks: SocialLink[] = createSocialLinks({
   NEXT_PUBLIC_SOCIAL_TIKTOK: process.env.NEXT_PUBLIC_SOCIAL_TIKTOK,
   NEXT_PUBLIC_SOCIAL_YOUTUBE: process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE,
 });
+
+// WhatsApp da loja (operação, fase 1a): NEXT_PUBLIC_WHATSAPP_NUMBER só com dígitos, com o código do país (ex.:
+// 5535999990000). Sem o número (ou com número inválido), o botão e os links de WhatsApp NÃO aparecem. As mensagens
+// pré-preenchidas ficam em lib/store-policy.ts.
+/** Número só com dígitos (10 a 15, com o código do país) ou null. */
+export function parseWhatsAppNumber(value: string | undefined) {
+  const digits = String(value ?? "").trim();
+  return /^\d{10,15}$/.test(digits) ? digits : null;
+}
+
+export const whatsappNumber = parseWhatsAppNumber(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER);
+
+/** Link wa.me com a mensagem pré-preenchida, ou null sem número configurado. */
+export function whatsappLink(message: string, number: string | null = whatsappNumber) {
+  if (!number) return null;
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+}

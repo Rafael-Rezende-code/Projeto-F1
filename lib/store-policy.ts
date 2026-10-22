@@ -77,3 +77,27 @@ export function installmentOffer(priceCents: number, policy: StorePolicy = store
   if (count < 2) return null;
   return { count, amountCents: Math.ceil(priceCents / count) };
 }
+
+// Mensagens pré-preenchidas do WhatsApp (operação, fase 1a). Configuráveis por variável; sem ela, o texto padrão abaixo
+// (neutro: não promete prazo de resposta). Marcadores: {produto}, {link} e {pedido}.
+//   NEXT_PUBLIC_WHATSAPP_MESSAGE           mensagem geral (rodapé, /contato, demais páginas)
+//   NEXT_PUBLIC_WHATSAPP_MESSAGE_PRODUCT   na página de produto
+//   NEXT_PUBLIC_WHATSAPP_MESSAGE_ORDER     na página do pedido
+const fill = (template: string, values: Record<string, string>) => template.replace(/\{(\w+)\}/g, (match, key) => values[key] ?? match);
+
+export function createWhatsAppMessages(env: Env) {
+  const generic = text(env.NEXT_PUBLIC_WHATSAPP_MESSAGE) ?? "Olá! Tenho uma dúvida sobre a loja.";
+  const product = text(env.NEXT_PUBLIC_WHATSAPP_MESSAGE_PRODUCT) ?? "Olá! Tenho uma dúvida sobre o produto {produto}: {link}";
+  const order = text(env.NEXT_PUBLIC_WHATSAPP_MESSAGE_ORDER) ?? "Olá! Tenho uma dúvida sobre o meu pedido {pedido}.";
+  return {
+    generic: () => generic,
+    product: (name: string, url: string) => fill(product, { produto: name, link: url }),
+    order: (orderId: string) => fill(order, { pedido: orderId }),
+  };
+}
+
+export const whatsappMessages = createWhatsAppMessages({
+  NEXT_PUBLIC_WHATSAPP_MESSAGE: process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE,
+  NEXT_PUBLIC_WHATSAPP_MESSAGE_PRODUCT: process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE_PRODUCT,
+  NEXT_PUBLIC_WHATSAPP_MESSAGE_ORDER: process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE_ORDER,
+});

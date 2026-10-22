@@ -1,6 +1,8 @@
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { PageIntro } from "@/components/page-intro";
 import { companyFacts } from "@/lib/company";
+import { whatsappLink } from "@/lib/social";
+import { whatsappMessages } from "@/lib/store-policy";
 import { PLACEHOLDER, type InstitutionalPage } from "@/lib/institutional";
 
 // Esqueleto de página institucional/legal: título, índice e seções com texto placeholder bem marcado.
@@ -70,8 +72,16 @@ export function InstitutionalPageView({ page }: { page: InstitutionalPage }) {
             </div>
           )}
 
-          {page.slug === "contato" && companyFacts().length > 0 && (
+          {page.slug === "contato" && (companyFacts().length > 0 || whatsappLink(whatsappMessages.generic())) && (
             <dl className="grid gap-4 rounded-2xl border border-black/10 p-6 text-sm sm:grid-cols-2">
+              {whatsappLink(whatsappMessages.generic()) && (
+                <div>
+                  <dt className="text-xs text-black/60">WhatsApp</dt>
+                  <dd className="mt-1">
+                    <a href={whatsappLink(whatsappMessages.generic())!} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Conversar pelo WhatsApp<span className="sr-only"> (abre em outra aba)</span></a>
+                  </dd>
+                </div>
+              )}
               {companyFacts().map((fact) => (
                 <div key={fact.key}>
                   <dt className="text-xs text-black/60">{fact.label}</dt>

@@ -129,7 +129,7 @@ export function ProductPurchase({ product }: { product: Product }) {
 
       {/* Barra fixa de compra (celular), acima do dock (--dock-space). Só existe quando o botão principal saiu da tela. */}
       {showBar && !soldOut && (
-        <div className="fixed inset-x-0 bottom-[var(--dock-space)] z-[70] border-t border-black/10 bg-white/95 px-5 py-3 backdrop-blur md:hidden">
+        <div data-buy-bar className="fixed inset-x-0 bottom-[var(--dock-space)] z-[70] border-t border-black/10 bg-white/95 px-5 py-3 backdrop-blur md:hidden">
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{product.name}</p>
