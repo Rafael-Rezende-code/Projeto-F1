@@ -8,8 +8,10 @@ test("sob encomenda: aviso no produto e prazo do item mais lento na sacola", asy
   await page.goto("/produtos/miniatura-capacete-hamilton");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await expect(page.getByText("Produto sob encomenda · Importado")).toBeVisible();
-  await expect(page.getByText("Envio estimado em 15 a 30 dias úteis.")).toBeVisible();
+  // Escopo no conteúdo principal: durante o streaming o React mantém por um instante uma cópia oculta do trecho.
+  const main = page.locator("#conteudo");
+  await expect(main.getByText("Produto sob encomenda · Importado")).toBeVisible();
+  await expect(main.getByText("Envio estimado em 15 a 30 dias úteis.")).toBeVisible();
   const sizes = page.locator("label:has(input[name=tamanho]:not([disabled]))");
   if (await sizes.count()) await sizes.first().click();
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
@@ -17,7 +19,8 @@ test("sob encomenda: aviso no produto e prazo do item mais lento na sacola", asy
 
   // Peça de estoque próprio: sem aviso.
   await page.goto("/produtos/camiseta-hamilton");
-  await expect(page.getByText(/Produto sob encomenda/)).toHaveCount(0);
+  await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(main.getByText(/Produto sob encomenda/)).toHaveCount(0);
   await page.locator("label:has(input[name=tamanho]:not([disabled]))").first().click();
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("foi adicionado à sacola");

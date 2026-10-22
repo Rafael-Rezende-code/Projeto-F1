@@ -56,7 +56,8 @@ test("equipe: história, marcos e sede entre o cabeçalho e os produtos", async 
 test("/sobre: manifesto, independência, o que vendemos e [CONFIRMAR] destacado; sem placeholders da empresa", async ({ page }) => {
   await page.goto("/sobre");
   await expect(page.getByRole("heading", { level: 1, name: "Feita para quem sente a corrida." })).toBeVisible();
-  await expect(page.getByText("Não temos vínculo, patrocínio nem aprovação da Fórmula 1, das equipes ou dos pilotos.")).toBeVisible();
+  // Escopo no conteúdo principal: durante o streaming o React mantém por um instante uma cópia oculta do trecho.
+  await expect(page.locator("#conteudo").getByText("Não temos vínculo, patrocínio nem aprovação da Fórmula 1, das equipes ou dos pilotos.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "O que vendemos" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Pistas impressas em 3D" })).toBeVisible();
   await expect(page.getByText("Entregamos em todo o Brasil.")).toBeVisible();

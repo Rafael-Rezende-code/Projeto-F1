@@ -524,7 +524,8 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   estão contidas na `main`.
 - **`feat/conteudo`** (a partir da `main`): fases 1 a 8 da rodada de conteúdo (imagens, carros, VELOCIDADE, textos,
   Diário, descrições, /sobre). **`feat/backend`** (a partir da `feat/conteudo`): fases 9 a 11 (Supabase, Mercado Pago,
-  admin). **`feat/refino`** (a partir da `feat/backend`): refino 2 (itens 0–8). Nenhuma tem merge na `main` sem aprovação.
+  admin). **`feat/refino`** (a partir da `feat/backend`): refino 2 (itens 0–8). **`feat/lancamento`** (a partir da
+  `feat/refino`): SQL único, indexação desligada, importador CSV e checklist. Nenhuma tem merge na `main` sem aprovação.
 
 ## Rodada de conteúdo e backend (feat/conteudo, feat/backend)
 
@@ -771,8 +772,10 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete
   perf/server-components feat/loja feat/polimento feat/polimento-2 feat/ajustes feat/pilotos`.
-- **Aprovação:** `feat/conteudo` (fases 1–8), `feat/backend` (fases 9–11, contém a `feat/conteudo`) e `feat/refino`
-  (refino 2, contém a `feat/backend`) sem merge na `main`. Relatório do refino 2 em `docs/refino-2/relatorio.md`.
+- **Aprovação:** `feat/conteudo` (fases 1–8), `feat/backend` (fases 9–11, contém a `feat/conteudo`), `feat/refino`
+  (refino 2, contém a `feat/backend`) e `feat/lancamento` (contém a `feat/refino`) sem merge na `main`. Relatórios em
+  `docs/refino-2/relatorio.md` e `docs/relatorio-lancamento.md`.
+- **Antes de abrir ao público:** seguir `docs/lancamento.md` (checklist e roteiro de teste de compra).
 - **Refino 2:** rodar a migração `20261023000000_modelo_de_venda.sql` no Supabase; e-mail de contato
   (`NEXT_PUBLIC_CONTACT_EMAIL`); dados da empresa em `lib/company.ts`; entrega local e calculadora com valores reais;
   conta/token do Melhor Envio; questões de `docs/operacao/modelo-de-venda.md` com advogado e contador.
