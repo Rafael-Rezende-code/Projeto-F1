@@ -1,6 +1,13 @@
 import type { HoverTransitionDirection, HoverTransitionEffect } from "@/components/ui/hover-transition";
 
-export type DriverPhoto = { src: string; width: number; height: number; position: string };
+export type DriverPhoto = {
+  src: string;
+  width: number;
+  height: number;
+  position: string;
+  /** Enquadramento da versão de desktop opcional ({slug}-principal-desktop / -secundaria-desktop), se existir. */
+  desktopPosition?: string;
+};
 
 export type Driver = {
   slug: string;
@@ -18,6 +25,9 @@ export type Driver = {
    * Fotos da página do piloto (/pilotos/[slug]), em public/images/pilotos/paginas/. Largura e altura reais do arquivo
    * (decidem o layout do topo: vertical = dividido, horizontal = largura total) e o enquadramento (object-position).
    * principal: topo da página; secundária: bloco editorial do meio.
+   * VERSÕES DE DESKTOP OPCIONAIS: se existir public/images/pilotos/paginas/{slug}-principal-desktop.(jpg|png|webp) ou
+   * {slug}-secundaria-desktop.*, ela é usada a partir de 1024px (<picture>: cada aparelho baixa só uma). Basta colocar o
+   * arquivo e rodar o build (ou `pnpm images:blur`); a orientação dela decide o layout do topo no desktop.
    */
   photoMain: DriverPhoto;
   photoSecondary: DriverPhoto;

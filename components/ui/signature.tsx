@@ -5,7 +5,8 @@
 //    e a caixa vêm do servidor (lib/signature-paths.ts, no build). Sem opentype.js nem arquivo de fonte no cliente;
 // 2) `stagger`: o intervalo entre letras (0,2 s fixo) vira prop, para o nome inteiro caber em ~2,2 s;
 // 3) viewBox pela caixa real dos glifos: o SVG tinha altura fixa de 100 e cortava laços, ascendentes e descendentes;
-// 4) `still`: aparece pronto (sem animação), para prefers-reduced-motion.
+// 4) `still`: aparece pronto (sem animação), para prefers-reduced-motion;
+// 5) `play`: quando definido, controla o início (false espera, true desenha), para coreografar com a foto do piloto.
 // A animação é a do original: cada letra tem o contorno desenhado (pathLength) e o preenchimento revelado por uma máscara.
 
 import { useId } from "react";
@@ -89,6 +90,8 @@ interface SignatureProps {
   stagger?: number;
   /** APEX (4): mostra pronto, sem animar */
   still?: boolean;
+  /** APEX (5): controla o início (false: espera escondido; true: desenha). Sem ela, vale inView/animate do original. */
+  play?: boolean;
 }
 
 export function Signature({
@@ -103,6 +106,7 @@ export function Signature({
   once = true,
   stagger = PATH_DELAY_STEP,
   still = false,
+  play,
 }: SignatureProps) {
   const maskId = `signature-reveal-${useId().replace(/:/g, "")}`;
 
@@ -115,8 +119,8 @@ export function Signature({
       fill="none"
       className={className}
       initial={still ? "visible" : "hidden"}
-      whileInView={inView ? "visible" : undefined}
-      animate={inView ? undefined : "visible"}
+      whileInView={play === undefined && inView ? "visible" : undefined}
+      animate={play !== undefined ? (play || still ? "visible" : "hidden") : inView ? undefined : "visible"}
       viewport={{ once }}
     >
       <defs>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { DriverCardList } from "@/components/drivers-section";
+import { driverCardBlurs } from "@/lib/driver-card-blurs";
 import { PageIntro } from "@/components/page-intro";
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function PilotosPage() {
         <div className="mt-8">
           <PageIntro eyebrow="Os pilotos" title="Escolha seu piloto" body="Camisetas, bonés, miniaturas e pôsteres de quem acelera no grid." />
         </div>
-        <DriverCardList className="mt-12" />
+        <DriverCardList className="mt-12" blurs={driverCardBlurs()} />
       </div>
     </div>
   );

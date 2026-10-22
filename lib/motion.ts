@@ -1,5 +1,5 @@
 // TOKENS DE MOVIMENTO — a única escala de animação do site (rodada 2). Espelho em CSS no app/globals.css
-// (--motion-short/medium/long, --ease-out/--ease-in-out, --motion-stagger, --motion-rise): mantenha os dois iguais.
+// (--motion-short/medium/long/reveal, --ease-out/--ease-in-out, --motion-stagger, --motion-rise): mantenha os dois iguais.
 //
 // Regras:
 // - animar só transform e opacity (nada de filter/blur, width/height, top/left, cor em loop);
@@ -16,6 +16,8 @@ export const duration = {
   medium: 0.45,
   /** entradas de cards e blocos; zoom de imagem no hover; cortinas */
   long: 0.8,
+  /** revelação das fotos (cortina + foco da foto de piloto, components/motion/image-reveal.tsx) */
+  reveal: 1,
 } as const;
 
 /** Curvas cubic-bezier (formato do motion). */

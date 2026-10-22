@@ -1,0 +1,97 @@
+{
+  "/images/editorial/abraco-redbull-ferrari-desktop.png": {
+    "w": 1672,
+    "h": 941,
+    "blur": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAAAQAgCdASoQAAkAAsBMJYgCdAD+ozxF6h2AAP5mDO9KkgfsDInMNGldUQUcOGBJMgJSb3eYkClUPLOw/sVdMuLVErtvY4gYpmgvkppdjVQGXpMAMiCOPZpQAAA="
+  },
+  "/images/editorial/abraco-redbull-ferrari.jpeg": {
+    "w": 1170,
+    "h": 1424,
+    "blur": "data:image/webp;base64,UklGRrQAAABXRUJQVlA4IKgAAACQBACdASoQABQAPtFUo0uoJKMhsAgBABoJbACxG1AVf+4BkrXscsHgDrj15AAA/k7Rb0iHIwim31/1MSzfKq313nZ+J2/cRvV4PbI619Rz3P9wKFSje6VArJbWthKPPYUi6kKx8cQDVm/L2r/GlJUoHXAag7SGPW6MFhIDoHbFhi9IvhNHjXP8e2P4g31Nq/0giSfTYZvQh2ifgxeYlWdL7hntl/kXYAA="
+  },
+  "/images/editorial/senna-champanhe.jpeg": {
+    "w": 1169,
+    "h": 1435,
+    "blur": "data:image/webp;base64,UklGRqAAAABXRUJQVlA4IJQAAADwAwCdASoQABQAPtFUo0uoJKMhsAgBABoJYwAAXG2XAef2GhR6/JfAAP7snBnw7yDsi7cufMp/ZLCOSGVaaooKdkzdV2epjw+3IwF4uxeHVbdB7e04fHbTihjEzT7uWPp73n5vTWqqeGlhU0FaQwCTUEIrSVC94R78y4VJjktvaFO/Cuw34qaLkp5NxubTUJOZAAAA"
+  },
+  "/images/editorial/senna-pneus.jpeg": {
+    "w": 1170,
+    "h": 1484,
+    "blur": "data:image/webp;base64,UklGRqIAAABXRUJQVlA4IJYAAABQBACdASoQABQAPtFUo0uoJKMhsAgBABoJagAD5SoayFRrq7VkQRYUjz0gAP7w4V91PrMVGR6Ej2GRAZQbMHIJft30jJBZF6k2Pkr3emD9RfXclmQ9QX5mTVo7k6Sln5Dpn/s14gqJoxOdnRpET+HSEQnz4T+L8aOb3TJm1q5Uv5iDdcWQDblSwRfJenpmao6zB6IbgAA="
+  },
+  "/images/editorial/senna-sentado.jpeg": {
+    "w": 1170,
+    "h": 1431,
+    "blur": "data:image/webp;base64,UklGRtAAAABXRUJQVlA4IMQAAACQBACdASoQABQAPtFUo0uoJKMhsAgBABoJbAC7H8AgqxVYzriy2B6bhX8Wf2AA4jaMCeVuWeIxMCutKBu1z7Gav/iJGXKT3fKp8cJrwmf05jDT6Ci3uAP+D06L6mRd9CbON1VL7lLaHjnudjjtlk631KeP3DYhvYaSETvLdrmK3MDRRANDBj6RgHfIrN4Y9G4yRW2oI16D+Kvk+yO3hUAT/NMsZVxRa9+I34v/YvIYKL91w2RboNXfgUMzuqw2L//IAAAA"
+  },
+  "/images/editorial/verstappen-capacete-desktop.png": {
+    "w": 1672,
+    "h": 941,
+    "blur": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAADQAQCdASoQAAkAAsBMJZwCdAEfOobikAD+aIedZMXGyBK19Wv5FVh9DWsxuSGDQKZOuvGoI43v+6wpY35yXROHe237Kk95T2hakUcbkgAmG6gTkEg5O7NMAAA="
+  },
+  "/images/editorial/verstappen-capacete.jpeg": {
+    "w": 1170,
+    "h": 1418,
+    "blur": "data:image/webp;base64,UklGRq4AAABXRUJQVlA4IKIAAAAwBACdASoQABMAPtFUo0uoJKMhsAgBABoJQApgC4HWrJsmEc86LofbMrgA/f9p/2vK7iyZO8beDrouujSqx/ZKoB50nus+TmmaO2WzMh6eM3FY6GN+bzwuiEwP72BrMt1pUqGElxkXsih8tH+ptFSNz/T9GZMNionQQ8A3rGNtZn1746TA2+2KhETZOGm4JV+sXRj0L69zFz5Zl4OWOOU0AAA="
+  },
+  "/images/pilotos/bortoleto.png": {
+    "w": 1024,
+    "h": 1536,
+    "blur": "data:image/webp;base64,UklGRuIAAABXRUJQVlA4INYAAAAwBQCdASoQABgAPtFUo0uoJKMhsAgBABoJbACdMoMYJn/YoCzw11bcqiGu2pFpquiZ7AD8VQAJBIK+PUKCPrJmug4MJaRf3CTwycP/NSDI4Cn6/Zp+IXG/1q9NERcd/e25mddn5pnMCErEPwHwVCGfofYSZyD5Dm1rTfVYv0FS+5JNqXZvBVUBb3GvX2fS07DxNGC9Our+kW/J2sbuxwH79GK7TfP/vAq3af858/z63+72iX51Qw3BQMqQ6tB5u2fp1wtAD8G8XFx952Iy1YQbSek+KAAA"
+  },
+  "/images/pilotos/hamilton.png": {
+    "w": 1024,
+    "h": 1536,
+    "blur": "data:image/webp;base64,UklGRtoAAABXRUJQVlA4IM4AAADQBQCdASoQABgAPtFUo0uoJKMhsAgBABoJbACdMoR3IsChMPRRrgDIBM6CyKqcyvaHGxn7FPtQAPxYkCrBRssLKtOyjFsb+D93LSMW0P0Q+IkAYGZMpKZRMttZFcZkzLMiQb0Tm9oX7pHV4H9KORUBudM/a2N5esoRKfS9xq2bAG+zj8oPXVF2v6W0nTZkKWeOGT8BMb2SdAGMKstQGaNMNWtfquOu336/uXmM2DLpCBTwPJLKh/ri+1SpEsOYGIpWjktVPSYH952d7psAAA=="
+  },
+  "/images/pilotos/norris.jpeg": {
+    "w": 1024,
+    "h": 1536,
+    "blur": "data:image/webp;base64,UklGRvQAAABXRUJQVlA4IOgAAABQBQCdASoQABgAPtFUo0uoJKMhsAgBABoJbACdMoRwIsB9gJpJIjAKYRprtgYF4WIe7AAA9x48CoJWBWoaiQFeN64OaT5y1rjB2iyrtwm/UOtQwUmEKX6fejVJ4ku/RP8DKOg8MVsdQnd+Ie7qPD66D3Hv5eb4y2HnFyg617puvVHH7ZHE/vsVIPdTdBqVNjYJJAmGJl+gP4UrU1G257WaQAbhPDzRpldl1MXQD+/uD/X9VQiJuFjUjqPzgKvGJ6ZIhp8zlxqnye/8yqcW6/meP6mOSnL1/hkoX9dr4+zZQ6JW1M/QAAAA"
+  },
+  "/images/pilotos/paginas/bortoleto-principal.jpg": {
+    "w": 1169,
+    "h": 1433,
+    "blur": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAAAwBACdASoQABQAPtFUo0uoJKMhsAgBABoJbAC09BRALYV4WWcjfR151gAA/vXaTOyONiuLwgs08/edmko7xf7jTpOi8hW3YOxGq6vi1z34q0eF8gSxJOoMkyJ1ppU2nIoUGgmPYJ7Bki3ywict/zJcrevwe1lRGI+Sn4lMm6YskVY36uayFzQiAdXuAAAA"
+  },
+  "/images/pilotos/paginas/bortoleto-secundaria.jpg": {
+    "w": 1170,
+    "h": 1553,
+    "blur": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAADQAwCdASoQABUAPtFUo0uoJKMhsAgBABoJZwAAYf+1xYsfQVjlpIAA/okwBK2LA3+yJZdTifaBxZKJ+H5jwmrNxO/QQ1BzXelPscwp0QHcpQ1bmwEDO9nQAEFtTgyW7Q6c4RLOVxs87fi6VzD7gHPD5CyTZycCAAA="
+  },
+  "/images/pilotos/paginas/hamilton-principal.jpg": {
+    "w": 1169,
+    "h": 1435,
+    "blur": "data:image/webp;base64,UklGRuQAAABXRUJQVlA4INgAAACwBACdASoQABQAPtFUo0uoJKMhsAgBABoJbACdMoAlug/ZQTRzC07Hnwa6dbnsAP7pAcImRrFMDMHSTdlNfpLpOzutx0QT5ge4LTr5K0LmNr9qWun5yKlab/UUdnaz9f8+QRz2xyJdOPPlnostrOxKwcHnuaM8u6dSijbyZed0EnSWELT3kzDZh2SiuCod/onfoq9aY7f6M7hX0uPjJRRl22h1HhMeee0snNDzXJiM+gmfGlnp/ndYU1XFscDWxdYyIc8TVl/ceUrJk7ftGnkIXzgVKCXAAAA="
+  },
+  "/images/pilotos/paginas/hamilton-secundaria.jpg": {
+    "w": 1170,
+    "h": 1470,
+    "blur": "data:image/webp;base64,UklGRqgAAABXRUJQVlA4IJwAAABwBACdASoQABQAPtFUo0uoJKMhsAgBABoJbACdMoAltxOQj6inSzUxWsuRoAD+8rSN3o/LagtlDbGkRiv1Bmn2cuhCCJ1mQXEpEaaWet0dcTdk4ROmSPl996QSnf4YQ/M2ZpxnjQrxUpTT6x96Z/f3DuKRFDD4x25E77c9bZV21rdUnOIOU68o9GGAXuji4SrPmM+pYhh7sZizQAA="
+  },
+  "/images/pilotos/paginas/norris-principal.jpg": {
+    "w": 1170,
+    "h": 1425,
+    "blur": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAAAQBACdASoQABQAPtFUo0uoJKMhsAgBABoJZgCdMoMuo8ABEFBIbI+2/gD+94I2FThiE8zBBnwfxhjFTg3lmXCF7qYGs1nBLJtyPM+CkbBVxi4mg2FulhbN5mDyH8GlL1mRMG5x8p4qXQm0+FOLIxPEUsc4ATaZsiTOabKi0CD4M83eg04j104Op7SJlgAA"
+  },
+  "/images/pilotos/paginas/norris-secundaria.jpg": {
+    "w": 1169,
+    "h": 1586,
+    "blur": "data:image/webp;base64,UklGRoYAAABXRUJQVlA4IHoAAACwAwCdASoQABYAPtFUo0uoJKMhsAgBABoJYgDCgYvM3sUM1b+nwAD+8yuCaPjO2fJVroY7U2T+SqttVEYo4E440VT7hydK/yGMfI3g/rkeMFKc/hemXtW7U4PAEaRm5hlu+RLLW2xgFRl4azmX7uqOM4JQ8VLVP+a+AA=="
+  },
+  "/images/pilotos/paginas/verstappen-principal.jpg": {
+    "w": 1170,
+    "h": 1446,
+    "blur": "data:image/webp;base64,UklGRrYAAABXRUJQVlA4IKoAAABQBACdASoQABQAPtFUo0uoJKMhsAgBABoJZQC/OYwcyrMJKuuJ23+C6q64AP7zgJvWXf5bH4Rpa4Wda7IWuXqxvYeRwSAgLotTwEBjlODHFd1R8NI6zSuVUgmHl5tZfubhvyN68Aal6XXWB7/EZ5nCmlxcRzf60ZXlPcuO5QmQh+q0KM5dSSR//wQyXmHwZKWurT+hba24CNN320oFylQVFivU5UWr7gAAAA=="
+  },
+  "/images/pilotos/paginas/verstappen-secundaria.jpg": {
+    "w": 1170,
+    "h": 1452,
+    "blur": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAADQAwCdASoQABQAPtFUo0uoJKMhsAgBABoJYwAIEANmioCts70Sx0AA/tmbIp/OSJo8SkOYYQlMVBdjecZfUNJMyeEVD7K+hOTbclx844GRH/P9VsgGF9SAiom3pasu3O1Gfx0AELsne6Wc7t2sC3cwPba8Z2w3xjsCGvDeB/Bx/f4lUJCcvwiLziAAAA=="
+  },
+  "/images/pilotos/verstappen.png": {
+    "w": 1024,
+    "h": 1536,
+    "blur": "data:image/webp;base64,UklGRuAAAABXRUJQVlA4INQAAADwBACdASoQABgAPtFUpEuoJKOhsAgBABoJbACdMoMYPYB7qBEcB2Ov6k1l2I6RzewA9x48i0jTz6FhMg3tf+sZVaBir2jqN47HguYbulebsO4rh3u0R2jntBAPJ9e5eOmKd9i/5j5GvjqKI7X9G8X4JBkX5vMG9oXJ+Imy9LmewzMyQxBK1HG4tp+gPLn2cCtzvnYBjvYErDESvPPipV+1FfDOFETndtA2zyW7YV41W32hylbqz5t22+JNVbzZchDn/XMO9PvLXGz+o9hgt4mBm9AAAA=="
+  }
+}

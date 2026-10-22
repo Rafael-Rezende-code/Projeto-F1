@@ -19,6 +19,9 @@ type ArtDirectedImageProps = {
   desktop?: ArtSource;
   quality?: number;
   className?: string;
+  /** Foto principal acima da dobra: carrega já (loading eager + fetchPriority high). Sem <link preload>: com <picture>
+   *  o preload baixaria as duas versões. */
+  eager?: boolean;
 };
 
 /**
@@ -29,8 +32,8 @@ type ArtDirectedImageProps = {
  */
 const DESKTOP_MIN_WIDTH = 1024;
 
-export function ArtDirectedImage({ alt, mobile, desktop, quality = 90, className }: ArtDirectedImageProps) {
-  const common = { alt, fill: true, quality } as const;
+export function ArtDirectedImage({ alt, mobile, desktop, quality = 90, className, eager = false }: ArtDirectedImageProps) {
+  const common = { alt, fill: true, quality, ...(eager ? { loading: "eager" as const, fetchPriority: "high" as const } : {}) };
   const { props: mobileProps } = getImageProps({ ...common, src: mobile.src, sizes: mobile.sizes });
   const desktopProps = desktop ? getImageProps({ ...common, src: desktop.src, sizes: desktop.sizes }).props : null;
 

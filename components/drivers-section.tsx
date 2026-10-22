@@ -4,6 +4,7 @@ import { memo, useState, type FocusEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { ImageReveal } from "@/components/motion/image-reveal";
 import { RevealGroup } from "@/components/motion/reveal-group";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { SectionTitle } from "@/components/motion/section-title";
@@ -32,18 +33,22 @@ function isFocusVisible(event: FocusEvent<HTMLElement>) {
   }
 }
 
-function DefaultFace({ driver }: { driver: Driver }) {
+function DefaultFace({ driver, blur }: { driver: Driver; blur?: string }) {
   return (
     <div className="relative h-full w-full bg-[#e9e8e4]">
-      <Image
-        src={driver.image}
-        alt=""
-        fill
-        sizes={IMAGE_SIZES}
-        quality={IMAGE_QUALITY}
-        className="object-cover"
-        style={{ objectPosition: driver.imagePosition }}
-      />
+      {/* Placeholder desfocado + entrada sutil (fade) se a foto ainda não carregou (fase 1 da rodada de conteúdo). */}
+      <ImageReveal className="absolute inset-0">
+        <Image
+          src={driver.image}
+          alt=""
+          fill
+          sizes={IMAGE_SIZES}
+          quality={IMAGE_QUALITY}
+          className="object-cover"
+          style={{ objectPosition: driver.imagePosition }}
+          {...(blur ? { placeholder: "blur" as const, blurDataURL: blur } : {})}
+        />
+      </ImageReveal>
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 via-35% to-transparent" />
       <div className="absolute inset-x-5 bottom-5 text-white">
         <p className="text-[10px] uppercase tracking-[0.16em] text-white/75">{driver.team}</p>
@@ -83,7 +88,7 @@ function HoverFace({ driver }: { driver: Driver }) {
   );
 }
 
-function DriverCard({ driver }: { driver: Driver }) {
+function DriverCard({ driver, blur }: { driver: Driver; blur?: string }) {
   // Hover só com mouse (no toque o link navega direto) e foco só via teclado (focus-visible).
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -113,7 +118,7 @@ function DriverCard({ driver }: { driver: Driver }) {
             backgroundColor: active ? driver.color : "transparent",
             transition: `background-color 0s linear ${active ? 0 : duration}s`,
           }}
-          defaultComponent={<DefaultFace driver={driver} />}
+          defaultComponent={<DefaultFace driver={driver} blur={blur} />}
           hoverComponent={<HoverFace driver={driver} />}
         />
         <Link
@@ -135,27 +140,27 @@ function DriverCard({ driver }: { driver: Driver }) {
 }
 
 // Lista dos cards (carrossel no celular, grade a partir de 640px). Usada na home e em /pilotos.
-export function DriverCardList({ className = "" }: { className?: string }) {
+export function DriverCardList({ className = "", blurs = {} }: { className?: string; /** placeholders desfocados por slug (lib/driver-card-blurs.ts) */ blurs?: Record<string, string> }) {
   return (
     <RevealGroup
       role="list"
       className={`-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 py-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4 ${className}`}
     >
       {drivers.map((driver) => (
-        <DriverCard key={driver.slug} driver={driver} />
+        <DriverCard key={driver.slug} driver={driver} blur={blurs[driver.slug]} />
       ))}
     </RevealGroup>
   );
 }
 
-// memo: a página re-renderiza a cada frame (spotlight do hero); sem props, a seção não precisa acompanhar.
-export const DriversSection = memo(function DriversSection() {
+// memo: a página re-renderiza a cada frame (spotlight do hero); as props não mudam, a seção não precisa acompanhar.
+export const DriversSection = memo(function DriversSection({ blurs }: { blurs?: Record<string, string> }) {
   return (
     <section id="pilotos" aria-labelledby="pilotos-titulo" className="bg-white px-5 pb-12 pt-20 sm:px-10 sm:pb-16 sm:pt-28">
       <div className="mx-auto max-w-[1400px]">
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Os pilotos</p>
         <SectionTitle id="pilotos-titulo" text="Escolha seu piloto" className="text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl" />
-        <DriverCardList className="mt-12" />
+        <DriverCardList className="mt-12" blurs={blurs} />
       </div>
     </section>
   );

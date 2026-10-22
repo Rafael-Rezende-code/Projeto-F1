@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { ImageReveal } from "@/components/motion/image-reveal";
 import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import { SharedTransition } from "@/components/motion/view-transition";
 import { useModal } from "@/components/use-modal";
@@ -28,7 +29,9 @@ export function ProductGallery({ images, name, transitionName }: { images: Produ
         aria-label={`Ampliar foto: ${current.alt}`}
         className="group relative aspect-[4/5] cursor-zoom-in overflow-hidden rounded-2xl bg-[#e9e8e4] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
       >
-        <Image key={current.src} src={current.src} alt={current.alt} fill priority sizes={MAIN_SIZES} quality={85} className="object-cover" />
+        <ImageReveal key={current.src} className="absolute inset-0">
+          <Image src={current.src} alt={current.alt} fill priority sizes={MAIN_SIZES} quality={85} className="object-cover" />
+        </ImageReveal>
         <span aria-hidden="true" className="absolute bottom-3 right-3 rounded-xl bg-white/85 p-2 text-black opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
           <Expand size={16} />
         </span>

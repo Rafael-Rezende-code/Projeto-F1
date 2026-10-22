@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import { SectionTitle } from "@/components/motion/section-title";
 import type { Metadata } from "next";
@@ -5,12 +6,17 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { DriverSignature } from "@/components/driver-signature";
+import { ImageReveal } from "@/components/motion/image-reveal";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
+import { ArtDirectedImage } from "@/components/ui/art-directed-image";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
+import { blurProps, findLocalImage } from "@/lib/local-images";
 import { signaturePaths } from "@/lib/signature-paths";
 
 type Params = { params: Promise<{ slug: string }> };
+
+const SECOND_SIZES = "(min-width: 1480px) 680px, (min-width: 768px) calc(50vw - 72px), calc(100vw - 40px)";
 
 export async function generateStaticParams() {
   const drivers = await catalog.getDrivers();
@@ -36,8 +42,14 @@ export default async function DriverPage({ params }: Params) {
 
   const main = driver.photoMain;
   const second = driver.photoSecondary;
+  // Versões opcionais de desktop (≥ 1024px), detectadas no build (lib/local-images.ts).
+  const mainDesktop = findLocalImage(`/images/pilotos/paginas/${driver.slug}-principal-desktop`);
+  const secondDesktop = findLocalImage(`/images/pilotos/paginas/${driver.slug}-secundaria-desktop`);
   const wide = main.width > main.height; // horizontal: largura total; vertical: layout dividido
+  const wideDesktop = mainDesktop ? mainDesktop.width > mainDesktop.height : wide;
   const teamColor = team?.color ?? "#111";
+  // Sinal da foto principal: a assinatura entra depois que ela começa a aparecer (components/motion/cue.ts).
+  const photoCue = `piloto-foto-${driver.slug}`;
 
   // Nome e equipe (bloco na cor da equipe). O nome em texto fica no h1 para leitores de tela e buscadores; a
   // assinatura animada (DriverSignature) usa uma fonte manuscrita GENÉRICA: nunca imitar o autógrafo real (CLAUDE.md).
@@ -55,7 +67,7 @@ export default async function DriverPage({ params }: Params) {
         )}
         <h1 className="@container mt-3">
           <span className="sr-only">{driver.name}</span>
-          <DriverSignature signature={signaturePaths(driver.name)} className={wide ? "text-[clamp(2.25rem,8cqw,6rem)]" : "text-[clamp(2.25rem,12.5cqw,6rem)]"} />
+          <DriverSignature after={photoCue} signature={signaturePaths(driver.name)} className={wide ? "text-[clamp(2.25rem,8cqw,6rem)]" : "text-[clamp(2.25rem,12.5cqw,6rem)]"} />
         </h1>
         <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
       </div>
@@ -65,26 +77,51 @@ export default async function DriverPage({ params }: Params) {
   // Foto principal: nítida, sem gradiente nem fade. Encosta nas bordas do bloco: fica reta.
   // Vertical: metade da largura no desktop (altura limitada à tela); no celular vem DEPOIS do nome, com altura
   // controlada (até 62svh / 520px). Horizontal: largura total, proporção da própria foto (até 80svh).
+  // Entrada (fase 1 da rodada de conteúdo): cortina na cor da equipe + escala/foco, só com a foto decodificada.
+  const mainSizes = wide ? "100vw" : "(min-width: 768px) 50vw, 100vw";
+  const vertical = "h-[min(62svh,520px)] md:h-[min(88svh,860px)]";
+  const horizontal = "aspect-[3/2] max-h-[80svh] w-full";
+  // Desktop com orientação diferente da foto do celular: o layout do topo troca em lg.
+  const desktopShape = !mainDesktop || wideDesktop === wide ? "" : wideDesktop ? "lg:h-auto lg:w-full lg:aspect-(--desk-ratio) lg:max-h-[80svh]" : "lg:aspect-auto lg:max-h-none lg:h-[min(88svh,860px)]";
   const photo = (
     <SharedTransition name={driverTransitionName(driver.slug)} crossfade={false}>
-      <div className={wide ? "relative aspect-[3/2] max-h-[80svh] w-full" : "relative h-[min(62svh,520px)] md:h-[min(88svh,860px)]"}>
-        <Image
-          src={main.src}
-          alt={driver.name}
-          fill
-          priority
-          sizes={wide ? "100vw" : "(min-width: 768px) 50vw, 100vw"}
-          quality={90}
-          className="object-cover"
-          style={{ objectPosition: main.position }}
-        />
-      </div>
+      <ImageReveal
+        variant="curtain"
+        color={teamColor}
+        cue={photoCue}
+        className={`relative ${wide ? horizontal : vertical} ${desktopShape}`}
+        style={mainDesktop ? ({ "--desk-ratio": `${mainDesktop.width}/${mainDesktop.height}` } as React.CSSProperties) : undefined}
+      >
+        {mainDesktop ? (
+          <ArtDirectedImage
+            alt={driver.name}
+            eager
+            quality={90}
+            className="object-cover"
+            mobile={{ src: main.src, position: main.position, sizes: mainSizes }}
+            desktop={{ src: mainDesktop.src, position: main.desktopPosition ?? main.position, sizes: wideDesktop ? "100vw" : "50vw" }}
+          />
+        ) : (
+          <Image
+            src={main.src}
+            alt={driver.name}
+            fill
+            preload
+            sizes={mainSizes}
+            quality={90}
+            className="object-cover"
+            style={{ objectPosition: main.position }}
+            {...blurProps(main.src)}
+          />
+        )}
+      </ImageReveal>
     </SharedTransition>
   );
+  const headerLayout = wide ? (wideDesktop ? "" : "lg:grid lg:grid-cols-2") : wideDesktop ? "grid md:grid-cols-2 lg:block" : "grid md:grid-cols-2";
 
   return (
     <div className="pb-24">
-      <header className={`text-white ${wide ? "" : "grid md:grid-cols-2"}`} style={{ backgroundColor: teamColor }}>
+      <header className={`text-white ${headerLayout}`} style={{ backgroundColor: teamColor }}>
         {identity}
         {photo}
       </header>
@@ -93,17 +130,35 @@ export default async function DriverPage({ params }: Params) {
           detalhe (fio e marcador), não como cor de texto: algumas cores não têm contraste suficiente sobre o branco. */}
       <section aria-label={`Sobre ${driver.name}`} className="px-5 pt-16 sm:px-10 sm:pt-24">
         <div className="mx-auto grid max-w-[1400px] items-center gap-10 md:grid-cols-2 md:gap-16">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4]">
-            <Image
-              src={second.src}
-              alt=""
-              fill
-              sizes="(min-width: 1480px) 680px, (min-width: 768px) calc(50vw - 72px), calc(100vw - 40px)"
-              quality={90}
-              className="object-cover"
-              style={{ objectPosition: second.position }}
-            />
-          </div>
+          {/* Secundária: mesma cortina, quando a foto entra na tela (e já está decodificada). */}
+          <ImageReveal
+            variant="curtain"
+            start="view"
+            color={teamColor}
+            className={`relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4] ${secondDesktop ? "lg:aspect-(--desk-ratio)" : ""}`}
+            style={secondDesktop ? ({ "--desk-ratio": `${secondDesktop.width}/${secondDesktop.height}` } as React.CSSProperties) : undefined}
+          >
+            {secondDesktop ? (
+              <ArtDirectedImage
+                alt=""
+                quality={90}
+                className="object-cover"
+                mobile={{ src: second.src, position: second.position, sizes: SECOND_SIZES }}
+                desktop={{ src: secondDesktop.src, position: second.desktopPosition ?? second.position, sizes: SECOND_SIZES }}
+              />
+            ) : (
+              <Image
+                src={second.src}
+                alt=""
+                fill
+                sizes={SECOND_SIZES}
+                quality={90}
+                className="object-cover"
+                style={{ objectPosition: second.position }}
+                {...blurProps(second.src)}
+              />
+            )}
+          </ImageReveal>
           <div className="max-w-md">
             <span aria-hidden="true" className="block h-1 w-12 rounded-full" style={{ backgroundColor: teamColor }} />
             {team && (

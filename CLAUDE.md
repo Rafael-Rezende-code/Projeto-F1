@@ -535,9 +535,34 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   arquivo a cada início.
 - **Testes sem Edge:** `PW_EXECUTABLE_PATH=/caminho/do/chromium` faz o Playwright (e2e e `qa:varredura`) usar esse
   Chromium no lugar do Edge (sessão em nuvem Linux: `/opt/pw-browsers/chromium`). Sem a variável, continua o Edge.
+- **Fase 1:** o desfoque (`filter`) na entrada da foto de piloto é exceção à regra "só transform/opacity" de
+  `lib/motion.ts`, pedida explicitamente; dura ~1 s, numa foto por vez. Fotos de produto (remotas) ficam sem placeholder
+  desfocado, só com o fade; o `ProductCard` também roda no cliente (favoritos), então não lê o mapa de placeholders.
+  Categorias da home também ganharam o fade (imagens grandes que pipocavam). `sharp` entrou como devDependency (o
+  gerador usa; o Next já o usava como opcional).
 - **Branches antigas no GitHub:** apagadas localmente; a exclusão remota foi bloqueada pela política do ambiente em
   nuvem (HTTP 403 no push de exclusão). Apagar à mão: `git push origin --delete perf/server-components feat/loja
   feat/polimento feat/polimento-2 feat/ajustes feat/pilotos`.
+
+### Estado (rodada de conteúdo)
+
+- **Fase 1, entrada das imagens:** placeholders desfocados gerados no build (`scripts/images/blur-placeholders.mjs`,
+  roda antes do `next build` no script `build`; à mão: `pnpm images:blur`) em `lib/generated/blur-placeholders.json`
+  (16px WebP + largura/altura reais de cada foto de `public/images`, exceto logos), lidos por `lib/local-images.ts`
+  (`blurProps`, `localImage`, `findLocalImage`). **Não importe `lib/local-images` em componente client** (o mapa iria
+  para o JS): monte no servidor e passe por prop (ex.: `lib/driver-card-blurs.ts`). `components/motion/image-reveal.tsx`
+  (CSS `.img-reveal` no `globals.css`): `curtain` = cortina na cor da equipe (clip-path) + foto de 1,06× desfocada para
+  1× nítida em ~1 s (token novo `duration.reveal` / `--motion-reveal`), começando no HTML do servidor (a foto nunca
+  "pipoca"); `fade` = opacidade + escala 1,03 → 1 por cima do placeholder, só se a foto ainda não carregou. A animação
+  só começa com `img.decode()` resolvido; failsafe de 6 s; `<noscript>` mostra a foto. Estados `pending → in → done`
+  (em `done` nenhuma regra vale: o hover das fotos volta ao normal). Reduced motion: só opacidade.
+  Página do piloto: principal com `preload` e cortina; dispara o sinal `piloto-foto-{slug}` (`components/motion/cue.ts`)
+  e a assinatura (`DriverSignature after=...`, prop `play` no Signature, adaptação APEX 5) começa 0,45 s depois.
+  Secundária: cortina ao entrar na tela. Fade: cards de piloto, editoriais da home, categorias, card e galeria de produto.
+  **Versões de desktop opcionais:** `public/images/pilotos/paginas/{slug}-principal-desktop.*` e
+  `{slug}-secundaria-desktop.*` (jpg/png/webp) são detectadas no build e usadas a partir de 1024px via `<picture>`
+  (`ArtDirectedImage`, que ganhou `eager`); cada aparelho baixa só uma. A orientação da versão de desktop decide o layout
+  do topo no desktop; enquadramento opcional em `desktopPosition` (`lib/drivers.ts`). GIF em `docs/fase-1/`.
 
 ## Pendências (atualizado em 22/10/2026)
 

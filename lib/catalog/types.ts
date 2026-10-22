@@ -59,7 +59,7 @@ export type Team = {
   logo: { src: string; width: number; height: number; displayHeight: number };
 };
 
-export type DriverPhoto = { src: string; width: number; height: number; position: string };
+export type DriverPhoto = { src: string; width: number; height: number; position: string; desktopPosition?: string };
 
 export type Driver = {
   slug: string;

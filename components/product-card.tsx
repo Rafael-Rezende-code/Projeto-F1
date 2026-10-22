@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { ImageReveal } from "@/components/motion/image-reveal";
 import { AddToCartButton } from "@/components/cart";
 import { FavoriteButton } from "@/components/favorites";
 import { QuickSizes } from "@/components/quick-sizes";
@@ -39,15 +40,19 @@ export function ProductCard({
     <article className="group relative">
       <SharedTransition name={transition ? productTransitionName(product.slug) : undefined}>
       <div className="relative isolate aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4]">
-        <Image
-          src={product.images[0].src}
-          alt={product.images[0].alt}
-          fill
-          sizes={sizes}
-          quality={QUALITY}
-          priority={priority}
-          className="object-cover transition duration-700 group-hover:scale-105"
-        />
+        {/* Entrada sutil (fade) quando a foto ainda não carregou. Sem placeholder desfocado: as fotos de produto são
+            remotas, e este card também roda no cliente (favoritos), onde o mapa de placeholders pesaria no JS. */}
+        <ImageReveal className="absolute inset-0">
+          <Image
+            src={product.images[0].src}
+            alt={product.images[0].alt}
+            fill
+            sizes={sizes}
+            quality={QUALITY}
+            priority={priority}
+            className="object-cover transition duration-700 group-hover:scale-105"
+          />
+        </ImageReveal>
         {/* Segunda foto no hover (desktop): troca suave por cima da primeira. */}
         {product.images[1] && (
           <Image

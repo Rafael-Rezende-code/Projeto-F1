@@ -216,6 +216,7 @@ h1, h2, .font-display {
   --motion-short: 0.2s;
   --motion-medium: 0.45s;
   --motion-long: 0.8s;
+  --motion-reveal: 1s;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --motion-rise: 16px;
@@ -274,3 +275,28 @@ h1, h2, .font-display {
 /* Assinatura do piloto (components/driver-signature.tsx + components/ui/signature.tsx): SVG em em, acompanha o
    font-size do contêiner e nunca passa da largura. */
 .sig { display: block; max-width: 100%; line-height: 1; }
+
+/* Entrada das fotos (components/motion/image-reveal.tsx). O contêiner é o próprio bloco da foto (a posição vem da
+   className de quem usa). Camadas: placeholder desfocado (atrás), a foto, a cortina (na frente). Só transform, opacity e
+   clip-path, mais o desfoque da foto de piloto (filter), que dura só a entrada (~1 s). As regras de "in" só declaram a
+   transição: o estado final é o da própria className da foto (ex.: opacity-65). Depois da entrada vira "done" e nada
+   daqui vale mais (o hover das fotos volta às transições delas). */
+.img-reveal { overflow: hidden; isolation: isolate; }
+.img-reveal__blur { position: absolute; inset: 0; z-index: -1; background-size: cover; background-position: center;
+  filter: blur(18px); transform: scale(1.15); }
+.img-reveal__curtain { position: absolute; inset: 0; z-index: 2; background: var(--reveal-color); pointer-events: none;
+  clip-path: inset(0 0 0 0); }
+.img-reveal[data-state="pending"][data-variant="curtain"] img { transform: scale(1.06); filter: blur(14px); transform-origin: 50% 40%; }
+.img-reveal[data-state="pending"][data-variant="fade"] img { opacity: 0; transform: scale(1.03); }
+.img-reveal[data-state="in"] img { transform-origin: 50% 40%;
+  transition: opacity var(--motion-long) var(--ease-out), transform var(--motion-reveal) var(--ease-out),
+    filter var(--motion-reveal) var(--ease-out); }
+.img-reveal[data-state="in"] .img-reveal__curtain { clip-path: inset(0 0 0 100%);
+  transition: clip-path var(--motion-reveal) var(--ease-in-out); }
+.img-reveal[data-state="done"] .img-reveal__curtain, .img-reveal[data-state="done"] .img-reveal__blur { display: none; }
+/* Reduced motion: só opacidade (sem cortina, escala nem desfoque). */
+@media (prefers-reduced-motion: reduce) {
+  .img-reveal__curtain { display: none; }
+  .img-reveal[data-state="pending"] img { opacity: 0; transform: none !important; filter: none !important; }
+  .img-reveal[data-state="in"] img { transition: opacity var(--motion-long) var(--ease-out); }
+}
