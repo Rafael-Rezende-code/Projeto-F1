@@ -5,7 +5,7 @@ export type NavLink = { label: string; href: string };
 export const headerLinks: NavLink[] = [
   { label: "Coleção", href: "/produtos" },
   { label: "Manifesto", href: "/#story" },
-  { label: "Diário", href: "/#journal" },
+  { label: "Diário", href: "/diario" },
 ];
 
 // Menu (celular): navegação principal em destaque + atalhos de ajuda.
@@ -19,7 +19,7 @@ export const menuLinks: NavLink[] = [
 ];
 export const menuSecondaryLinks: NavLink[] = [
   { label: "Manifesto", href: "/#story" },
-  { label: "Diário", href: "/#journal" },
+  { label: "Diário", href: "/diario" },
   { label: "Sacola", href: "/carrinho" },
   { label: "Envio", href: "/envio" },
   { label: "Trocas e devoluções", href: "/trocas-e-devolucoes" },
@@ -44,6 +44,7 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
       { label: "Pilotos", href: "/pilotos" },
       { label: "Circuitos", href: "/#collection" },
       { label: "Cultura F1", href: "/#story" },
+      { label: "Diário", href: "/diario" },
       { label: `Sobre a ${BRAND.name}`, href: "/sobre" },
     ],
   },

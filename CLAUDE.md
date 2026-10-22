@@ -187,8 +187,7 @@ interna e sem arredondamento).
 - **Licenciamento pendente:** as fotos em `public/images/editorial` são placeholders e precisam de
   licenciamento antes do lançamento comercial (antes da venda). Em uso: `abraco-redbull-ferrari` ("Mais que
   uma corrida", #story), `senna-pneus` ("Cada detalhe importa") e `verstappen-capacete` ("Luzes apagadas",
-  #journal). `senna-sentado` e `senna-champanhe` aguardam uma seção "Diário" de verdade (o #journal atual é
-  a seção "Luzes apagadas"). Dados em `lib/editorial.ts`, com direção de arte por breakpoint:
+  #journal). `senna-sentado` e `senna-champanhe` estão no artigo do Senna no Diário (fase 6). Dados em `lib/editorial.ts`, com direção de arte por breakpoint:
   foto vertical (1170px) no celular/tablet (<1024px) e foto horizontal (`*-desktop.png`, 1672px) no desktop, via
   `components/ui/art-directed-image.tsx` (<picture> + getImageProps: baixa só uma). Para trocar a foto do
   desktop, colocar o arquivo horizontal em `public/images/editorial/` e mudar o `src` do `desktop` em
@@ -544,6 +543,9 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   assinatura" lido como "quando o nome já está quase todo escrito", para não esperar 3 s por links de produto. Rótulo
   das miniaturas: "Destaques {sobrenome}". Miniaturas em cartões brancos (contraste garantido sobre qualquer cor de
   equipe). Sem fotos de carro no repositório, nenhum recorte foi feito (ver Estado).
+- **Fase 6:** o dock não tem item "Diário" (5 ícones aprovados); o link fica no menu que o dock abre. Datas dos artigos:
+  22, 20 e 18/10/2026. Fotos dos artigos reaproveitam as do site (Bortoleto: fotos da página do piloto; dia de prova:
+  Verstappen e o abraço Red Bull/Ferrari). Autor no JSON-LD: a própria marca (organização).
 - **Fase 4:** BlurReveal e WordsStagger (Spell UI) voltaram, como pedido, mas SÓ abaixo da dobra e com `inView`: eles
   escondem o texto até o JS (a rodada 2 os tirou da home por isso). Os números ficam em `<dl>` com `dt` antes dos `dd`
   (o número aparece primeiro por `order`). Fatos com divergência entre fontes ficaram de fora ou genéricos (idade de
@@ -609,6 +611,16 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   2 parágrafos, 3 marcos e sede), fontes em `docs/conteudo/fontes-equipes.md`. `components/team-story.tsx` entre o
   cabeçalho e os produtos de `/equipes/[slug]`: título com BlurReveal, abertura com WordsStagger, sede com marcador na cor
   da equipe, história em coluna de leitura, marcos com o ano grande na Archivo e a nota de texto independente.
+- **Fase 6, Diário:** `/diario` (índice: mais recente em destaque + grade) e `/diario/[slug]` (estáticas). Artigos em
+  `lib/content/diario/` (tipo `Article` em `types.ts`: título, linha fina, data, capa, corpo em blocos p/h2/imagem e
+  `related` = slugs ou filtro de piloto/equipe); tempo de leitura a 200 palavras/min (`readingMinutes`). Fontes por fato
+  em `docs/conteudo/fontes-diario.md`. Layout de leitura: título grande centralizado, coluna `max-w-[65ch]` a 17–18px,
+  imagens do corpo um pouco mais largas que o texto (`lg:-mx-24`), JSON-LD Article, nota de texto independente e
+  produtos relacionados. Artigos: Senna e a McLaren (usa `senna-sentado` e `senna-champanhe`), O Brasil de volta ao
+  grid (Bortoleto) e A cultura do dia de prova. "Diário" no cabeçalho, no menu (aberto pelo dock) e no rodapé (coluna
+  Explorar) aponta para `/diario`; em "Luzes apagadas." entrou só o link "Ler o Diário →" abaixo do botão. Sitemap
+  inclui o Diário. Para escrever um artigo novo: criar o arquivo, registrar em `lib/content/diario/index.ts` e listar
+  as fontes.
 - **Imagens de carros em public/images/pilotos/carros/ vindas de fotos de imprensa são PLACEHOLDERS: têm logos de
   patrocinadores e números de carro (alguns de outros pilotos). Antes do lançamento, substituir por carros sem logos
   nem números (arquivo com o mesmo nome) ou licenciar.**
@@ -618,6 +630,5 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 - **Depende do responsável:** contas e chaves do Supabase e do Mercado Pago (o código fica pronto e desligado nas
   fases 9 a 11), textos legais, razão social/CNPJ/endereço em `lib/company.ts`, fotos licenciadas de produtos, e conferir
   as cores das equipes com os manuais de marca.
-- **Fotos editoriais:** placeholders (licenciar antes da venda); `senna-sentado` e `senna-champanhe` aguardam
-  a seção "Diário".
+- **Fotos editoriais:** placeholders (licenciar antes da venda), inclusive as usadas no Diário.
 - O 404 de `/_vercel/insights/script.js` só ocorre localmente.
