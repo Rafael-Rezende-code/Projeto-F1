@@ -67,3 +67,33 @@ test("frete: entrega local em São Sebastião do Paraíso e prazo total (envio +
   await expect(local).toContainText("Chega em 2 a 4 dias úteis");
   await expect(page.locator("label", { hasText: "Econômica" })).toBeVisible();
 });
+
+test("calcular frete na página de produto; o checkout reaproveita o CEP", async ({ page }) => {
+  await page.route("https://viacep.com.br/ws/**", (route) =>
+    route.fulfill({ json: route.request().url().includes("99999999") ? { erro: true } : { cep: "37950-000", logradouro: "Praça Comendador João Alves", bairro: "Centro", localidade: "São Sebastião do Paraíso", uf: "MG" } }),
+  );
+  await page.goto("/produtos/camiseta-hamilton");
+  await page.evaluate(() => localStorage.clear());
+  const field = page.getByLabel("Calcular frete");
+  await field.fill("123");
+  await page.getByRole("button", { name: "Calcular", exact: true }).click();
+  await expect(page.getByText("Digite um CEP com 8 números.")).toBeVisible();
+  await field.fill("99999999");
+  await page.getByRole("button", { name: "Calcular", exact: true }).click();
+  await expect(page.getByText("CEP não encontrado. Confira os números.")).toBeVisible();
+  await field.fill("37950000");
+  await page.getByRole("button", { name: "Calcular", exact: true }).click();
+  await expect(page.getByText("Para São Sebastião do Paraíso/MG")).toBeVisible();
+  await expect(page.getByText(/Chega em/).first()).toBeVisible();
+
+  // Checkout: o CEP calculado entra sozinho na etapa de endereço.
+  await page.locator("label:has(input[name=tamanho]:not([disabled]))").first().click();
+  await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
+  await page.goto("/checkout");
+  await page.getByLabel("Nome completo").fill("Teste da Silva");
+  await page.getByLabel("E-mail").fill("teste@exemplo.com");
+  await page.getByLabel("Telefone").fill("35912345678");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByLabel("CEP")).toHaveValue("37950-000");
+  await expect(page.getByLabel("Rua")).toHaveValue("Praça Comendador João Alves");
+});

@@ -846,6 +846,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   A página de produto e a do pedido informam o assunto com `<WhatsAppTopic>`. Rodapé e /contato usam o mesmo link. Sem
   número, nada aparece.
 
+- **Frete por CEP (fase 1b):** `components/shipping-estimator.tsx` na página de produto (cota com uma variante disponível:
+  o pacote é do produto) e no /carrinho. Máscara e validação; ViaCEP confere a existência (inexistente → "CEP não
+  encontrado"; ViaCEP fora do ar → cota assim mesmo); cotação pela server action `quoteShipping` (o prazo de sob encomenda
+  entra no "Chega em"); falha de rede com mensagem. O último CEP fica em `apex:cep:v1` (`lib/cep-storage.ts`, try/catch;
+  lido no foco do campo para não divergir da hidratação) e o checkout o preenche ao chegar no Endereço. Teste em
+  `e2e/modelo-de-venda.spec.ts`.
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete

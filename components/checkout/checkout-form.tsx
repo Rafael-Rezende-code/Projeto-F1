@@ -14,6 +14,7 @@ import { placeOrder, quoteShipping } from "@/app/(loja)/checkout/actions";
 import { ORDER_STORAGE_PREFIX, orderUrl, PAYMENT_LABELS } from "@/lib/checkout/order";
 import { addressSchema, contactSchema, CPF_REQUIRED_METHODS, fieldErrors, paymentSchema, shippingSchema } from "@/lib/checkout/schema";
 import type { DeliveryOption } from "@/lib/checkout/shipping";
+import { readSavedCep, saveCep } from "@/lib/cep-storage";
 import { formatPrice } from "@/lib/format";
 import { methodFromBrick } from "@/lib/payments/brick";
 import type { CardDisplay } from "@/lib/payments/types";
@@ -159,6 +160,15 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
   const next = async () => {
     if (!validateStep(step) || step >= 3) return;
     if (step === 1 && !(await loadQuotes())) return;
+    if (step === 1) saveCep(form.cep);
+    // Chegando ao endereço: reaproveita o CEP do "Calcular frete" (produto/carrinho), se o campo estiver vazio.
+    if (step === 0 && !form.cep) {
+      const saved = readSavedCep();
+      if (saved) {
+        set("cep", maskCep(saved));
+        void lookupCep(saved);
+      }
+    }
     goTo((step + 1) as Step);
   };
 

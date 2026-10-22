@@ -10,6 +10,7 @@ import { ProductGallery } from "@/components/product-gallery";
 import { ProductGrid } from "@/components/product-grid";
 import { ProductPurchase } from "@/components/product-purchase";
 import { WhatsAppTopic } from "@/components/whatsapp";
+import { ShippingEstimator } from "@/components/shipping-estimator";
 import { catalog } from "@/lib/catalog";
 import { dispatchNotice, ORIGIN_LABELS } from "@/lib/catalog/fulfillment";
 import { discountPercent, formatPrice } from "@/lib/format";
@@ -59,6 +60,7 @@ export default async function ProductPage({ params }: Params) {
   // Parcelamento anunciado: só se a loja configurou parcelas SEM JUROS (lib/store-policy.ts); senão, nada aparece.
   const offer = installmentOffer(product.priceCents);
   const notice = dispatchNotice(product);
+  const shippingSku = (product.variants.find((variant) => variant.stock > 0) ?? product.variants[0])?.sku;
   const inStock = product.variants.some((variant) => variant.stock > 0);
 
   const jsonLd = {
@@ -145,6 +147,8 @@ export default async function ProductPage({ params }: Params) {
             <div className="mt-8">
               <ProductPurchase product={product} />
               <WhatsAppTopic product={{ name: product.name, slug: product.slug }} />
+              {/* Frete por CEP: o pacote é o mesmo para todos os tamanhos; cota com uma variante disponível. */}
+              {shippingSku && <ShippingEstimator items={[{ sku: shippingSku, quantity: 1 }]} className="mt-6" />}
             </div>
 
             <div className="mt-10 border-t border-black/10">

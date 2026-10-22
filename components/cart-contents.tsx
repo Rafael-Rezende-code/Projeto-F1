@@ -9,6 +9,7 @@ import { FREE_SHIPPING_THRESHOLD_CENTS } from '@/lib/cart/config'
 import { freeShippingRemaining } from '@/lib/cart/reducer'
 import { formatPrice } from '@/lib/format'
 import { DispatchSummary } from '@/components/dispatch-summary'
+import { ShippingEstimator } from '@/components/shipping-estimator'
 import { daysLabel } from '@/lib/catalog/fulfillment'
 
 // Conteúdo da sacola, usado na gaveta (variant="drawer") e na página /carrinho (variant="page").
@@ -101,6 +102,7 @@ export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer'
         </dl>
         <p className="mt-1 text-xs text-black/60">Frete calculado no checkout.</p>
         <DispatchSummary items={items} className="mt-3" />
+        {variant === 'page' && <ShippingEstimator items={items.map((item) => ({ sku: item.sku, quantity: item.quantity }))} className="mt-5 border-t border-black/10 pt-5" />}
         <Link href="/checkout" onClick={onNavigate} className="mt-5 flex w-full items-center justify-center rounded-xl bg-[#b94f01] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#9f4300]">
           Finalizar compra
         </Link>
