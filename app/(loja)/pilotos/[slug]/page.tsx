@@ -15,6 +15,7 @@ import { ArtDirectedImage } from "@/components/ui/art-directed-image";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
 import { getDriverContent } from "@/lib/content/drivers";
+import { readableTextOn } from "@/lib/contrast";
 import { CAR_FACING } from "@/lib/drivers";
 import { blurProps, findLocalImage, localImage } from "@/lib/local-images";
 import { signaturePaths } from "@/lib/signature-paths";
@@ -58,6 +59,8 @@ export default async function DriverPage({ params }: Params) {
   const wide = main.width > main.height; // horizontal: largura total; vertical: layout dividido
   const wideDesktop = mainDesktop ? mainDesktop.width > mainDesktop.height : wide;
   const teamColor = team?.color ?? "#111";
+  // Texto pequeno do cabeçalho (caminho, equipe, frase): ≥ 4,5:1 sobre a cor da equipe (branco sólido ou preto).
+  const smallText = readableTextOn(teamColor);
   // Sinal da foto principal: a assinatura entra depois que ela começa a aparecer (components/motion/cue.ts).
   const photoCue = `piloto-foto-${driver.slug}`;
   // Texto editorial (fase 4): lib/content/drivers/{slug}.ts.
@@ -92,13 +95,14 @@ export default async function DriverPage({ params }: Params) {
     <div className="flex flex-col justify-between gap-10 px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
       <Breadcrumbs
         tone="light"
+        color={smallText}
         items={[{ label: "Início", href: "/" }, { label: "Pilotos", href: "/pilotos" }, { label: driver.name }]}
       />
       {/* Desktop/tablet: carro ou miniaturas no espaço vazio entre o caminho e o nome. No celular vêm depois da foto. */}
       <div className="hidden flex-1 items-center md:flex">{slot}</div>
       <div>
         {team && (
-          <Link href={`/equipes/${team.slug}`} className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 hover:text-white">
+          <Link href={`/equipes/${team.slug}`} className="text-[10px] font-semibold uppercase tracking-[0.24em] underline-offset-4 hover:underline" style={{ color: smallText }}>
             {team.name}
           </Link>
         )}
@@ -106,7 +110,7 @@ export default async function DriverPage({ params }: Params) {
           <span className="sr-only">{driver.name}</span>
           <DriverSignature after={photoCue} signature={signaturePaths(driver.name)} className={wide ? "text-[clamp(2.25rem,8cqw,6rem)]" : "text-[clamp(2.25rem,12.5cqw,6rem)]"} />
         </h1>
-        <p className="mt-6 max-w-sm text-sm leading-6 text-white/85 sm:text-base">{driver.phrase}</p>
+        <p className="mt-6 max-w-sm text-sm leading-6 sm:text-base" style={{ color: smallText }}>{driver.phrase}</p>
       </div>
     </div>
   );
