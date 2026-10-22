@@ -1,5 +1,7 @@
 "use client";
 
+import { DispatchSummary } from "@/components/dispatch-summary";
+import { daysLabel } from "@/lib/catalog/fulfillment";
 import { useId, useRef, useState, useTransition, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -435,6 +437,7 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
                 <div className="min-w-0">
                   <p className="truncate font-medium">{item.name}</p>
                   <p className="text-xs text-black/60">Tam. {item.size} · Qtd. {item.quantity}</p>
+                  {item.fulfillment === "sob_encomenda" && item.dispatchDays && <p className="text-xs text-black/60">Sob encomenda · {daysLabel(item.dispatchDays)}</p>}
                 </div>
                 <p className="whitespace-nowrap">{formatPrice(item.priceCents * item.quantity)}</p>
               </div>
@@ -446,6 +449,7 @@ export function CheckoutForm({ mpPublicKey }: { mpPublicKey?: string }) {
           <div className="flex justify-between"><dt className="text-black/60">Entrega ({option.label})</dt><dd>{shippingCents === 0 ? "Grátis" : formatPrice(shippingCents)}</dd></div>
           <div className="mt-2 flex justify-between border-t border-black/10 pt-3 text-base font-medium"><dt>Total</dt><dd>{formatPrice(subtotalCents + shippingCents)}</dd></div>
         </dl>
+        <DispatchSummary items={items} className="mt-4" />
         <Link href="/carrinho" className="mt-5 inline-block text-xs text-black/60 underline underline-offset-4 hover:text-black">Editar sacola</Link>
       </aside>
     </div>

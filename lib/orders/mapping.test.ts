@@ -36,6 +36,15 @@ describe("pedido gravado", () => {
     expect(order.tracking).toBeUndefined();
   });
 
+  it("itens: modelo de venda e status; rastreio do fornecedor nunca vai para o cliente", () => {
+    const order = orderFromRow({
+      ...row,
+      order_items: [{ sku: "B-UN", product_slug: "b", name: "B", size: "Único", image: "", unit_price_cents: 5000, quantity: 1, fulfillment: "sob_encomenda", dispatch_min_days: 15, dispatch_max_days: 30, item_status: "comprado", tracking_code: null, supplier_tracking_code: "LB999BR" }],
+    });
+    expect(order.lines[0]).toMatchObject({ fulfillment: "sob_encomenda", dispatchDays: { min: 15, max: 30 }, status: "comprado" });
+    expect(JSON.stringify(order)).not.toContain("LB999BR");
+  });
+
   it("status do pagamento → status do pedido", () => {
     expect(orderStatusFromPayment("approved")).toBe("pago");
     expect(orderStatusFromPayment("rejected")).toBe("recusado");

@@ -43,6 +43,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       image: found.product.images[0]?.src ?? "",
       unitPriceCents: found.product.priceCents,
       quantity: item.quantity,
+      fulfillment: found.product.fulfillment,
+      dispatchDays: found.product.dispatchDays,
+      status: found.product.fulfillment === "sob_encomenda" ? "aguardando-compra" : "separando",
     });
   }
   if (stockIssues.length) return { ok: false, message: STOCK_MESSAGE, stockIssues };

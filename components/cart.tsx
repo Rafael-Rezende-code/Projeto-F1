@@ -96,6 +96,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           image: product.images[0]?.src ?? '',
           priceCents: product.priceCents,
           stock: variant.stock,
+          fulfillment: product.fulfillment,
+          dispatchDays: product.dispatchDays,
         },
       })
       announce(quantity > room ? `Só havia ${room} unidade(s) de ${product.name}: adicionamos o que restava` : `${product.name} foi adicionado à sacola`)

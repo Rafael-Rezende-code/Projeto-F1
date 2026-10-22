@@ -3,7 +3,46 @@
 //   catálogo) e o devolve ao cliente, que o guarda no sessionStorage para a página /pedido/[id].
 // - GRAVADO (Supabase configurado, fase 9): o pedido vai para o banco pela função create_order (baixa de estoque na
 //   mesma transação) e /pedido/[id]?t=<accessToken> lê do banco no servidor. Ver docs/backend/supabase.md.
-export type OrderLine = { sku: string; slug: string; name: string; size: string; image: string; unitPriceCents: number; quantity: number };
+import type { DispatchDays, Fulfillment } from "@/lib/catalog/types";
+
+/**
+ * Status de cada item (refino 2, item 5): separando (estoque próprio) · aguardando-compra (sob encomenda, falta comprar
+ * no fornecedor) · comprado · enviado · entregue. O rastreio do FORNECEDOR fica só no painel admin; o cliente vê o
+ * rastreio até ele (`tracking`).
+ */
+export type OrderItemStatus = "separando" | "aguardando-compra" | "comprado" | "enviado" | "entregue";
+
+export type OrderLine = {
+  sku: string;
+  slug: string;
+  name: string;
+  size: string;
+  image: string;
+  unitPriceCents: number;
+  quantity: number;
+  fulfillment?: Fulfillment;
+  dispatchDays?: DispatchDays;
+  status?: OrderItemStatus;
+  tracking?: string;
+};
+
+/** Rótulos para o CLIENTE (sem falar em fornecedor). */
+export const ORDER_ITEM_STATUS_LABELS: Record<OrderItemStatus, string> = {
+  separando: "Separando",
+  "aguardando-compra": "Encomendado",
+  comprado: "Em preparação",
+  enviado: "Enviado",
+  entregue: "Entregue",
+};
+
+/** Rótulos do painel admin. */
+export const ORDER_ITEM_STATUS_ADMIN_LABELS: Record<OrderItemStatus, string> = {
+  separando: "Separando (estoque próprio)",
+  "aguardando-compra": "Aguardando compra no fornecedor",
+  comprado: "Comprado",
+  enviado: "Enviado",
+  entregue: "Entregue",
+};
 
 /**
  * confirmado: aprovado no modo simulado · aguardando-pagamento: Pix/boleto em aberto ou cartão em análise ·

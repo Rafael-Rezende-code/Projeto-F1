@@ -3,13 +3,14 @@ import Link from "next/link";
 import { SectionTitle } from "@/components/motion/section-title";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { RotateCcw, Truck } from "lucide-react";
+import { Clock, RotateCcw, Truck } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { productTransitionName } from "@/components/motion/view-transition";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductGrid } from "@/components/product-grid";
 import { ProductPurchase } from "@/components/product-purchase";
 import { catalog } from "@/lib/catalog";
+import { dispatchNotice, ORIGIN_LABELS } from "@/lib/catalog/fulfillment";
 import { discountPercent, formatPrice } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 
@@ -53,6 +54,7 @@ export default async function ProductPage({ params }: Params) {
     .filter((item, index, list) => list.findIndex((other) => other.id === item.id) === index)
     .slice(0, 4);
   const discount = discountPercent(product.priceCents, product.compareAtPriceCents);
+  const notice = dispatchNotice(product);
   const inStock = product.variants.some((variant) => variant.stock > 0);
 
   const jsonLd = {
@@ -123,6 +125,18 @@ export default async function ProductPage({ params }: Params) {
               {discount > 0 && <span className="rounded-md bg-black px-2 py-1 text-[10px] font-semibold tracking-[0.12em] text-white">-{discount}%</span>}
             </p>
             <p className="mt-1 text-xs text-black/60 xl:mt-2 xl:text-sm">ou 3x de {formatPrice(Math.ceil(product.priceCents / 3))} sem juros</p>
+
+            {/* Modelo de venda (refino 2, item 5): sob encomenda e/ou prazo de envio acima do padrão. */}
+            {notice && (
+              <div className="mt-6 flex gap-3 rounded-xl border border-black/10 bg-[#f5f5f3] px-4 py-3 text-sm leading-6">
+                <Clock size={18} strokeWidth={1.5} aria-hidden="true" className="mt-0.5 shrink-0" />
+                <p>
+                  {notice.madeToOrder && <strong className="block font-medium text-black">Produto sob encomenda{notice.imported ? ` · ${ORIGIN_LABELS.importado}` : ""}</strong>}
+                  <span className="text-black/70">{notice.text}.</span>
+                  {notice.madeToOrder && <span className="text-black/70"> A peça é pedida ao fornecedor depois da confirmação do pagamento.</span>}
+                </p>
+              </div>
+            )}
 
             <div className="mt-8">
               <ProductPurchase product={product} />

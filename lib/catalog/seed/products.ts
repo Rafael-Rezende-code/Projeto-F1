@@ -29,10 +29,27 @@ function variants(code: string, seed: number, sizes: string[]): ProductVariant[]
   }));
 }
 
-type Base = Omit<Product, "id" | "variants" | "status" | "illustrative" | "createdAt"> & {
+type Sale = Pick<Product, "fulfillment" | "dispatchDays" | "origin" | "package">;
+
+type Base = Omit<Product, "id" | "variants" | "status" | "illustrative" | "createdAt" | keyof Sale> & {
   sizes: string[];
   createdAt?: string;
-};
+} & Partial<Sale>;
+
+// Modelo de venda do seed (refino 2, item 5), por tipo de peça — EXEMPLO para exercitar a interface: camisetas, bonés e
+// as peças da casa em estoque próprio; moletons e jaquetas de equipe sob encomenda (fornecedor nacional); miniaturas de
+// capacete importadas sob encomenda; pôsteres impressos sob encomenda. Pesos e medidas da embalagem são estimativas.
+function saleFor(slug: string, categorySlug: string): Sale {
+  const own = (min: number, max: number) => ({ fulfillment: "estoque_proprio" as const, dispatchDays: { min, max }, origin: "nacional" as const });
+  const pkg = (weightGrams: number, lengthCm: number, widthCm: number, heightCm: number) => ({ weightGrams, lengthCm, widthCm, heightCm });
+  if (slug.startsWith("miniatura-capacete-"))
+    return { fulfillment: "sob_encomenda", dispatchDays: { min: 15, max: 30 }, origin: "importado", package: pkg(900, 20, 20, 20) };
+  if (slug.startsWith("poster-")) return { fulfillment: "sob_encomenda", dispatchDays: { min: 3, max: 6 }, origin: "nacional", package: pkg(300, 62, 8, 8) };
+  if (/^(moletom|jaqueta)-/.test(slug)) return { fulfillment: "sob_encomenda", dispatchDays: { min: 7, max: 12 }, origin: "nacional", package: pkg(900, 35, 30, 8) };
+  if (slug.startsWith("bone-") || categorySlug === "acessorios") return { ...own(1, 2), package: pkg(250, 25, 20, 14) };
+  if (/jacket|hoodie|overshirt/.test(slug)) return { ...own(1, 2), package: pkg(1000, 35, 30, 8) };
+  return { ...own(1, 2), package: pkg(250, 30, 25, 3) };
+}
 
 let counter = 0;
 function product(base: Base): Product {
@@ -40,6 +57,7 @@ function product(base: Base): Product {
   const { sizes, ...rest } = base;
   const code = `APX-${String(counter).padStart(3, "0")}`;
   return {
+    ...saleFor(rest.slug, rest.categorySlug),
     ...rest,
     // A partir da 2ª, as imagens são placeholders reaproveitados (usados na troca de foto no hover do card).
     images: rest.images.map((image, index) => (index > 0 ? { ...image, illustrative: true } : image)),

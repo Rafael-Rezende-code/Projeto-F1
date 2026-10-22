@@ -8,6 +8,8 @@ import { useCart } from '@/components/cart'
 import { FREE_SHIPPING_THRESHOLD_CENTS } from '@/lib/cart/config'
 import { freeShippingRemaining } from '@/lib/cart/reducer'
 import { formatPrice } from '@/lib/format'
+import { DispatchSummary } from '@/components/dispatch-summary'
+import { daysLabel } from '@/lib/catalog/fulfillment'
 
 // Conteúdo da sacola, usado na gaveta (variant="drawer") e na página /carrinho (variant="page").
 // `empty`: conteúdo extra abaixo da sacola vazia (na página: "Mais desejados", components/most-wanted.tsx).
@@ -49,6 +51,9 @@ export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer'
                     {item.name}
                   </Link>
                   <p className="mt-1 text-xs text-black/60">Tamanho: {item.size}</p>
+                  {item.fulfillment === 'sob_encomenda' && item.dispatchDays && (
+                    <p className="mt-0.5 text-xs text-black/60">Sob encomenda · envio em {daysLabel(item.dispatchDays)}</p>
+                  )}
                 </div>
                 <p className="whitespace-nowrap text-sm">{formatPrice(item.priceCents * item.quantity)}</p>
               </div>
@@ -89,7 +94,8 @@ export function CartContents({ variant, onNavigate, empty }: { variant: 'drawer'
           <dt>Subtotal</dt>
           <dd className="text-lg font-medium tracking-[-0.03em]">{formatPrice(subtotalCents)}</dd>
         </dl>
-        <p className="mt-1 text-xs text-black/60">Frete e prazo calculados no checkout.</p>
+        <p className="mt-1 text-xs text-black/60">Frete calculado no checkout.</p>
+        <DispatchSummary items={items} className="mt-3" />
         <Link href="/checkout" onClick={onNavigate} className="mt-5 flex w-full items-center justify-center rounded-xl bg-[#b94f01] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#9f4300]">
           Finalizar compra
         </Link>

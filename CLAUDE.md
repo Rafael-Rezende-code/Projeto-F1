@@ -713,6 +713,27 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `docs/relatorio-final.md`.
 - Para rodar e2e e varredura sem Edge: `PW_EXECUTABLE_PATH=/caminho/do/chromium`.
 
+## Refino 2 (feat/refino, a partir da feat/backend)
+
+- **Modelo de venda (item 5):** campos públicos por produto em `Product` (`fulfillment` "estoque_proprio" |
+  "sob_encomenda", `dispatchDays` {min, max} em dias úteis ATÉ O ENVIO, `origin` "nacional" | "importado", `package`
+  peso/medidas para o frete); regras puras em `lib/catalog/fulfillment.ts` (com testes). Migração NOVA
+  `supabase/migrations/20261023000000_modelo_de_venda.sql` (a anterior não foi tocada): colunas em `products`, tabela
+  **`product_private`** (custo, frete do fornecedor, link do fornecedor, notas) com RLS só admin e `revoke` do anon,
+  colunas por item em `order_items` (`item_status` separando | aguardando-compra | comprado | enviado | entregue,
+  `supplier_tracking_code`, `tracking_code`, datas) e `create_order` recriada copiando o modelo de venda para cada item.
+  **Dados privados nunca entram no `Product`, no seed local nem no JS/HTML público**: testes no PGlite
+  (`supabase/tests/loja.test.ts`), em `lib/catalog/fulfillment.test.ts` e no e2e `e2e/modelo-de-venda.spec.ts`
+  (procura os nomes dos campos no HTML). O rastreio do fornecedor também não vai para o cliente (`orderFromRow`).
+  Seed (exemplo): camisetas, bonés e peças da casa em estoque próprio (1–2 dias úteis); moletons/jaquetas de equipe sob
+  encomenda (7–12); miniaturas de capacete importadas sob encomenda (15–30); pôsteres sob encomenda (3–6).
+  Página de produto: "Produto sob encomenda" (+ "Importado") e "Envio estimado em X a Y dias úteis" quando sob encomenda
+  ou acima de 3 dias. Sacola e checkout (`components/dispatch-summary.tsx`): prazo do item mais lento e aviso de mais de
+  um pacote quando os prazos diferem; o item da sacola guarda `fulfillment`/`dispatchDays` (itens antigos usam o
+  padrão 1–3). Página do pedido: status por item (rótulos do cliente sem falar em fornecedor) depois do pagamento.
+  **Sob encomenda também usa o estoque da variante**: ali ele é "quantas unidades a loja aceita encomendar".
+  Prints em `docs/refino-2/5-modelo-de-venda/`.
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete

@@ -1,3 +1,4 @@
+import type { DispatchDays, Fulfillment } from "@/lib/catalog/types";
 import { FREE_SHIPPING_THRESHOLD_CENTS } from "./config";
 
 // Lógica pura da sacola (testada em reducer.test.ts). Um item por variante (SKU = produto + tamanho).
@@ -13,6 +14,9 @@ export type CartItem = {
   /** Estoque da variante no momento em que foi adicionada (o checkout revalida no servidor). */
   stock: number;
   quantity: number;
+  /** Modelo de venda (refino 2): prazo de envio do item. Itens antigos sem o campo usam o padrão. */
+  fulfillment?: Fulfillment;
+  dispatchDays?: DispatchDays;
 };
 
 /** hydrated: a sacola salva (localStorage) já foi lida. Antes disso ela aparece vazia, igual ao HTML do servidor. */
@@ -81,7 +85,11 @@ export function sanitizeItems(raw: unknown): CartItem[] {
     )
       continue;
     const quantity = clamp(item.quantity as number, item.stock as number);
-    if (quantity > 0 && !items.some((other) => other.sku === item.sku)) items.push({ ...(item as CartItem), quantity });
+    const days = item.dispatchDays;
+    const validDays = days && Number.isInteger(days.min) && Number.isInteger(days.max) && days.min >= 0 && days.max >= days.min;
+    const fulfillment = item.fulfillment === "sob_encomenda" || item.fulfillment === "estoque_proprio" ? item.fulfillment : undefined;
+    if (quantity > 0 && !items.some((other) => other.sku === item.sku))
+      items.push({ ...(item as CartItem), quantity, fulfillment, dispatchDays: validDays ? { min: days.min, max: days.max } : undefined });
   }
   return items;
 }

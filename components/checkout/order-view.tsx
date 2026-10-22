@@ -3,7 +3,8 @@ import Link from "next/link";
 import { CheckCircle2, Clock3, Truck, XCircle } from "lucide-react";
 import { CopyButton } from "@/components/checkout/copy-button";
 import { OrderStatusPoller } from "@/components/checkout/order-status-poller";
-import { ORDER_STATUS_LABELS, PAYMENT_LABELS, type Order } from "@/lib/checkout/order";
+import { DispatchSummary } from "@/components/dispatch-summary";
+import { ORDER_ITEM_STATUS_LABELS, ORDER_STATUS_LABELS, PAYMENT_LABELS, type Order } from "@/lib/checkout/order";
 import { formatPrice } from "@/lib/format";
 
 // Página de status do pedido (usada no modo gravado, lida no servidor, e no simulado, lida do sessionStorage):
@@ -40,6 +41,8 @@ export function OrderView({ order }: { order: Order }) {
   const pending = order.status === "aguardando-pagamento";
   const Icon = head.icon === "ok" ? CheckCircle2 : head.icon === "no" ? XCircle : head.icon === "ship" ? Truck : Clock3;
   const iconColor = head.icon === "ok" || head.icon === "ship" ? "text-[#1f7a3a]" : head.icon === "no" ? "text-[#b42318]" : "text-[#b94f01]";
+  // Status por item (refino 2) só depois do pagamento: antes disso nada foi separado nem encomendado.
+  const hasItemStatus = ["confirmado", "pago", "enviado", "entregue"].includes(order.status);
   const brand = card?.brand ? (BRANDS[card.brand] ?? card.brand.toUpperCase()) : undefined;
 
   return (
@@ -150,12 +153,20 @@ export function OrderView({ order }: { order: Order }) {
                 <div className="min-w-0">
                   <p className="truncate font-medium">{line.name}</p>
                   <p className="text-xs text-black/60">Tam. {line.size} · Qtd. {line.quantity}</p>
+                  {line.status && hasItemStatus && (
+                    <p className="text-xs text-black/60">
+                      {line.fulfillment === "sob_encomenda" ? "Sob encomenda · " : ""}
+                      <span className="font-medium text-black">{ORDER_ITEM_STATUS_LABELS[line.status]}</span>
+                    </p>
+                  )}
+                  {line.tracking && <p className="font-mono text-xs text-black">Rastreio: {line.tracking}</p>}
                 </div>
                 <p className="whitespace-nowrap">{formatPrice(line.unitPriceCents * line.quantity)}</p>
               </div>
             </li>
           ))}
         </ul>
+        <DispatchSummary items={order.lines} className="mt-5" />
         <dl className="mt-6 flex flex-col gap-2 border-t border-black/10 pt-5 text-sm">
           <div className="flex justify-between"><dt className="text-black/60">Subtotal</dt><dd>{formatPrice(order.subtotalCents)}</dd></div>
           <div className="flex justify-between"><dt className="text-black/60">Entrega</dt><dd>{order.shipping.priceCents === 0 ? "Grátis" : formatPrice(order.shipping.priceCents)}</dd></div>

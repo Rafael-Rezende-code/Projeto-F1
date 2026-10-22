@@ -20,6 +20,14 @@ export type ProductVariant = {
   stock: number;
 };
 
+/** Modelo de venda (refino 2, item 5; regras em lib/catalog/fulfillment.ts e docs/operacao/modelo-de-venda.md). */
+export type Fulfillment = "estoque_proprio" | "sob_encomenda";
+export type ProductOrigin = "nacional" | "importado";
+/** Prazo em DIAS ÚTEIS até o envio (postagem), não até a entrega. */
+export type DispatchDays = { min: number; max: number };
+/** Pacote para cotação de frete (lib/shipping). */
+export type ProductPackage = { weightGrams: number; lengthCm: number; widthCm: number; heightCm: number };
+
 /** Item da ficha do produto (material, caimento, cuidados...). */
 export type ProductDetail = { label: string; value: string };
 
@@ -48,6 +56,11 @@ export type Product = {
   illustrative?: boolean;
   /** Data de lançamento (ISO), usada na ordenação "novidades". */
   createdAt: string;
+  /** Estoque próprio (pronta entrega) ou sob encomenda (comprado no fornecedor depois do pedido). */
+  fulfillment: Fulfillment;
+  dispatchDays: DispatchDays;
+  origin: ProductOrigin;
+  package: ProductPackage;
   /** Destaque: aparece primeiro nas vitrines curtas (seção VELOCIDADE, miniaturas do topo do piloto). */
   featured?: boolean;
 };

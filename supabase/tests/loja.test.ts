@@ -38,7 +38,11 @@ beforeAll(async () => {
     grant usage on schema public, auth, storage to anon, authenticated, service_role;
   `);
   await db.exec(read("supabase/migrations/20261022000000_loja.sql"));
+  // Como no Supabase: os papéis recebem permissão nas tabelas por padrão (o RLS é que filtra). A product_private é
+  // criada DEPOIS do grant geral e revoga o anon por conta própria; o grant abaixo reproduz o default do Supabase.
   await db.exec("grant select, insert, update, delete on all tables in schema public to anon, authenticated, service_role;");
+  await db.exec("alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated, service_role;");
+  await db.exec(read("supabase/migrations/20261023000000_modelo_de_venda.sql"));
   await db.exec(read("supabase/seed.sql"));
 }, 60_000);
 
@@ -101,5 +105,43 @@ describe("banco da loja (migração + seed)", () => {
     await db.query("update products set price_cents = 1 where code = 'APX-002'");
     await db.exec("reset role");
     expect((await db.query<{ p: number }>("select price_cents p from products where code = 'APX-002'")).rows[0].p).toBe(12345);
+  });
+
+  it("modelo de venda: cada item leva o modelo do produto e começa no status certo", async () => {
+    await db.exec("reset role");
+    const madeToOrder = (await db.query<{ sku: string }>("select v.sku from product_variants v join products p on p.id = v.product_id where p.fulfillment = 'sob_encomenda' and v.stock > 0 limit 1")).rows[0].sku;
+    await asRole("service_role");
+    await db.query("select * from create_order($1::jsonb)", [order("APX-T4", [{ sku: "APX-001-M", quantity: 1 }, { sku: madeToOrder, quantity: 1 }])]);
+    const { rows } = await db.query<{ sku: string; fulfillment: string; item_status: string; dispatch_max_days: number }>("select sku, fulfillment, item_status, dispatch_max_days from order_items where order_id = 'APX-T4' order by sku");
+    const own = rows.find((row) => row.sku === "APX-001-M")!;
+    const ordered = rows.find((row) => row.sku === madeToOrder)!;
+    expect(own).toMatchObject({ fulfillment: "estoque_proprio", item_status: "separando" });
+    expect(ordered).toMatchObject({ fulfillment: "sob_encomenda", item_status: "aguardando-compra" });
+    expect(ordered.dispatch_max_days).toBeGreaterThan(own.dispatch_max_days);
+  });
+
+  it("dados privados (custo, fornecedor, notas): só admin; nunca no catálogo público", async () => {
+    await db.exec("reset role");
+    await db.exec("insert into product_private (product_id, cost_cents, supplier_url, notes) select id, 12300, 'https://fornecedor.exemplo/item-secreto', 'nota interna' from products where code = 'APX-001'");
+    // Nenhuma coluna privada na tabela pública.
+    const columns = (await db.query<{ column_name: string }>("select column_name from information_schema.columns where table_schema = 'public' and table_name = 'products'")).rows.map((row) => row.column_name);
+    for (const secret of ["cost_cents", "supplier_url", "supplier_shipping_cents", "notes"]) expect(columns).not.toContain(secret);
+    // Visitante: sem permissão nenhuma na tabela; e o "select *" público do catálogo não traz nada privado.
+    await asRole("anon");
+    await expect(db.query("select * from product_private")).rejects.toThrow("permission denied");
+    const publicRow = JSON.stringify((await db.query("select p.*, (select json_agg(v) from product_variants v where v.product_id = p.id) from products p where code = 'APX-001'")).rows);
+    expect(publicRow).not.toContain("12300");
+    expect(publicRow).not.toContain("fornecedor.exemplo");
+    // Logado sem ser admin: zero linhas, e não escreve.
+    await asRole("authenticated", "outro@x.com");
+    expect((await db.query<{ n: number }>("select count(*)::int n from product_private")).rows[0].n).toBe(0);
+    await db.query("update product_private set cost_cents = 1");
+    await expect(db.query("insert into product_private (product_id, cost_cents) select id, 1 from products where code = 'APX-002'")).rejects.toThrow();
+    // Admin lê e edita.
+    await asRole("authenticated", "dono@loja.com");
+    expect((await db.query<{ c: number }>("select cost_cents c from product_private")).rows[0].c).toBe(12300);
+    await db.query("update order_items set item_status = 'comprado', supplier_tracking_code = 'LB123' where order_id = 'APX-T4' and item_status = 'aguardando-compra'");
+    await db.exec("reset role");
+    expect((await db.query<{ n: number }>("select count(*)::int n from order_items where supplier_tracking_code = 'LB123'")).rows[0].n).toBe(1);
   });
 });

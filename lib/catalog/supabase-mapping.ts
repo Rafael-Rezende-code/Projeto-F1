@@ -1,5 +1,6 @@
 import { drivers as driverCards } from "@/lib/drivers";
-import type { Category, Driver, Product, ProductDetail, Team } from "./types";
+import { DEFAULT_DISPATCH, DEFAULT_PACKAGE } from "./fulfillment";
+import type { Category, Driver, Fulfillment, Product, ProductDetail, ProductOrigin, Team } from "./types";
 
 // Linhas das tabelas do Supabase (supabase/migrations) ↔ tipos do catálogo (lib/catalog/types.ts). Funções puras, com
 // testes (supabase-mapping.test.ts): o mesmo mapeamento serve para ler (repositório) e para gravar (seed e admin).
@@ -29,6 +30,16 @@ export type ProductRow = {
   illustrative: boolean;
   position: number;
   created_at: string;
+  // Modelo de venda (migração 20261023000000_modelo_de_venda.sql). Opcionais na leitura: banco sem a migração nova
+  // cai nos padrões. Custo, fornecedor e notas NÃO estão aqui: ficam em product_private (só admin).
+  fulfillment?: Fulfillment;
+  dispatch_min_days?: number;
+  dispatch_max_days?: number;
+  origin?: ProductOrigin;
+  weight_grams?: number | null;
+  length_cm?: number | null;
+  width_cm?: number | null;
+  height_cm?: number | null;
   product_variants?: VariantRow[];
   product_images?: ImageRow[];
 };
@@ -99,6 +110,15 @@ export function productFromRow(row: ProductRow): Product {
     status: row.status,
     illustrative: row.illustrative || undefined,
     createdAt: row.created_at,
+    fulfillment: row.fulfillment ?? "estoque_proprio",
+    dispatchDays: { min: row.dispatch_min_days ?? DEFAULT_DISPATCH.min, max: row.dispatch_max_days ?? DEFAULT_DISPATCH.max },
+    origin: row.origin ?? "nacional",
+    package: {
+      weightGrams: row.weight_grams ?? DEFAULT_PACKAGE.weightGrams,
+      lengthCm: Number(row.length_cm ?? DEFAULT_PACKAGE.lengthCm),
+      widthCm: Number(row.width_cm ?? DEFAULT_PACKAGE.widthCm),
+      heightCm: Number(row.height_cm ?? DEFAULT_PACKAGE.heightCm),
+    },
   };
 }
 
@@ -123,6 +143,14 @@ export function productToRows(product: Product, position: number) {
     illustrative: product.illustrative ?? false,
     position,
     created_at: product.createdAt,
+    fulfillment: product.fulfillment,
+    dispatch_min_days: product.dispatchDays.min,
+    dispatch_max_days: product.dispatchDays.max,
+    origin: product.origin,
+    weight_grams: product.package.weightGrams,
+    length_cm: product.package.lengthCm,
+    width_cm: product.package.widthCm,
+    height_cm: product.package.heightCm,
   };
   const variants = product.variants.map((variant, index) => ({ sku: variant.sku, size: variant.size, color: variant.color ?? null, stock: variant.stock, position: index }));
   const images = product.images.map((image, index) => ({ src: image.src, alt: image.alt, illustrative: image.illustrative ?? false, position: index }));

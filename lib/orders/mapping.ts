@@ -1,7 +1,24 @@
-import type { Order, OrderStatus, PaymentDetails } from "@/lib/checkout/order";
+import type { Fulfillment } from "@/lib/catalog/types";
+import type { Order, OrderItemStatus, OrderStatus, PaymentDetails } from "@/lib/checkout/order";
 
 // Linhas de orders/order_items (supabase/migrations) → Order (lib/checkout/order.ts). Função pura (com teste).
-export type OrderItemRow = { sku: string; product_slug: string; name: string; size: string; image: string; unit_price_cents: number; quantity: number };
+export type OrderItemRow = {
+  sku: string;
+  product_slug: string;
+  name: string;
+  size: string;
+  image: string;
+  unit_price_cents: number;
+  quantity: number;
+  // Migração 20261023000000_modelo_de_venda.sql (opcionais: banco sem ela continua funcionando).
+  id?: string;
+  fulfillment?: Fulfillment;
+  dispatch_min_days?: number;
+  dispatch_max_days?: number;
+  item_status?: OrderItemStatus;
+  tracking_code?: string | null;
+  supplier_tracking_code?: string | null;
+};
 export type OrderRow = {
   id: string;
   access_token: string;
@@ -49,6 +66,11 @@ export function orderFromRow(row: OrderRow): Order {
       image: item.image,
       unitPriceCents: item.unit_price_cents,
       quantity: item.quantity,
+      fulfillment: item.fulfillment,
+      dispatchDays: item.dispatch_min_days != null && item.dispatch_max_days != null ? { min: item.dispatch_min_days, max: item.dispatch_max_days } : undefined,
+      status: item.item_status,
+      // supplier_tracking_code NÃO vai para o cliente (só painel admin).
+      tracking: item.tracking_code ?? undefined,
     })),
     subtotalCents: row.subtotal_cents,
     totalCents: row.total_cents,
