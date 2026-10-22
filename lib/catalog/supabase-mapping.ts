@@ -77,6 +77,7 @@ export function driverFromRow(row: DriverRow): Driver {
     photoSecondary: card?.photoSecondary ?? fallback,
     carImage: card?.carImage,
     carFacing: card?.carFacing,
+    carLight: card?.carLight,
   };
 }
 export const driverToRow = (driver: Driver, position: number): DriverRow => ({

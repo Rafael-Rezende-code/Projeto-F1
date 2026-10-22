@@ -6,26 +6,25 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { DriverCar } from "@/components/driver-car";
-import { DriverIntro } from "@/components/driver-intro";
+import { DriverIntro, DriverTopText } from "@/components/driver-intro";
 import { DriverSignature } from "@/components/driver-signature";
-import { DriverCareer, DriverExtras, DriverOpening } from "@/components/driver-story";
+import { DriverCareer, DriverExtras } from "@/components/driver-story";
 import { ImageReveal } from "@/components/motion/image-reveal";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { ArtDirectedImage } from "@/components/ui/art-directed-image";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
 import { getDriverContent } from "@/lib/content/drivers";
-import { contrastRatio, readableTextOn } from "@/lib/contrast";
+import { readableTextOn } from "@/lib/contrast";
 import { blurProps, findLocalImage, localImage } from "@/lib/local-images";
-import { choreography } from "@/lib/motion";
 import { signaturePaths } from "@/lib/signature-paths";
 
 type Params = { params: Promise<{ slug: string }> };
 
-// Coreografia do topo (segundos depois do sinal da foto principal, lib/motion.ts): foto → assinatura (0,45 s a ~3 s) →
-// carro (ou o bloco de abertura, sem carro) quando o nome já está quase todo escrito.
-const CAR_DELAY = choreography.carStart;
-const INTRO_DELAY = choreography.introStart;
+// Coreografia do topo (lib/motion.ts): foto (sinal) → assinatura → carro car.afterSignature s depois do INÍCIO da
+// assinatura, revelando a frase e as curiosidades. Sem carro, o mesmo texto entra com o BlurReveal.
+// Largura do bloco do carro: metade da tela menos o recuo lateral (celular: tela inteira menos o recuo).
+const CAR_SIZES = "(min-width: 1024px) calc(50vw - 112px), (min-width: 768px) calc(50vw - 80px), (min-width: 640px) calc(100vw - 80px), calc(100vw - 40px)";
 
 const SECOND_SIZES = "(min-width: 1480px) 680px, (min-width: 768px) calc(50vw - 72px), calc(100vw - 40px)";
 
@@ -66,57 +65,56 @@ export default async function DriverPage({ params }: Params) {
   // Texto editorial (fase 4): lib/content/drivers/{slug}.ts.
   const story = getDriverContent(driver.slug);
 
-  // Espaço ao lado do nome: o carro, se o PNG existir no build (fase 2); sem carro, a frase de abertura, 3 números e
-  // "Ver a coleção ↓" (refino 2). As miniaturas de produto do topo saíram: os produtos vêm logo depois do topo.
+  // Bloco do topo (um só no DOM; o lugar muda por grid-template-areas, .driver-header no globals.css): o carro, se o PNG
+  // existir no build, revelando a frase e 3 curiosidades; sem carro, o mesmo texto com BlurReveal.
   const carSrc = driver.carImage ?? `/images/pilotos/carros/${driver.slug}.png`;
   const carFile = localImage(carSrc);
-  // Rastro de movimento (scripts/carros/padronizar.mjs): {slug}-motion.webp, se existir.
-  const ghostSrc = carSrc.replace(/.png$/, "-motion.webp");
-  const ghostSoftSrc = carSrc.replace(/.png$/, "-motion-soft.webp");
-  const slot = carFile ? (
+  const signatureCue = `piloto-assinatura-${driver.slug}`;
+  const stage = carFile ? (
     <DriverCar
       src={carSrc}
       width={carFile.w}
       height={carFile.h}
-      ghost={localImage(ghostSrc) ? ghostSrc : undefined}
-      ghostSoft={localImage(ghostSoftSrc) ? ghostSoftSrc : undefined}
       facing={driver.carFacing ?? "right"}
-      cue={photoCue}
-      delay={CAR_DELAY}
+      cue={signatureCue}
       blur={carFile.blur}
-      sizes="(min-width: 768px) 45vw, 90vw"
-    />
+      sizes={CAR_SIZES}
+      cover={teamColor}
+      light={driver.carLight}
+    >
+      {story && <DriverTopText content={story} textColor={smallText} />}
+    </DriverCar>
   ) : story ? (
-    <DriverIntro content={story} textColor={smallText} cue={photoCue} delay={INTRO_DELAY} />
+    <DriverIntro content={story} textColor={smallText} />
   ) : null;
-  // Números das curiosidades (texto pequeno sobre branco): cor da equipe só com ≥ 4,5:1.
-  const accentOnWhite = contrastRatio(teamColor, "#FFFFFF") >= 4.5 ? teamColor : "#000000";
 
   // Nome e equipe (bloco na cor da equipe). O nome em texto fica no h1 para leitores de tela e buscadores; a
   // assinatura animada (DriverSignature) usa uma fonte manuscrita GENÉRICA: nunca imitar o autógrafo real (CLAUDE.md).
-  const identity = (
-    <div className="flex flex-col justify-between gap-10 px-5 py-10 sm:px-10 sm:py-14 lg:px-14">
+  const crumbs = (
+    <div className="px-5 pt-10 [grid-area:crumbs] sm:px-10 sm:pt-14 lg:px-14">
       <Breadcrumbs
         tone="light"
         color={smallText}
         items={[{ label: "Início", href: "/" }, { label: "Pilotos", href: "/pilotos" }, { label: driver.name }]}
       />
-      {/* Desktop/tablet: carro ou miniaturas no espaço vazio entre o caminho e o nome. No celular vêm depois da foto. */}
-      <div className="hidden flex-1 items-center md:flex">{slot}</div>
-      <div>
-        {team && (
-          <Link href={`/equipes/${team.slug}`} className="text-[10px] font-semibold uppercase tracking-[0.24em] underline-offset-4 hover:underline" style={{ color: smallText }}>
-            {team.name}
-          </Link>
-        )}
-        <h1 className="@container mt-3">
-          <span className="sr-only">{driver.name}</span>
-          <DriverSignature after={photoCue} signature={signaturePaths(driver.name)} className={wide ? "text-[clamp(2.25rem,8cqw,6rem)]" : "text-[clamp(2.25rem,12.5cqw,6rem)]"} />
-        </h1>
-        <p className="mt-6 max-w-sm text-sm leading-6 sm:text-base" style={{ color: smallText }}>{driver.phrase}</p>
-      </div>
     </div>
   );
+  const identity = (
+    <div className="px-5 pb-10 pt-10 [grid-area:name] sm:px-10 sm:pb-14 lg:px-14">
+      {team && (
+        <Link href={`/equipes/${team.slug}`} className="text-[10px] font-semibold uppercase tracking-[0.24em] underline-offset-4 hover:underline" style={{ color: smallText }}>
+          {team.name}
+        </Link>
+      )}
+      <h1 className="@container mt-3">
+        <span className="sr-only">{driver.name}</span>
+        <DriverSignature after={photoCue} startCue={signatureCue} signature={signaturePaths(driver.name)} className={wide ? "text-[clamp(2.25rem,8cqw,6rem)]" : "text-[clamp(2.25rem,12.5cqw,6rem)]"} />
+      </h1>
+      <p className="mt-6 max-w-sm text-sm leading-6 sm:text-base" style={{ color: smallText }}>{driver.phrase}</p>
+    </div>
+  );
+  // Celular: depois da foto. Desktop: entre o caminho e o nome, centralizado na altura que sobra.
+  const stageBlock = stage && <div className="px-5 py-8 [grid-area:stage] sm:px-10 md:flex md:flex-col md:justify-center md:py-0 md:pt-10 lg:px-14">{stage}</div>;
 
   // Foto principal: nítida, sem gradiente nem fade. Encosta nas bordas do bloco: fica reta.
   // Vertical: metade da largura no desktop (altura limitada à tela); no celular vem DEPOIS do nome, com altura
@@ -133,7 +131,7 @@ export default async function DriverPage({ params }: Params) {
         variant="curtain"
         color={teamColor}
         cue={photoCue}
-        className={`relative ${wide ? horizontal : vertical} ${desktopShape}`}
+        className={`relative [grid-area:photo] ${wide ? horizontal : vertical} ${desktopShape}`}
         style={mainDesktop ? ({ "--desk-ratio": `${mainDesktop.width}/${mainDesktop.height}` } as React.CSSProperties) : undefined}
       >
         {mainDesktop ? (
@@ -161,14 +159,13 @@ export default async function DriverPage({ params }: Params) {
       </ImageReveal>
     </SharedTransition>
   );
-  const headerLayout = wide ? (wideDesktop ? "" : "lg:grid lg:grid-cols-2") : wideDesktop ? "grid md:grid-cols-2 lg:block" : "grid md:grid-cols-2";
-
   return (
     <div className="pb-24">
-      <header className={`text-white ${headerLayout}`} style={{ backgroundColor: teamColor }}>
+      <header className="driver-header text-white" data-photo={wide ? "wide" : "vertical"} data-photo-lg={mainDesktop ? (wideDesktop ? "wide" : "vertical") : undefined} style={{ backgroundColor: teamColor }}>
+        {crumbs}
         {identity}
         {photo}
-        {slot && <div className="px-5 py-8 md:hidden">{slot}</div>}
+        {stageBlock}
       </header>
 
       {/* Ordem (refino 2): topo → produtos → história e números → bloco editorial com a foto secundária. */}
@@ -187,7 +184,7 @@ export default async function DriverPage({ params }: Params) {
 
       {story && (
         <div className="px-5 pt-20 sm:px-10 sm:pt-28">
-          <DriverCareer content={story} color={teamColor} name={driver.name} numbersFirst={Boolean(carFile)} />
+          <DriverCareer content={story} color={teamColor} name={driver.name} numbersFirst />
         </div>
       )}
 
@@ -232,11 +229,9 @@ export default async function DriverPage({ params }: Params) {
                 {team.name}
               </p>
             )}
-            {/* Com carro no topo, a frase de abertura vem para cá (sem carro, ela está no topo). */}
-            {story && carFile && <DriverOpening text={story.opening} />}
             {story && (
               <div className="mt-10">
-                <DriverExtras content={story} accent={accentOnWhite} name={driver.name} />
+                <DriverExtras content={story} name={driver.name} />
               </div>
             )}
           </div>

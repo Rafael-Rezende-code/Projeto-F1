@@ -44,6 +44,8 @@ export type Driver = {
    * o carro entra pelo lado de trás dele, andando para a frente. Padrão: "right". Gerado por scripts/carros/padronizar.mjs.
    */
   carFacing?: "left" | "right";
+  /** Luz atrás do carro (gradiente radial claro, contido no slot) e contorno claro estático: separa o carro do fundo. */
+  carLight?: { glow: string; glowOpacity: number; rim: string };
   href: string;
   /** Efeito do HoverTransition e direção de entrada. */
   effect: HoverTransitionEffect;

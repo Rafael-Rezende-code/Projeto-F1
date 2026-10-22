@@ -5,12 +5,9 @@
 // Saída, em public/images/pilotos/carros/:
 //   {slug}.png          trim justo (sem margem transparente), MESMA ALTURA em pixels nos quatro e escala só para baixo;
 //                       a base do arquivo é a base do pneu mais baixo: todos têm a mesma linha do chão.
-//   {slug}-motion.webp       rastro FORTE de movimento (blur horizontal só do lado de trás, pequeno: 640px) e
-//   {slug}-motion-soft.webp  rastro LEVE: o "motion blur falso" da entrada (components/driver-car.tsx) passa do forte para o
-//                            leve enquanto o carro desacelera e do leve para a imagem nítida no último terço. Os dois
-//                            têm margem extra do lado do rastro (GHOST_PAD).
+//   (O "motion blur falso" da entrada é feito na página com uma cópia do próprio carro: components/driver-car.tsx.)
 // Também grava prévias em docs/carros/previas/ (sobre fundo branco e na cor da equipe) e imprime os números que vão para
-// lib/drivers.ts (largura/altura e GHOST_PAD). Uso: node scripts/carros/padronizar.mjs
+// lib/drivers.ts (largura/altura). Uso: node scripts/carros/padronizar.mjs
 //
 // carFacing (lado para onde o carro aponta NO ARQUIVO): norris, hamilton e bortoleto "right"; verstappen "left". A página
 // NÃO espelha (espelhar inverteria os textos dos patrocinadores): o lado decide de onde o carro entra. Mantenha igual em
@@ -35,10 +32,6 @@ const CARS = [
 
 const ALPHA_MIN = 24; // pixel "do carro": alfa a partir daqui (ignora o halo quase transparente)
 const MIN_PIXELS = 4; // linha/coluna só conta com pelo menos N pixels do carro (ignora respingos soltos)
-const GHOST_WIDTH = 640; // largura do rastro (px): blur não precisa de resolução
-const GHOST_SMEAR = 0.09; // comprimento do rastro forte (fração da largura do carro)
-const GHOST_SMEAR_SOFT = 0.035; // comprimento do rastro leve
-const GHOST_PAD = 0.12; // margem transparente extra do lado do rastro (fração da largura do carro)
 
 async function readRgba(file) {
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -68,39 +61,6 @@ function bbox({ data, width, height }) {
  * Blur de movimento horizontal em alfa pré-multiplicado: cada pixel recebe a média da janela [x, x+L] (movimento para a
  * direita: o rastro fica atrás, à esquerda do carro) ou [x-L, x] (movimento para a esquerda).
  */
-function smear(rgba, width, height, length, facing) {
-  const out = Buffer.alloc(rgba.length);
-  const pre = new Float32Array(width * 4);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      const a = rgba[i + 3] / 255;
-      pre[x * 4] = rgba[i] * a;
-      pre[x * 4 + 1] = rgba[i + 1] * a;
-      pre[x * 4 + 2] = rgba[i + 2] * a;
-      pre[x * 4 + 3] = a;
-    }
-    for (let x = 0; x < width; x++) {
-      const from = facing === "right" ? x : x - length;
-      const to = facing === "right" ? x + length : x;
-      let r = 0, g = 0, b = 0, a = 0, n = 0;
-      for (let k = Math.max(0, from); k <= Math.min(width - 1, to); k++) {
-        r += pre[k * 4]; g += pre[k * 4 + 1]; b += pre[k * 4 + 2]; a += pre[k * 4 + 3];
-      }
-      n = to - from + 1; // fora da imagem conta como transparente
-      const i = (y * width + x) * 4;
-      const alpha = a / n;
-      out[i + 3] = Math.round(alpha * 255);
-      if (alpha > 0.002) {
-        out[i] = Math.min(255, Math.round(r / n / alpha));
-        out[i + 1] = Math.min(255, Math.round(g / n / alpha));
-        out[i + 2] = Math.min(255, Math.round(b / n / alpha));
-      }
-    }
-  }
-  return out;
-}
-
 await mkdir(OUT, { recursive: true });
 await mkdir(PREVIEWS, { recursive: true });
 
@@ -123,23 +83,6 @@ for (const { car, box, raw } of sources) {
   const png = await trimmed.clone().resize({ width, height: targetHeight, kernel: "lanczos3" }).png({ compressionLevel: 9, effort: 10 }).toBuffer();
   await writeFile(path.join(OUT, `${car.slug}.png`), png);
 
-  // Rastro: carro reduzido + margem do lado do rastro + blur direcional.
-  const gw = GHOST_WIDTH;
-  const gh = Math.round((targetHeight * gw) / width);
-  const small = await sharp(png).resize({ width: gw, height: gh, kernel: "lanczos3" }).ensureAlpha().raw().toBuffer();
-  const pad = Math.round(gw * GHOST_PAD);
-  const padded = Buffer.alloc((gw + pad) * gh * 4);
-  for (let y = 0; y < gh; y++) {
-    small.copy(padded, (y * (gw + pad) + (car.facing === "right" ? pad : 0)) * 4, y * gw * 4, (y + 1) * gw * 4);
-  }
-  const ghostFile = async (suffix, smearFraction) => {
-    const blurred = smear(padded, gw + pad, gh, Math.round(gw * smearFraction), car.facing);
-    const out = await sharp(blurred, { raw: { width: gw + pad, height: gh, channels: 4 } }).webp({ quality: 78, alphaQuality: 90 }).toBuffer();
-    await writeFile(path.join(OUT, `${car.slug}${suffix}.webp`), out);
-    return out;
-  };
-  const ghost = await ghostFile("-motion", GHOST_SMEAR);
-  await ghostFile("-motion-soft", GHOST_SMEAR_SOFT);
 
   // Prévia: branco e cor da equipe, com a linha do chão desenhada.
   const prev = await sharp(png).resize({ width: 900 }).toBuffer();
@@ -155,8 +98,8 @@ for (const { car, box, raw } of sources) {
     await writeFile(path.join(PREVIEWS, `${car.slug}-${name}.jpg`), base);
     previews.push({ slug: car.slug, name, base });
   }
-  report.push({ slug: car.slug, facing: car.facing, original: `${raw.width}x${raw.height}`, trim: `${box.width}x${box.height}`, saida: `${width}x${targetHeight}`, pngKB: Math.round(png.length / 1024), ghostKB: Math.round(ghost.length / 1024), ghost: `${gw + pad}x${gh}` });
+  report.push({ slug: car.slug, facing: car.facing, original: `${raw.width}x${raw.height}`, trim: `${box.width}x${box.height}`, saida: `${width}x${targetHeight}`, pngKB: Math.round(png.length / 1024) });
 }
 
 console.table(report);
-console.log(`altura comum: ${targetHeight}px; GHOST_PAD ${GHOST_PAD} (igual em components/driver-car.tsx)`);
+console.log(`altura comum: ${targetHeight}px`);

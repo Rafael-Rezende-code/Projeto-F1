@@ -217,7 +217,6 @@ h1, h2, .font-display {
   --motion-medium: 0.45s;
   --motion-long: 0.8s;
   --motion-reveal: 1s;
-  --motion-car: 1.3s;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --motion-rise: 16px;
@@ -302,47 +301,57 @@ h1, h2, .font-display {
   .img-reveal[data-state="in"] img { transition: opacity var(--motion-long) var(--ease-out); }
 }
 
-/* Carro no topo da página do piloto (components/driver-car.tsx). Slot de proporção fixa (5:1, mais largo que o carro mais
-   comprido): os quatro carros têm a MESMA altura e a mesma linha do chão (base do slot). overflow-x: clip corta o que
-   está fora dele (o carro entra de fora) sem criar scroll horizontal; overflow-y fica visível para a sombra no chão.
-   Camadas: __move (entrada), __shadow (sombra), __tilt (inclinação 3D falsa do mouse), __sharp (nítida) e __ghost (rastro
-   de movimento pré-gerado). Só transform e opacity animam. Direção pelo carFacing (--dir): o carro entra pela traseira. */
-.driver-car { --dir: 1; position: relative; width: 100%; aspect-ratio: 5 / 1; overflow-x: clip; overflow-y: visible; perspective: 900px; }
-.driver-car[data-facing="left"] { --dir: -1; }
-.driver-car__move { position: absolute; bottom: 0; left: 50%; height: 100%; aspect-ratio: var(--car-ratio); translate: -50% 0; }
-.driver-car__tilt { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.25s var(--ease-out); will-change: transform; }
-.driver-car__sharp { position: absolute; inset: 0; }
-.driver-car__ghost, .driver-car__ghost-soft { position: absolute; top: 0; height: 100%; width: calc((1 + var(--ghost-pad)) * 100%); left: calc(var(--ghost-pad) * -100%); opacity: 0; pointer-events: none; }
-.driver-car__ghost-soft { opacity: 0; }
-.driver-car[data-facing="left"] .driver-car__ghost, .driver-car[data-facing="left"] .driver-car__ghost-soft { left: 0; }
-.driver-car__shadow { position: absolute; left: 3%; right: 3%; bottom: -9%; height: 18%; border-radius: 50%;
+/* Cabeçalho da página do piloto (feat/carros A2): um único bloco "carro + texto" (.driver-stage) que muda de lugar por
+   grid-template-areas, sem duplicar nada no DOM. Celular: caminho, nome, foto, bloco. Desktop com foto vertical: coluna
+   da esquerda com caminho / bloco / nome e a foto à direita; foto horizontal: tudo em uma coluna, foto embaixo. */
+.driver-header { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "crumbs" "name" "photo" "stage"; }
+@media (min-width: 768px) {
+  .driver-header[data-photo="vertical"] { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto 1fr auto; grid-template-areas: "crumbs photo" "stage photo" "name photo"; }
+  .driver-header[data-photo="wide"] { grid-template-areas: "crumbs" "stage" "name" "photo"; }
+}
+@media (min-width: 1024px) {
+  .driver-header[data-photo-lg="vertical"] { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto 1fr auto; grid-template-areas: "crumbs photo" "stage photo" "name photo"; }
+  .driver-header[data-photo-lg="wide"] { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "crumbs" "stage" "name" "photo"; }
+}
+
+/* Carro no topo da página do piloto (components/driver-car.tsx, feat/carros A1). Slot de proporção fixa (5:1, mais largo
+   que o carro mais comprido): os quatro carros têm a MESMA altura e a mesma linha do chão (base do slot). overflow-x: clip
+   corta o carro enquanto ele está fora (sem scroll horizontal); overflow-y visível para a sombra.
+   Todas as transformações vêm de UM relógio (motion) escrito no estilo de cada camada: __move (posição + skew de
+   velocidade), __ghost (cópia desfocada ESTÁTICA que converge), __shadow, __tilt (inclinação com o mouse, depois de
+   parar) e o painel que revela o texto (.driver-stage__cover, controlado por --reveal-x / --reveal-y).
+   will-change só durante a entrada (.is-ready = camadas aquecidas na espera de 0,35 s; [data-state="in"]) e enquanto
+   inclina (.is-tilting); sai no fim. */
+.driver-car { position: relative; width: 100%; aspect-ratio: 5 / 1; overflow-x: clip; overflow-y: visible; perspective: 900px; }
+.driver-car__move { position: absolute; bottom: 0; left: 50%; height: 100%; aspect-ratio: var(--car-ratio); translate: -50% 0; backface-visibility: hidden; }
+.driver-car__tilt, .driver-car__ghost { position: absolute; inset: 0; backface-visibility: hidden; }
+.driver-car__tilt { transform-style: preserve-3d; }
+/* O desfoque fica num filho NÃO composto (.driver-car__ghost-blur): entra no raster da camada uma vez. Na própria camada
+   que se move, o compositor reaplicaria o filtro a cada quadro. */
+.driver-car__ghost { opacity: 0; pointer-events: none; }
+.driver-car__ghost-blur { position: absolute; inset: 0; filter: blur(var(--ghost-blur, 6px)); }
+.driver-car__shadow { position: absolute; left: 3%; right: 3%; bottom: -9%; height: 18%; border-radius: 50%; backface-visibility: hidden;
   background: radial-gradient(closest-side, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.26) 58%, transparent); }
-/* antes: fora do slot (do lado de trás), invisível */
-.driver-car[data-state="pending"] .driver-car__move { transform: translate3d(calc(var(--dir) * -125%), 0, 0); }
-.driver-car[data-state="pending"] .driver-car__sharp, .driver-car[data-state="pending"] .driver-car__shadow { opacity: 0; }
-/* entrada: ease-out forte, passa 7px e assenta; rastro nos primeiros 2/3, nítido no último terço; sombra cresce e escurece */
-.driver-car[data-state="in"] .driver-car__move { animation: car-drive var(--motion-car) linear both; }
-.driver-car[data-state="in"] .driver-car__sharp { animation: car-sharp var(--motion-car) linear both; }
-.driver-car[data-state="in"] .driver-car__ghost { animation: car-ghost var(--motion-car) linear both; }
-.driver-car[data-state="in"] .driver-car__ghost-soft { animation: car-ghost-soft var(--motion-car) linear both; }
-.driver-car[data-state="in"] .driver-car__shadow { animation: car-shadow var(--motion-car) var(--ease-out) both; }
-@keyframes car-drive {
-  0% { transform: translate3d(calc(var(--dir) * -125%), 0, 0); animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1); }
-  70% { transform: translate3d(calc(var(--dir) * 7px), 0, 0); animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
-  100% { transform: translate3d(0, 0, 0); }
+.driver-car:is(.is-ready, [data-state="in"]):not([data-state="done"]) :is(.driver-car__move, .driver-car__ghost, .driver-car__shadow),
+.driver-car.is-tilting .driver-car__tilt { will-change: transform; }
+.driver-car[data-state="done"] .driver-car__ghost { display: none; }
+
+/* Texto do topo (frase + 3 curiosidades) revelado pela passagem do carro: um painel na cor do fundo (a do bloco do piloto)
+   cobre o texto e desliza com transform, com borda em degradê de --reveal-edge. Desktop: da traseira para a frente do
+   carro, acompanhando a borda dianteira (--reveal-x, 0 → 1); celular: de cima para baixo (--reveal-y). Depois de
+   revelado, o painel some e o texto fica estático. Sem JS, o painel não aparece. */
+.driver-stage__text { position: relative; overflow: clip; }
+.driver-stage__cover { --edge: var(--reveal-edge, 24px); position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; backface-visibility: hidden;
+  width: calc(100% + var(--edge)); height: 100%; background: linear-gradient(90deg, transparent, var(--cover) var(--edge));
+  transform: translate3d(calc(var(--reveal-x, 0) * 100% - var(--edge)), 0, 0); }
+.driver-stage[data-facing="left"] .driver-stage__cover { left: auto; right: 0; background: linear-gradient(270deg, transparent, var(--cover) var(--edge));
+  transform: translate3d(calc(var(--reveal-x, 0) * -100% + var(--edge)), 0, 0); }
+@media (max-width: 767.98px) {
+  .driver-stage__cover, .driver-stage[data-facing="left"] .driver-stage__cover { left: 0; right: auto; width: 100%; height: calc(100% + var(--edge));
+    background: linear-gradient(180deg, transparent, var(--cover) var(--edge)); transform: translate3d(0, calc(var(--reveal-y, 0) * 100% - var(--edge)), 0); }
 }
-/* rastro forte enquanto ele corre → rastro leve enquanto desacelera → nítido no último terço */
-@keyframes car-ghost { 0%, 8% { opacity: 1; } 42% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes car-ghost-soft { 0% { opacity: 0; } 20%, 62% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes car-sharp { 0%, 62% { opacity: 0; } 100% { opacity: 1; } }
-@keyframes car-shadow { from { opacity: 0.15; transform: scaleX(0.4); } to { opacity: 1; transform: scaleX(1); } }
-@media (prefers-reduced-motion: reduce) {
-  .driver-car[data-state="pending"] .driver-car__move { transform: none; }
-  .driver-car__ghost, .driver-car__ghost-soft { display: none; }
-  .driver-car[data-state="in"] .driver-car__move, .driver-car[data-state="in"] .driver-car__shadow { animation: none; }
-  .driver-car[data-state="in"] .driver-car__sharp { animation: car-fade var(--motion-long) var(--ease-out) both; }
-  @keyframes car-fade { from { opacity: 0; } to { opacity: 1; } }
-}
+.driver-stage:is(.is-ready, [data-state="in"]):not([data-state="done"]) .driver-stage__cover { will-change: transform; }
+.driver-stage[data-state="done"] .driver-stage__cover { display: none; }
 
 /* VELOCIDADE: padrão de linhas de fluxo no campo vermelho (components/velocidade-portal.tsx). Maior que a tela para a
    deriva não mostrar a borda; deriva lenta, contínua e só em transform (camada própria). Reduced motion: parado

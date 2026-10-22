@@ -1,66 +1,102 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from "react";
 import Image from "next/image";
-import { useReducedMotion } from "motion/react";
+import { animate, motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { useCue } from "@/components/motion/cue";
+import { carClock, carKeyframes, carTransforms } from "@/lib/car-motion";
+import { car } from "@/lib/motion";
 
 type Props = {
   src: string;
   width: number;
   height: number;
-  /** Rastro de movimento pequeno (scripts/carros/padronizar.mjs): vira o "motion blur falso" da entrada. */
-  ghost?: string;
-  /** Rastro leve (o intermediário entre o rastro forte e a imagem nítida). */
-  ghostSoft?: string;
-  /** Margem extra do rastro, em fração da largura do carro (GHOST_PAD do script: 0,12). */
-  ghostPad?: number;
   /** Para que lado o carro aponta NO ARQUIVO e na página (não espelha: os patrocinadores continuam legíveis). */
   facing: "left" | "right";
-  /** Sinal da foto principal (components/motion/cue.ts) e atraso, em segundos, depois dele. */
+  /** Sinal do INÍCIO do desenho da assinatura (components/driver-signature.tsx). */
   cue: string;
-  delay: number;
   blur?: string;
   sizes: string;
+  /** Cor do fundo do bloco (a da equipe): o painel que esconde o texto até o carro passar. */
+  cover: string;
+  /** Luz atrás do carro e contorno claro (feat/carros A3; lib/drivers.ts). */
+  light?: { glow: string; glowOpacity: number; rim: string };
+  /** Texto do topo (frase + curiosidades), revelado pela passagem do carro. */
+  children?: ReactNode;
+  className?: string;
 };
 
-const MAX_TILT = 6; // graus
 
-// Carro no topo da página do piloto. Coreografia: foto → assinatura → carro (começa `delay` s depois do sinal da foto,
-// quando o nome já está quase todo escrito) e só quando o slot está na tela (no celular ele fica abaixo da foto).
+// Carro no topo da página do piloto + o texto que ele revela (feat/carros A1/A2).
 //
-// A página renderiza o slot duas vezes (um por layout: desktop e celular); o que está com display:none não monta imagem
-// nenhuma porque as imagens são lazy (não eager).
-//
-// Entrada (CSS em app/globals.css, .driver-car): o carro chega pela lateral, de fora do slot, andando para a frente
-// (de onde ele entra vem de `facing`), com ease-out forte, ~1,25 s e um pequeno assentamento no fim (passa 7 px da
-// posição final e volta). O desfoque de movimento é falso: um rastro forte pré-gerado cobre o carro enquanto ele corre,
-// passa para um rastro leve enquanto desacelera e a imagem nítida aparece por baixo no último terço. A sombra no chão cresce e escurece conforme ele chega. Só
-// transform e opacity animam; o slot corta o que está fora dele (overflow-x: clip), então nada gera scroll horizontal.
-// Depois de parado (`done`), no desktop com mouse, inclina até ~6° seguindo o ponteiro (perspective + rotateX/rotateY
-// escritos direto no estilo dentro do requestAnimationFrame, sem setState). No toque: mesma entrada, sem inclinação.
-// Reduced motion: só opacidade (sem deslocamento, sem rastro, sem inclinação).
-export function DriverCar({ src, width, height, ghost, ghostSoft, ghostPad = 0.12, facing, cue, delay, blur, sizes }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
+// UM relógio (lib/car-motion.ts): t linear de 0 a 1 em car.duration s. Cada camada é uma função dele: posição (curva
+// car.ease, ease-out quint, sem passar do ponto), skew de velocidade, fantasma (cópia do MESMO carro com desfoque
+// ESTÁTICO, atrás e atrasado, que converge até car.ghostUntil e some), sombra (mesma curva) e o painel que revela o texto
+// (borda dianteira do carro no desktop; de cima para baixo no celular). As funções viram keyframes amostrados e cada camada
+// roda como animação WAAPI com o MESMO instante de início (document.timeline): o compositor executa tudo junto, sem
+// escrita de estilo por quadro na thread principal e sem leitura de layout. Só transform e opacity.
+// Disparo: car.afterSignature s depois do início da assinatura, com a imagem decodificada (img.decode(), sem atraso
+// artificial) e o slot na tela (no celular ele fica abaixo da foto). Depois de assentar, no desktop com mouse, inclina
+// até car.tiltMax° seguindo o ponteiro (spring do motion, com rampa de car.tiltRamp s). Animação sempre ligada.
+/** Milissegundos até o instante `at` (performance.now), nunca negativo. */
+const msUntil = (at: number) => Math.max(0, at - performance.now());
+
+export function DriverCar({ src, width, height, facing, cue, blur, sizes, cover, light, children, className = "" }: Props) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const slotRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const tiltRef = useRef<HTMLDivElement>(null);
-  const cueReady = useCue(cue, 4000);
-  const reduced = useReducedMotion();
-  const [timeReady, setTimeReady] = useState(false);
+  const signatureStarted = useCue(cue, 4000);
+  const signatureAt = useRef<number | null>(null);
+  const [decoded, setDecoded] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [done, setDone] = useState(false);
-  const go = timeReady && visible;
-  const state = done ? "done" : go ? "in" : "pending";
+  const [state, setState] = useState<"pending" | "in" | "done">("pending");
 
-  // 1) a coreografia: sinal da foto + atraso
-  useEffect(() => {
-    if (!cueReady) return;
-    const timer = window.setTimeout(() => setTimeReady(true), (reduced ? 0.2 : delay) * 1000);
-    return () => window.clearTimeout(timer);
-  }, [cueReady, delay, reduced]);
+  const dir = facing === "right" ? 1 : -1;
+  // Largura do carro em fração da largura do slot (o slot é 5:1).
+  const carWidth = width / height / 5;
 
-  // 2) o slot precisa estar na tela (celular: abaixo da foto)
+  const options = { dir: dir as 1 | -1, carWidth };
+  // Estado inicial (t = 0), já no HTML do servidor: o carro fora do slot, do lado de trás.
+  const initial = carClock(0, options);
+  const moveRef = useRef<HTMLDivElement>(null);
+  const ghostRef = useRef<HTMLDivElement>(null);
+  const shadowRef = useRef<HTMLSpanElement>(null);
+  const coverRef = useRef<HTMLSpanElement>(null);
+
+  // Inclinação com o mouse (depois de parar): alvo → spring → rampa.
+  const tiltX = useMotionValue(0);
+  const tiltY = useMotionValue(0);
+  const springX = useSpring(tiltX, { stiffness: 140, damping: 20, mass: 0.6 });
+  const springY = useSpring(tiltY, { stiffness: 140, damping: 20, mass: 0.6 });
+  const ramp = useMotionValue(0);
+  const tiltTransform = useTransform(() => {
+    const a = ramp.get();
+    return `rotateY(${(springX.get() * car.tiltMax * a).toFixed(3)}deg) rotateX(${(-springY.get() * car.tiltMax * 0.6 * a).toFixed(3)}deg)`;
+  });
+
+  // 1) quando a assinatura começa
   useEffect(() => {
-    const el = ref.current;
+    if (signatureStarted && signatureAt.current === null) signatureAt.current = performance.now();
+  }, [signatureStarted]);
+
+  // 2) imagem decodificada (se já estiver, resolve na hora)
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+    let alive = true;
+    const done = () => alive && setDecoded(true);
+    if (img.complete && img.naturalWidth) img.decode().then(done, done);
+    else img.addEventListener("load", () => img.decode().then(done, done), { once: true });
+    img.addEventListener("error", done, { once: true });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // 3) slot na tela
+  useEffect(() => {
+    const el = slotRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -74,81 +110,132 @@ export function DriverCar({ src, width, height, ghost, ghostSoft, ghostPad = 0.1
     return () => observer.disconnect();
   }, []);
 
-  // 3) inclinação seguindo o mouse: só depois que o carro parou
+  // 4) o relógio: todas as camadas com o mesmo início e a mesma duração (uma vez só; a trava evita recomeçar)
+  const started = useRef(false);
   useEffect(() => {
-    const tilt = tiltRef.current;
-    if (!tilt || !done || reduced) return;
+    if (started.current || !signatureStarted || signatureAt.current === null || !decoded || !visible) return;
+    const wait = msUntil(signatureAt.current + car.afterSignature * 1000);
+    // Aquece as camadas durante a espera (raster do carro e do fantasma desfocado antes de andar): sem isso, o primeiro
+    // quadro em movimento pagava o raster e atrasava. O will-change sai no fim (data-state="done").
+    slotRef.current?.classList.add("is-ready");
+    stageRef.current?.classList.add("is-ready");
+    const animations: Animation[] = [];
+    const timer = window.setTimeout(() => {
+      started.current = true;
+      const frames = carKeyframes(options);
+      const mobile = window.matchMedia("(max-width: 767.98px)").matches;
+      const timing: KeyframeAnimationOptions = { duration: car.duration * 1000, easing: "linear", fill: "both" };
+      const layers: [Element | null, Keyframe[]][] = [
+        [moveRef.current, frames.move],
+        [ghostRef.current, frames.ghost],
+        [shadowRef.current, frames.shadow],
+        [coverRef.current, mobile ? frames.coverY : frames.coverX],
+      ];
+      // Criadas na mesma tarefa, as animações recebem o MESMO instante de início do navegador (no primeiro quadro em que
+      // o compositor as recebe): um relógio só, sem "alcançar" um início no passado.
+      for (const [el, keyframes] of layers) if (el) animations.push(el.animate(keyframes, timing));
+      performance.mark("apex:carro-inicio");
+      setState("in");
+      animations[0]?.finished.then(
+        () => {
+          performance.mark("apex:carro-fim");
+          // estado final fixo no estilo e as animações liberadas (sem camadas sobrando)
+          for (const animation of animations) {
+            try {
+              animation.commitStyles();
+            } catch {}
+            animation.cancel();
+          }
+          setState("done");
+        },
+        () => {},
+      );
+    }, wait);
+    return () => window.clearTimeout(timer);
+    // `options` é derivado das props (estável por página)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signatureStarted, decoded, visible]);
+
+  // 5) inclinação: só desktop com mouse, depois de parar, com rampa curta (sem salto)
+  useEffect(() => {
+    const slot = slotRef.current;
+    if (state !== "done" || !slot) return;
     if (!window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 768px)").matches) return;
-    let frame = 0;
-    let x = 0;
-    let y = 0;
-    const apply = () => {
-      frame = 0;
-      tilt.style.transform = `rotateY(${(x * MAX_TILT).toFixed(2)}deg) rotateX(${(-y * MAX_TILT * 0.6).toFixed(2)}deg)`;
-    };
+    const rampControls = animate(ramp, 1, { duration: car.tiltRamp, ease: car.ease });
+    let idle = 0;
     const onMove = (event: PointerEvent) => {
-      const box = tilt.getBoundingClientRect();
+      const box = slot.getBoundingClientRect();
       if (box.bottom < 0 || box.top > window.innerHeight) return;
-      // -1..1 a partir do centro do carro, limitado a uma área do tamanho da tela
-      x = Math.max(-1, Math.min(1, (event.clientX - (box.left + box.width / 2)) / (window.innerWidth / 2)));
-      y = Math.max(-1, Math.min(1, (event.clientY - (box.top + box.height / 2)) / (window.innerHeight / 2)));
-      if (!frame) frame = requestAnimationFrame(apply);
+      tiltX.set(Math.max(-1, Math.min(1, (event.clientX - (box.left + box.width / 2)) / (window.innerWidth / 2))));
+      tiltY.set(Math.max(-1, Math.min(1, (event.clientY - (box.top + box.height / 2)) / (window.innerHeight / 2))));
+      slot.classList.add("is-tilting");
+      window.clearTimeout(idle);
+      idle = window.setTimeout(() => slot.classList.remove("is-tilting"), 800);
     };
     const onLeave = () => {
-      x = 0;
-      y = 0;
-      if (!frame) frame = requestAnimationFrame(apply);
+      tiltX.set(0);
+      tiltY.set(0);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
     return () => {
+      rampControls.stop();
+      window.clearTimeout(idle);
       window.removeEventListener("pointermove", onMove);
       document.documentElement.removeEventListener("pointerleave", onLeave);
-      if (frame) cancelAnimationFrame(frame);
     };
-  }, [done, reduced]);
+  }, [state, ramp, tiltX, tiltY]);
+
+  const image = (ref?: Ref<HTMLImageElement>) => (
+    <Image
+      ref={ref}
+      src={src}
+      alt=""
+      fill
+      sizes={sizes}
+      quality={90}
+      loading="eager"
+      fetchPriority="high"
+      className="object-contain"
+      {...(blur && ref ? { placeholder: "blur" as const, blurDataURL: blur } : {})}
+    />
+  );
 
   return (
     <div
-      ref={ref}
-      aria-hidden="true"
+      ref={stageRef}
       data-state={state}
       data-facing={facing}
-      className="driver-car"
-      onAnimationEnd={(event) => {
-        if (event.animationName === "car-drive") setDone(true);
-      }}
-      style={{ "--car-ratio": `${width} / ${height}`, "--ghost-pad": ghostPad } as React.CSSProperties}
+      className={`driver-stage ${className}`}
+      style={{ "--cover": cover, "--reveal-edge": `${car.revealEdge}px` } as CSSProperties}
     >
-      <div className="driver-car__move">
-        <span className="driver-car__shadow" />
-        <div ref={tiltRef} className="driver-car__tilt">
-          <div className="driver-car__sharp">
-            <Image
-              src={src}
-              alt=""
-              fill
-              sizes={sizes}
-              quality={90}
-              className="object-contain"
-              {...(blur ? { placeholder: "blur" as const, blurDataURL: blur } : {})}
-            />
+      <div
+        ref={slotRef}
+        aria-hidden="true"
+        data-state={state}
+        data-facing={facing}
+        className="driver-car"
+        style={{ "--car-ratio": `${width} / ${height}`, "--ghost-blur": `${car.ghostBlur}px`, ...(light ? { "--car-glow": light.glow, "--car-glow-opacity": light.glowOpacity, "--car-rim": light.rim } : {}) } as CSSProperties}
+      >
+        {light && <span className="driver-car__glow" />}
+        <div ref={moveRef} className="driver-car__move" style={{ transform: carTransforms.move(initial) }}>
+          <span ref={shadowRef} className="driver-car__shadow" style={{ transform: carTransforms.shadow(initial), opacity: initial.shadowOpacity }} />
+          <div ref={ghostRef} className="driver-car__ghost" style={{ transform: carTransforms.ghost(initial), opacity: initial.ghostOpacity }}>
+            <div className="driver-car__ghost-blur">{image()}</div>
           </div>
-          {/* rastros: WebP de 640px, sem otimização */}
-          {ghost && (
-            <div className="driver-car__ghost">
-              <Image src={ghost} alt="" fill unoptimized sizes="720px" className="object-fill" />
-            </div>
-          )}
-          {ghostSoft && (
-            <div className="driver-car__ghost-soft">
-              <Image src={ghostSoft} alt="" fill unoptimized sizes="720px" className="object-fill" />
-            </div>
-          )}
+          <motion.div ref={tiltRef} className="driver-car__tilt" style={{ transform: tiltTransform }}>
+            <div className={light ? "driver-car__lit" : "absolute inset-0"}>{image(imgRef)}</div>
+          </motion.div>
         </div>
       </div>
+      {children && (
+        <div className="driver-stage__text">
+          {children}
+          <span ref={coverRef} aria-hidden="true" className="driver-stage__cover" />
+        </div>
+      )}
       <noscript>
-        <style>{".driver-car__move,.driver-car__sharp,.driver-car__shadow{opacity:1!important;transform:none!important;animation:none!important}.driver-car__ghost,.driver-car__ghost-soft{display:none}"}</style>
+        <style>{".driver-stage__cover{display:none!important}.driver-car__move{transform:none!important}.driver-car__ghost{display:none!important}"}</style>
       </noscript>
     </div>
   );

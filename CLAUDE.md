@@ -795,19 +795,27 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   textos dos patrocinadores): o carro **entra pela traseira, andando para a frente** (direita: vem da esquerda).
 - **Slot (`.driver-car`):** proporção fixa 5:1 (mais largo que o carro mais comprido, 4,8:1), `overflow-x: clip` (corta o
   que está fora, sem scroll horizontal) e `overflow-y` visível (sombra). Os quatro ficam com a mesma altura e a mesma
-  linha do chão (base do slot). A página renderiza o slot duas vezes (desktop e celular); as imagens são lazy, então a
-  cópia com display:none não baixa nada.
-- **Coreografia (`choreography` em `lib/motion.ts`):** foto (sinal) → assinatura (0,45 s a 2,95 s) → carro em 2,7 s, e só
-  com o slot visível (celular: abaixo da foto; começa quando entra na tela). Entrada de **1,3 s** (`duration.car`,
-  `--motion-car`): `car-drive` com ease-out forte `cubic-bezier(0.25, 1, 0.5, 1)` até 70% passando **7 px** da posição e
-  assentando em 30%; motion blur falso por camadas (rastro forte 0–42%, leve 20–62% e nítida a partir de 62%, no último
-  terço); sombra no chão (`scaleX` 0,4 → 1 e opacidade 0,15 → 1) que cresce e escurece. Só `transform` e `opacity`.
-  Reduced motion: só opacidade (sem rastro, deslocamento nem inclinação).
-- **Inclinação:** só depois de parado (`data-state="done"`, no fim da animação `car-drive`), máx. 6° (medido 5,99°),
-  só desktop com mouse (`hover: hover`, `pointer: fine`, ≥ 768px). Celular: mesma entrada, sem inclinação.
-- **Com o carro:** o bloco "frase + 3 números + botão" (`DriverIntro`) não existe no topo; a frase de abertura vai para o
-  bloco editorial e **os números abrem a seção de história** (`DriverCareer numbersFirst`, antes de "A história de…").
-  Sem carro, tudo como antes (miniaturas ou intro no topo).
+  linha do chão (base do slot). **Um bloco só no DOM** (`.driver-stage` = carro + texto), posicionado por
+  `grid-template-areas` em `.driver-header` (globals.css): celular caminho → nome → foto → bloco; desktop com foto vertical
+  caminho / bloco / nome à esquerda e a foto à direita.
+- **Entrada (refeita em feat/carros A1):** UM relógio (`lib/car-motion.ts`, testes em `car-motion.test.ts`): t linear 0 →
+  1 em `car.duration` (1,5 s); posição com `car.ease` = `cubic-bezier(0.22, 1, 0.36, 1)` sem passar do ponto, skewX de
+  velocidade (6° → 0 até 70%), **fantasma** = cópia do MESMO carro com desfoque ESTÁTICO de 6 px (num filho não composto,
+  raster uma vez), opacidade 0,3, atrasado e convergindo até 60%; sombra na mesma curva; revelação do texto. As funções
+  viram keyframes e cada camada roda como **WAAPI** criada na mesma tarefa (mesmo início; o compositor anima, sem escrita
+  por quadro na thread principal). Tokens em `car` (`lib/motion.ts`). Disparo: **0,35 s depois do INÍCIO da assinatura**
+  (sinal `piloto-assinatura-{slug}` de `DriverSignature startCue`), esperando `img.decode()` e o slot na tela; camadas
+  aquecidas com `will-change` durante essa espera e liberadas no fim. Imagem: next/image eager + `fetchPriority="high"`,
+  `sizes` pela largura real da coluna. Marcas `apex:assinatura-inicio`, `apex:carro-inicio`, `apex:carro-fim` para medir.
+  **Sem tratamento de reduced motion** (regra do projeto: animação sempre ligada). Os rastros `-motion*.webp` foram
+  removidos (e do `padronizar.mjs`). Medição antes × depois e GIFs em `docs/carros/a1/`.
+- **Texto revelado pelo carro (A2):** frase de abertura + 3 curiosidades (`DriverTopText`, `components/driver-intro.tsx`)
+  dentro do bloco, cobertas por um painel na cor do fundo que desliza com a **borda dianteira** do carro (desktop) ou de
+  cima para baixo (celular), borda em degradê de 24 px; no fim o painel some e o texto fica estático (no HTML, na ordem
+  natural, uma vez só). As curiosidades saíram do bloco editorial (sem duplicar); os **números abrem a história** sempre.
+  Sem carro: o mesmo texto com BlurReveal (`DriverIntro`).
+- **Inclinação:** depois de assentar, desktop com mouse (`hover: hover`, `pointer: fine`, ≥ 768px): springs do motion com
+  rampa de 0,5 s (sem salto), máx. 6°; `will-change` só enquanto o mouse mexe (`.is-tilting`).
 - GIFs da entrada (desktop e celular, câmera lenta 0,25× refeita em tempo real) em `docs/carros/gifs/`; prints em
   `docs/carros/prints/`. Verstappen: carro azul-marinho sobre a cor azul-marinho da equipe tem pouco contraste (a sombra
   some); sugestão (não aplicada): um brilho claro sob o carro.

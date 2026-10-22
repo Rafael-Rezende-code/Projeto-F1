@@ -26,26 +26,32 @@ test("Diário: do cabeçalho ao artigo, com produtos relacionados", async ({ pag
   if (!isMobile) await expect(page.getByRole("banner").getByRole("link", { name: "Diário" })).toHaveAttribute("href", "/diario");
 });
 
-test("piloto: topo com frase e números, produtos logo depois, depois a história", async ({ page }) => {
+test("piloto: o carro revela a frase e as curiosidades; números abrem a história; produtos antes dela", async ({ page }) => {
   await page.goto("/pilotos/hamilton");
   await expect(page.getByRole("heading", { level: 1, name: "Lewis Hamilton" })).toBeAttached();
-  await expect(page.getByText("[TEXTO SOBRE O PILOTO]")).toHaveCount(0);
+  const main = page.locator("#conteudo");
+  const stage = main.locator(".driver-stage");
+  const cover = stage.locator(".driver-stage__cover");
+  // Antes do carro passar, o painel na cor do fundo cobre o texto (ele já está no HTML, na ordem natural, uma vez só).
+  await expect(main.getByText("Sete títulos. Uma história que mudou o grid.", { exact: false })).toHaveCount(1);
+  await expect(main.getByText("Recebeu o título de cavaleiro (Sir) do Reino Unido em 2021.")).toHaveCount(1);
+  await stage.scrollIntoViewIfNeeded();
+  await expect(stage).toHaveAttribute("data-state", "done", { timeout: 15_000 });
+  await expect(cover).toBeHidden();
+  await expect(main.getByText("Recebeu o título de cavaleiro (Sir) do Reino Unido em 2021.")).toBeVisible();
+  // As curiosidades saíram do bloco editorial (sem texto duplicado); os números abrem a história.
+  await expect(page.getByRole("heading", { name: "Curiosidades" })).toHaveCount(0);
   await page.getByRole("heading", { name: "A história de Lewis" }).scrollIntoViewIfNeeded();
   await expect(page.getByText("Estreou na Fórmula 1 em 2007")).toBeVisible();
   const numbers = page.getByRole("region", { name: "Lewis Hamilton em números" });
   await expect(numbers.getByText("Títulos mundiais")).toBeVisible();
   await expect(numbers.getByText("44", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Curiosidades" })).toBeVisible();
-  // Com o carro (feat/carros), a frase + números + botão saem do topo: os números abrem a história, e os produtos vêm ANTES dela.
-  await expect(page.getByText("Destaques Hamilton")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Ver a coleção/ })).toHaveCount(0);
   const numbersBox = await numbers.boundingBox();
   const storyHeading = await page.getByRole("heading", { name: "A história de Lewis" }).boundingBox();
   expect(numbersBox!.y).toBeLessThan(storyHeading!.y);
   await expect(page.getByRole("link", { name: /Ver todos os produtos/ })).toHaveAttribute("href", "/produtos?piloto=hamilton");
   const products = await page.locator("#produtos-piloto").boundingBox();
-  const story = await page.getByRole("heading", { name: "A história de Lewis" }).boundingBox();
-  expect(products!.y).toBeLessThan(story!.y);
+  expect(products!.y).toBeLessThan(storyHeading!.y);
 });
 
 test("equipe: história, marcos e sede entre o cabeçalho e os produtos", async ({ page }) => {

@@ -18,8 +18,6 @@ export const duration = {
   long: 0.8,
   /** revelação das fotos (cortina + foco da foto de piloto, components/motion/image-reveal.tsx) */
   reveal: 1,
-  /** entrada do carro no topo da página do piloto (components/driver-car.tsx): ~1,1–1,4 s, com assentamento no fim */
-  car: 1.3,
 } as const;
 
 /** Curvas cubic-bezier (formato do motion). */
@@ -29,16 +27,44 @@ export const ease = {
 };
 
 /**
- * Coreografia do topo da página do piloto, em segundos depois do sinal da foto principal: foto → assinatura → carro.
- * A assinatura começa em `signatureStart` e termina em `signatureEnd` (TOTAL de components/driver-signature.tsx); o carro
- * começa um instante antes do fim, quando o nome já está quase todo escrito.
+ * Coreografia do topo da página do piloto: foto (sinal) → assinatura `signatureStart` s depois → carro `car.afterSignature`
+ * s depois do INÍCIO da assinatura (sinal disparado por components/driver-signature.tsx).
  */
 export const choreography = {
   signatureStart: 0.45,
   signatureEnd: 2.95,
-  carStart: 2.7,
-  /** bloco de abertura (sem carro) */
+  /** bloco de abertura (sem carro), em segundos depois do sinal da foto */
   introStart: 2.1,
+} as const;
+
+/**
+ * Entrada do carro (components/driver-car.tsx), feat/carros A1. UM relógio linear de 0 a 1 (`duration` s) comanda tudo:
+ * posição (curva `ease`), inclinação de entrada (skewX), fantasma, sombra e a revelação do texto. Só transform e opacity.
+ */
+export const car = {
+  /** segundos depois do início do desenho da assinatura */
+  afterSignature: 0.35,
+  /** duração total da entrada, em segundos */
+  duration: 1.5,
+  /** ease-out quint: chega rápido e assenta sem ultrapassar (sem overshoot) */
+  ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+  /** onde o carro começa: fração da própria largura, para trás (fora do slot) */
+  startOffset: 1.25,
+  /** inclinação de velocidade no início (graus), zera em `skewUntil` do relógio */
+  skew: 6,
+  skewUntil: 0.7,
+  /** fantasma: atraso inicial (fração da largura do carro), opacidade, desfoque ESTÁTICO (px) e até quando converge */
+  ghostLag: 0.16,
+  ghostOpacity: 0.3,
+  ghostBlur: 6,
+  ghostUntil: 0.6,
+  /** sombra no chão: escala horizontal e opacidade iniciais */
+  shadowFrom: { scaleX: 0.45, opacity: 0.15 },
+  /** borda suave da revelação do texto (px) */
+  revealEdge: 24,
+  /** inclinação 3D com o mouse depois de assentar: máximo (graus) e rampa de entrada (s) */
+  tiltMax: 6,
+  tiltRamp: 0.5,
 } as const;
 
 /** Intervalo entre itens de uma sequência (palavras, cards), em segundos. */

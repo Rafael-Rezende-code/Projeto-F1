@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { useReducedMotion } from "motion/react";
-import { useCue } from "@/components/motion/cue";
+import { clearCue, fireCue, useCue } from "@/components/motion/cue";
 import { Signature } from "@/components/ui/signature";
 import { choreography } from "@/lib/motion";
 import type { SignatureData } from "@/lib/signature-paths";
@@ -20,9 +21,21 @@ const DRAW = 1.1;
 const DELAY = 0.1;
 const AFTER_DELAY = choreography.signatureStart;
 
-export function DriverSignature({ signature, className = "", after }: { signature: SignatureData; className?: string; after?: string }) {
+// `startCue`: sinal disparado quando o traço COMEÇA (o carro do topo entra car.afterSignature s depois; lib/motion.ts).
+export function DriverSignature({ signature, className = "", after, startCue }: { signature: SignatureData; className?: string; after?: string; startCue?: string }) {
   const reduced = useReducedMotion();
   const ready = useCue(after);
+  useEffect(() => {
+    if (!ready || !startCue) return;
+    const timer = window.setTimeout(() => {
+      performance.mark("apex:assinatura-inicio");
+      fireCue(startCue);
+    }, (after ? AFTER_DELAY : DELAY) * 1000);
+    return () => {
+      window.clearTimeout(timer);
+      clearCue(startCue);
+    };
+  }, [ready, startCue, after]);
   const letters = signature.paths.length;
   const stagger = letters > 1 ? (TOTAL - DELAY - DRAW) / (letters - 1) : 0;
   return (
