@@ -7,6 +7,7 @@ import { addressSchema, checkoutSchema, CPF_REQUIRED_METHODS, fieldErrors, order
 import { z } from "zod";
 import { newOrderId, type Order, type OrderLine } from "@/lib/checkout/order";
 import { cancelStoredOrder, createStoredOrder, recordPayment } from "@/lib/orders/store";
+import { queueOrderEmails } from "@/lib/email/order-emails";
 import { getPaymentProvider } from "@/lib/payments";
 import { isOrderStoreConfigured } from "@/lib/supabase/config";
 import { couponMessage, normalizeCouponCode } from "@/lib/coupons";
@@ -169,6 +170,8 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       providerStatus: payment.providerStatus ?? payment.status,
       details: { ...payment.details, instructions: payment.instructions },
     });
+    // Pagamento aprovado na hora: o recordPayment já agenda "pagamento aprovado" (que serve de confirmação).
+    if (status === "aguardando-pagamento") queueOrderEmails(id, ["pedido-recebido"]);
     return { ok: true, order: { ...stored.order, status: status ?? stored.order.status, payment: { ...stored.order.payment, provider: payment.provider, reference: payment.reference, instructions: payment.instructions, details: payment.details } } };
   }
 

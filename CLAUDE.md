@@ -889,6 +889,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   marcar teste. Lista com período e filtro de teste (`lib/admin/order-filters.ts`). CSV (`lib/admin/csv.ts`: BOM, ";",
   vírgula decimal, proteção contra fórmula): `/admin/pedidos/exportar` (mesmos filtros) e `/admin/fornecedor/exportar`.
   Testes: `supabase/tests/cancelamento.test.ts` (inclui falha no meio desfazendo tudo), `lib/admin/*.test.ts`.
+- **E-mails (fase 3):** `lib/email/` (`EmailProvider`: `ResendEmailProvider` por fetch, `ConsoleEmailProvider` sem
+  chave; `getEmailProvider()` pelo `RESEND_API_KEY` + `EMAIL_FROM`). Modelos puros em `templates.ts` (pedido recebido,
+  pagamento aprovado, enviado, cancelado; HTML em tabela + texto; sem endereço/CPF). Regras em `rules.ts`. Envio em
+  `order-emails.ts` (`queueOrderEmails` com `after()`; só pedidos gravados), idempotente pela migração
+  `20261029000000_emails.sql` (`email_log` único em pedido + tipo, `claim_order_email`/`finish_order_email`, até 5
+  tentativas). Disparos: `recordPayment` (aprovado/cancelado), `placeOrder` (recebido, quando pendente), `markShipped` e
+  `cancelOrder`. Registro no detalhe do pedido do admin. Guia (inclui SMTP do Supabase): `docs/backend/email.md`.
 
 ## Pendências (atualizado em 22/10/2026)
 

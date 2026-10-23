@@ -19,14 +19,16 @@ export default async function AdminPedido({ params }: { params: Promise<{ id: st
   if (adminDisabled()) return null;
   const { supabase } = await requireAdmin();
   const id = decodeURIComponent((await params).id);
-  const [{ data }, { data: eventRows }] = await Promise.all([
+  const [{ data }, { data: eventRows }, { data: emailRows }] = await Promise.all([
     supabase.from("orders").select("*, order_items(*)").eq("id", id).maybeSingle(),
     supabase.from("order_events").select("id, kind, message, actor, created_at").eq("order_id", id).order("id", { ascending: true }),
+    supabase.from("email_log").select("type, status, attempts, provider, error, updated_at").eq("order_id", id).order("id", { ascending: true }),
   ]);
   if (!data) notFound();
   const row = data as OrderRow;
   const extra = data as Extra;
   const events = (eventRows ?? []) as EventRow[];
+  const emails = (emailRows ?? []) as { type: string; status: string; attempts: number; provider: string | null; error: string | null; updated_at: string }[];
   const order = orderFromRow(row);
   const card = order.payment.details?.card;
   return (
@@ -135,6 +137,23 @@ export default async function AdminPedido({ params }: { params: Promise<{ id: st
           </ol>
         ) : (
           <p className="mt-2 text-sm text-black/60">Sem registros (pedidos anteriores à migração de histórico não têm eventos).</p>
+        )}
+      </section>
+
+      <section aria-labelledby="emails-pedido" className="mt-6 rounded-2xl bg-white p-6">
+        <h2 id="emails-pedido" className="font-medium">E-mails ao cliente</h2>
+        {emails.length ? (
+          <ul role="list" className="mt-3 space-y-1 text-sm">
+            {emails.map((email) => (
+              <li key={email.type}>
+                <span className="font-medium">{email.type}</span> · {email.status === "enviado" ? (email.provider === "console" ? "simulado (sem RESEND_API_KEY)" : "enviado") : email.status}
+                {email.attempts > 1 ? ` · ${email.attempts} tentativas` : ""} · <span className="text-black/60">{when(email.updated_at)}</span>
+                {email.error && <span className="block text-xs text-[#b42318]">{email.error}</span>}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-sm text-black/60">Nenhum e-mail registrado para este pedido.</p>
         )}
       </section>
     </div>

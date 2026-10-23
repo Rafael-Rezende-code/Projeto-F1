@@ -1,8 +1,10 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
-import type { Order, PaymentDetails } from "@/lib/checkout/order";
+import type { Order, OrderStatus, PaymentDetails } from "@/lib/checkout/order";
 import { orderFromRow, orderStatusFromPayment, type OrderRow } from "./mapping";
 import { lookupFromRow, type OrderLookup } from "./lookup";
+import { queueOrderEmails } from "@/lib/email/order-emails";
+import { emailsForStatusChange } from "@/lib/email/rules";
 
 // Pedidos gravados no Supabase (fase 9). Só no servidor, com a service role. Usado pelo checkout (server action), pela
 // página /pedido/[id] e pelo webhook do Mercado Pago. Sem Supabase configurado, ninguém chama isto (pedidos simulados).
@@ -92,6 +94,7 @@ export async function recordPayment(
     .eq("id", id);
   if (error) throw new Error(`Supabase (pagamento): ${error.message}`);
   if (status === "recusado" || status === "cancelado") await releaseStock(id);
+  queueOrderEmails(id, emailsForStatusChange(current.data.status as OrderStatus, status as OrderStatus));
   return status;
 }
 

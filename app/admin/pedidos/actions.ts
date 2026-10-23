@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin/auth";
 import { orderActionMessage } from "@/lib/admin/order-actions";
+import { queueOrderEmails } from "@/lib/email/order-emails";
 
 export type ShipState = { ok?: boolean; message?: string };
 
@@ -29,6 +30,7 @@ export async function markShipped(_: ShipState, form: FormData): Promise<ShipSta
     .update({ item_status: "enviado", tracking_code: parsed.data.tracking.toUpperCase(), shipped_at: new Date().toISOString() })
     .eq("order_id", parsed.data.id)
     .in("item_status", ["separando", "comprado", "enviado"]);
+  queueOrderEmails(parsed.data.id, ["enviado"]); // um por pedido (email_log): corrigir o código não reenvia
   revalidatePath(`/admin/pedidos/${parsed.data.id}`);
   revalidatePath("/admin/pedidos");
   return { ok: true, message: "Pedido marcado como enviado." };
@@ -55,8 +57,9 @@ export async function cancelOrder(_: OrderActionState, form: FormData): Promise<
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0].message };
   const { error } = await supabase.rpc("cancel_order", { p_order_id: parsed.data.id, p_reason: parsed.data.reason, p_confirm_shipped: parsed.data.confirmShipped });
   if (error) return { ok: false, message: orderActionMessage(error) };
+  queueOrderEmails(parsed.data.id, ["cancelado"]);
   refresh(parsed.data.id);
-  return { ok: true, message: "Pedido cancelado. Estoque e cupom devolvidos." };
+  return { ok: true, message: "Pedido cancelado. Estoque e cupom devolvidos. O cliente recebe um e-mail." };
 }
 
 export async function markRefunded(_: OrderActionState, form: FormData): Promise<OrderActionState> {
