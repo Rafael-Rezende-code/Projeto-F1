@@ -896,6 +896,14 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `20261029000000_emails.sql` (`email_log` único em pedido + tipo, `claim_order_email`/`finish_order_email`, até 5
   tentativas). Disparos: `recordPayment` (aprovado/cancelado), `placeOrder` (recebido, quando pendente), `markShipped` e
   `cancelOrder`. Registro no detalhe do pedido do admin. Guia (inclui SMTP do Supabase): `docs/backend/email.md`.
+- **Medição e consentimento (fase 4):** `lib/analytics.ts` (`track`: view_item, add_to_cart, begin_checkout, purchase,
+  search; mapeia para GA4 e Meta Pixel; ids = slug do produto; nada pessoal) é NO-OP sem `NEXT_PUBLIC_GA_ID` /
+  `NEXT_PUBLIC_META_PIXEL_ID` e sem o consentimento da categoria. `lib/consent.ts` (localStorage `apex:consentimento:v1`,
+  versão + data; medição → GA4, marketing → Pixel). `components/consent.tsx`: `ConsentManager` (no layout só com algum ID;
+  fora do /admin) carrega os scripts DEPOIS do "sim"; banner fixo (sem empurrar a página; acima do dock no celular) com
+  Recusar / Aceitar todos do mesmo peso + Personalizar; `ConsentPreferencesButton` no rodapé reabre. Disparos: página de
+  produto (`TrackEvent`), `addItem` da sacola, checkout (início e compra), busca (1,2 s parado, 3+ letras). **A Política de
+  Privacidade precisa citar GA4/Meta Pixel quando ligados** (`docs/lancamento.md`). Prints `docs/operacao/prints/consentimento-*`.
 
 ## Pendências (atualizado em 22/10/2026)
 

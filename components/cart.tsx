@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { ShoppingBag } from 'lucide-react'
 import { CartDrawer } from '@/components/cart-drawer'
+import { track } from '@/lib/analytics'
 import { CART_STORAGE_KEY } from '@/lib/cart/config'
 import { cartCount, cartReducer, cartSubtotal, initialCartState, type CartItem } from '@/lib/cart/reducer'
 import type { Product, ProductVariant } from '@/lib/catalog/types'
@@ -101,6 +102,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         },
       })
       announce(quantity > room ? `Só havia ${room} unidade(s) de ${product.name}: adicionamos o que restava` : `${product.name} foi adicionado à sacola`)
+      track({ name: 'add_to_cart', item: { id: product.slug, name: product.name, priceCents: product.priceCents, quantity: Math.min(quantity, room), category: product.categorySlug, variant: variant.size } })
     },
     [announce, state.items],
   )

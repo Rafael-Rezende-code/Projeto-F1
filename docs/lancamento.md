@@ -123,8 +123,12 @@ Outros conteúdos provisórios **sem colchetes**:
 - [ ] Questões de `docs/operacao/modelo-de-venda.md` com advogado e contador (tributos de importação, arrependimento em
       peças personalizadas, responsabilidade pelo prazo).
 - [ ] Textos de Envio e Trocas publicados (seção 5) e coerentes com os prazos do site.
-- [ ] E-mails transacionais (confirmação de pedido, envio): **não implementados**. Até lá, avisar o cliente
-      manualmente (o link do pedido fica na página de confirmação).
+- [ ] E-mails transacionais: implementados (pedido recebido, pagamento aprovado, enviado, cancelado), ligam com
+      `RESEND_API_KEY` + `EMAIL_FROM` (`docs/backend/email.md`). Sem eles, nada é enviado.
+- [ ] **Política de Privacidade precisa citar as ferramentas de medição e marketing** quando `NEXT_PUBLIC_GA_ID`
+      (Google Analytics 4) ou `NEXT_PUBLIC_META_PIXEL_ID` (Meta Pixel) estiverem configurados: o que coletam, para quê,
+      que só carregam depois do consentimento no banner e como mudar a escolha ("Preferências de cookies" no rodapé).
+      Citar também o Resend (e-mails do pedido), o Mercado Pago, o Supabase e a Vercel como operadores.
 - [ ] Pix/boleto vencidos: o cancelamento depende do aviso do Mercado Pago; acompanhar no painel nas primeiras semanas.
 
 ## 10. Roteiro de teste de compra (ponta a ponta)

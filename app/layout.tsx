@@ -1,6 +1,8 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
+import { ConsentManager } from '@/components/consent'
+import { trackingConfigured } from '@/lib/consent'
 import { HydrationMark } from '@/components/hydration-mark'
 import { WhatsAppButton } from '@/components/whatsapp'
 import { LazyShell } from '@/components/lazy-shell'
@@ -47,6 +49,8 @@ export default function RootLayout({
             <LazyShell />
             <SearchRoot />
             <WhatsAppButton />
+            {/* Consentimento e GA4/Meta Pixel: só com NEXT_PUBLIC_GA_ID ou NEXT_PUBLIC_META_PIXEL_ID (lib/consent.ts). */}
+            {trackingConfigured() && <ConsentManager />}
           </CartProvider>
         </SiteUIProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}

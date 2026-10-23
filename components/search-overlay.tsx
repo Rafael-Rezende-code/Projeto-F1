@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, Search, X } from "lucide-react";
 import { searchCatalog, searchSuggestions, type SearchHit } from "@/app/actions/search";
+import { track } from "@/lib/analytics";
 import { useSiteUI } from "@/components/site-ui";
 import { useModal } from "@/components/use-modal";
 import { formatPrice } from "@/lib/format";
@@ -49,6 +50,18 @@ export function SearchOverlay() {
         setActive(0);
       });
     }, 140);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  // Medição (search): só quando a pessoa para de digitar (1,2 s), com 3+ letras, uma vez por termo.
+  const lastTracked = useRef("");
+  useEffect(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 3 || q === lastTracked.current) return;
+    const timer = window.setTimeout(() => {
+      lastTracked.current = q;
+      track({ name: "search", term: q.slice(0, 80) });
+    }, 1200);
     return () => window.clearTimeout(timer);
   }, [query]);
 

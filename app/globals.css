@@ -400,3 +400,7 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
 @media (min-width: 640px) {
   .article-p { text-align: justify; hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 6 3 2; }
 }
+
+/* Banner de consentimento (operação, fase 4): fixo, acima do dock no celular. */
+.consent-banner { bottom: calc(var(--dock-space) + 12px); }
+@media (min-width: 640px) { .consent-banner { bottom: 16px; } }

@@ -7,6 +7,7 @@ import { footerColumns, legalLinks } from "@/lib/navigation";
 import { socialLinks, whatsappLink } from "@/lib/social";
 import { whatsappMessages } from "@/lib/store-policy";
 import { MessageCircle } from "lucide-react";
+import { ConsentPreferencesButton } from "@/components/consent";
 
 // Rodapé do site (home e páginas internas). Mesmo visual do rodapé original da home; links em lib/navigation.ts.
 export function SiteFooter() {
@@ -50,6 +51,7 @@ export function SiteFooter() {
               {link.label}
             </Link>
           ))}
+          <ConsentPreferencesButton className="transition hover:text-white" />
         </div>
         {/* Redes: só as que têm URL configurada (lib/social.ts, NEXT_PUBLIC_SOCIAL_*); sem nenhuma, nada aparece. */}
         {(socialLinks.length > 0 || whatsapp) && (

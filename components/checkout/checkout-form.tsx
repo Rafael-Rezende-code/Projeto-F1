@@ -3,7 +3,7 @@
 import { DispatchSummary } from "@/components/dispatch-summary";
 import { CouponField } from "@/components/coupon-field";
 import { daysLabel } from "@/lib/catalog/fulfillment";
-import { useId, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,6 +17,7 @@ import { addressSchema, contactSchema, CPF_REQUIRED_METHODS, fieldErrors, paymen
 import type { DeliveryOption } from "@/lib/checkout/shipping";
 import { readSavedCep, saveCep } from "@/lib/cep-storage";
 import { formatPrice } from "@/lib/format";
+import { track } from "@/lib/analytics";
 import { methodFromBrick } from "@/lib/payments/brick";
 import type { CardDisplay } from "@/lib/payments/types";
 import type { BrickSubmit } from "@/components/checkout/mercado-pago-brick";
@@ -58,6 +59,13 @@ const MercadoPagoBrick = dynamic(() => import("@/components/checkout/mercado-pag
 export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublicKey?: string; couponsEnabled?: boolean }) {
   const router = useRouter();
   const { items, subtotalCents, ready, clear } = useCart();
+  // begin_checkout: uma vez, quando a sacola (do localStorage) já foi lida e não está vazia.
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (!ready || checkoutTracked.current || !items.length) return;
+    checkoutTracked.current = true;
+    track({ name: "begin_checkout", valueCents: subtotalCents, items: items.map((item) => ({ id: item.slug, name: item.name, priceCents: item.priceCents, quantity: item.quantity, variant: item.size })) });
+  }, [ready, items, subtotalCents]);
   const [step, setStep] = useState<Step>(0);
   const [form, setForm] = useState<Form>(EMPTY);
   const needsCpf = (CPF_REQUIRED_METHODS as readonly string[]).includes(form.method);
@@ -200,7 +208,16 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
       // sem sessionStorage: a página do pedido mostra só o número
     }
     // Recusado: a sacola fica (o cliente tenta de novo); nos outros casos o pedido foi feito.
-    if (result.order.status !== "recusado") clear();
+    if (result.order.status !== "recusado") {
+      track({
+        name: "purchase",
+        transactionId: result.order.id,
+        valueCents: result.order.totalCents,
+        shippingCents: result.order.shipping.priceCents,
+        items: result.order.lines.map((line) => ({ id: line.slug, name: line.name, priceCents: line.unitPriceCents, quantity: line.quantity, variant: line.size })),
+      });
+      clear();
+    }
     router.push(orderUrl(result.order));
     return true;
   };

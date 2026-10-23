@@ -10,6 +10,7 @@ import { ProductGallery } from "@/components/product-gallery";
 import { ProductGrid } from "@/components/product-grid";
 import { ProductPurchase } from "@/components/product-purchase";
 import { WhatsAppTopic } from "@/components/whatsapp";
+import { TrackEvent } from "@/components/track-event";
 import { ShippingEstimator } from "@/components/shipping-estimator";
 import { catalog } from "@/lib/catalog";
 import { dispatchNotice, ORIGIN_LABELS } from "@/lib/catalog/fulfillment";
@@ -147,6 +148,7 @@ export default async function ProductPage({ params }: Params) {
             <div className="mt-8">
               <ProductPurchase product={product} />
               <WhatsAppTopic product={{ name: product.name, slug: product.slug }} />
+              <TrackEvent event={{ name: "view_item", item: { id: product.slug, name: product.name, priceCents: product.priceCents, category: product.categorySlug } }} />
               {/* Frete por CEP: o pacote é o mesmo para todos os tamanhos; cota com uma variante disponível. */}
               {shippingSku && <ShippingEstimator items={[{ sku: shippingSku, quantity: 1 }]} className="mt-6" />}
             </div>
