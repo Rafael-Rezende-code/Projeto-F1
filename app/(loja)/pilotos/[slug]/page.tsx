@@ -80,7 +80,6 @@ export default async function DriverPage({ params }: Params) {
       blur={carFile.blur}
       sizes={CAR_SIZES}
       cover={teamColor}
-      light={driver.carLight}
     >
       {story && <DriverTopText content={story} textColor={smallText} />}
     </DriverCar>
@@ -121,10 +120,11 @@ export default async function DriverPage({ params }: Params) {
   // controlada (até 62svh / 520px). Horizontal: largura total, proporção da própria foto (até 80svh).
   // Entrada (fase 1 da rodada de conteúdo): cortina na cor da equipe + escala/foco, só com a foto decodificada.
   const mainSizes = wide ? "100vw" : "(min-width: 768px) 50vw, 100vw";
-  const vertical = "h-[min(62svh,520px)] md:h-[min(88svh,860px)]";
+  // Desktop: a coluna da foto estica junto com o conteúdo do bloco (grid, align stretch); a altura da tela só dá o mínimo.
+  const vertical = "h-[min(62svh,520px)] md:h-auto md:min-h-[min(88svh,860px)]";
   const horizontal = "aspect-[3/2] max-h-[80svh] w-full";
   // Desktop com orientação diferente da foto do celular: o layout do topo troca em lg.
-  const desktopShape = !mainDesktop || wideDesktop === wide ? "" : wideDesktop ? "lg:h-auto lg:w-full lg:aspect-(--desk-ratio) lg:max-h-[80svh]" : "lg:aspect-auto lg:max-h-none lg:h-[min(88svh,860px)]";
+  const desktopShape = !mainDesktop || wideDesktop === wide ? "" : wideDesktop ? "lg:h-auto lg:w-full lg:aspect-(--desk-ratio) lg:max-h-[80svh]" : "lg:aspect-auto lg:max-h-none lg:h-auto lg:min-h-[min(88svh,860px)]";
   const photo = (
     <SharedTransition name={driverTransitionName(driver.slug)} crossfade={false}>
       <ImageReveal
