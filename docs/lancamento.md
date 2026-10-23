@@ -12,7 +12,7 @@ produtos reais: ele contém o seed de demonstração e repõe produtos de teste 
 ## 1. Contas e credenciais
 
 - [ ] **Supabase**: criar o projeto (região São Paulo), colar `supabase/setup-completo.sql` no SQL Editor, cadastrar os
-      e-mails de admin, configurar o login por link mágico. Passo a passo: `docs/backend/supabase.md`.
+      e-mails de admin, configurar o login do painel por e-mail e senha (`pnpm admin:senha`). Passo a passo: `docs/backend/supabase.md`.
 - [ ] **Mercado Pago**: conta de vendedor verificada, aplicação criada, credenciais de **teste** primeiro e depois as de
       **produção**; webhook apontando para `https://SEU-DOMINIO/api/webhooks/mercadopago`. Guia:
       `docs/backend/mercadopago.md`.
@@ -72,9 +72,10 @@ Lista completa com comentários: `.env.example`. Toda mudança de variável exig
 - [ ] Vercel → Settings → Domains → adicionar `www.sua-loja.com.br` e o domínio sem `www` (redirecionando para um deles);
       apontar o DNS como a Vercel indicar.
 - [ ] Atualizar `NEXT_PUBLIC_SITE_URL` (Production) e o webhook do Mercado Pago.
-- [ ] **Supabase → Authentication → URL Configuration:** *Site URL* = `https://SEU-DOMINIO`; *Redirect URLs* =
-      `https://SEU-DOMINIO/admin/entrar/callback` (e, se usar o painel nas prévias, `https://*-SEU-TIME.vercel.app/admin/entrar/callback`).
-      Sem isso, o link mágico do painel volta para o endereço antigo.
+- [ ] **Supabase → Authentication → URL Configuration:** *Site URL* = `https://SEU-DOMINIO`. O login do painel é por e-mail e
+      senha (sem link): não há Redirect URL do painel. Defina a senha do administrador de produção com `pnpm admin:senha`
+      (aponte o `.env.local` para o projeto de produção só nessa hora) e mantenha *Allow new users to sign up* DESLIGADO e
+      o comprimento mínimo da senha em 10.
 - [ ] E-mail no domínio (ex.: `contato@sua-loja.com.br`) para o `NEXT_PUBLIC_CONTACT_EMAIL`, e o domínio verificado no
       Resend para o `EMAIL_FROM` (ex.: `pedidos@sua-loja.com.br`). SMTP do Supabase com o mesmo domínio
       (`docs/backend/email.md`).
@@ -177,6 +178,9 @@ Outros conteúdos provisórios **sem colchetes**:
       que só carregam depois do consentimento no banner e como mudar a escolha ("Preferências de cookies" no rodapé).
       Citar também o Resend (e-mails do pedido), o Mercado Pago, o Supabase e a Vercel como operadores.
 - [ ] Pix/boleto vencidos: o cancelamento depende do aviso do Mercado Pago; acompanhar no painel nas primeiras semanas.
+- [ ] **Melhoria futura (não feita): verificação em duas etapas (TOTP) no painel.** O login é só e-mail e senha. O Supabase Auth
+      suporta MFA por aplicativo autenticador (`supabase.auth.mfa.enroll` / `challenge` / `verify`, nível de garantia `aal2`);
+      o painel passaria a exigir `aal2` depois da senha. Recomendado antes de ter mais de um administrador.
 
 ## 10. Roteiro de teste de compra (ponta a ponta)
 

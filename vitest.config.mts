@@ -5,5 +5,5 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./", import.meta.url)) } },
   // supabase/tests: migração + seed num Postgres em memória (PGlite).
-  test: { include: ["lib/**/*.test.ts", "app/**/*.test.ts", "supabase/tests/**/*.test.ts"], environment: "node" },
+  test: { include: ["lib/**/*.test.ts", "app/**/*.test.ts", "scripts/**/*.test.ts", "supabase/tests/**/*.test.ts"], environment: "node" },
 });

@@ -64,7 +64,7 @@ function Disabled() {
         <li>Crie o projeto no Supabase e rode o <code>supabase/setup-completo.sql</code> no SQL Editor (<code>docs/backend/supabase.md</code>).</li>
         <li>Cadastre os e-mails de quem administra na tabela <code>admin_emails</code> e na variável <code>ADMIN_EMAILS</code>.</li>
         <li>Configure <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> e <code>SUPABASE_SERVICE_ROLE_KEY</code> e faça um novo deploy.</li>
-        <li>Entre em <code>/admin/entrar</code> com o seu e-mail (link mágico).</li>
+        <li>Entre em <code>/admin/entrar</code> com o seu e-mail e a senha (defina com <code>pnpm admin:senha</code>).</li>
       </ol>
       <h2 className="mt-8 text-sm font-medium">Variáveis neste deploy</h2>
       <EnvChecklist />

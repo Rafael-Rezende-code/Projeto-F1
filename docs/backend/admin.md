@@ -3,8 +3,11 @@
 `/admin` está pronto e **desligado**: sem Supabase, qualquer rota do painel mostra só como ativar. Com o Supabase
 configurado (docs/backend/supabase.md):
 
-- **Entrada:** `/admin/entrar` envia um link mágico por e-mail (sem senha) via Supabase Auth, só para e-mails de
-  `ADMIN_EMAILS`. O link volta em `/admin/entrar/callback`. A sessão é renovada pelo `proxy.ts` (só em `/admin`).
+- **Entrada:** `/admin/entrar` pede **e-mail e senha** (Supabase Auth, `signInWithPassword`, sessão nos cookies do
+  `@supabase/ssr`). Depois do login, o e-mail precisa estar em `ADMIN_EMAILS` **e** em `admin_emails`; senão a sessão é
+  encerrada e aparece "acesso negado". Erro genérico ("E-mail ou senha incorretos"), limite de tentativas por IP e por
+  e-mail com atraso crescente, botão **Sair**. A senha é definida com `pnpm admin:senha` (ver `docs/backend/supabase.md`).
+  A sessão é renovada pelo `proxy.ts` (só em `/admin`).
 - **Produtos** (`/admin/produtos`): listar, buscar (nome, slug, código), filtrar por status, criar, editar
   (nome, slug, descrição, preço e preço "de" em reais, categoria, equipe, piloto, tags, selo Novo, destaque, status
   rascunho/publicado/arquivado, variantes com SKU/tamanho/cor/estoque, ficha, fotos com envio para o Storage) e arquivar.
@@ -26,11 +29,9 @@ Mantenha as duas listas iguais. Para tirar alguém: remova dos dois lugares e ap
 1. Supabase configurado (migração, seed e variáveis) — docs/backend/supabase.md.
 2. `insert into admin_emails (email) values ('voce@sua-loja.com.br');` no SQL Editor.
 3. `ADMIN_EMAILS=voce@sua-loja.com.br` na Vercel e no `.env.local`.
-4. Authentication → Users → *Add user* → *Send invitation* (ou *Create new user*) com o mesmo e-mail. O cadastro
-   aberto deve ficar desligado (o painel não cria usuários: `shouldCreateUser: false`).
-5. Authentication → URL Configuration: *Site URL* = URL do site; *Redirect URLs* inclui
-   `https://<seu-dominio>/admin/entrar/callback` (e `http://localhost:3000/admin/entrar/callback` para testar local).
-6. Deploy. Entre em `/admin/entrar`, informe o e-mail e clique no link recebido.
+4. No seu terminal: `pnpm admin:senha` (cria o usuário com o e-mail já confirmado, ou troca a senha). O cadastro aberto
+   deve ficar desligado e o comprimento mínimo da senha em 10.
+5. Deploy. Entre em `/admin/entrar` com o e-mail e a senha.
 
 ## Fotos
 

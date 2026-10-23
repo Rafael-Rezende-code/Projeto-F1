@@ -63,9 +63,9 @@ const actions = import.meta.glob("./**/actions.ts");
 const routes = import.meta.glob("./**/route.ts");
 const pages = import.meta.glob("./**/page.tsx");
 
-// Públicos de propósito: entrar (link mágico só para ADMIN_EMAILS, resposta igual para todos), voltar do link, sair e o
+// Públicos de propósito: entrar (e-mail e senha; erro genérico e limite de tentativas), sair e o
 // modelo VAZIO da planilha de importação.
-const PUBLIC = new Set(["./entrar/actions.ts#sendMagicLink", "./entrar/callback/route.ts#GET", "./sair/route.ts#POST", "./produtos/importar/modelo/route.ts#GET", "./entrar/page.tsx#default"]);
+const PUBLIC = new Set(["./entrar/actions.ts#loginWithPassword", "./sair/route.ts#POST", "./produtos/importar/modelo/route.ts#GET", "./entrar/page.tsx#default"]);
 
 const form = () => {
   const data = new FormData();

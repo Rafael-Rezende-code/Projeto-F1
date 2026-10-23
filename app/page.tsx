@@ -22,6 +22,7 @@ import { KineticText } from '@/components/ui/kinetic-text'
 import { editorial, editorialQuality } from '@/lib/editorial'
 import { BRAND } from '@/lib/brand'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { AuthErrorRedirect } from '@/components/auth-error-redirect'
 import { HERO_FONT_SCRIPT } from '@/lib/hero'
 import { catalog } from '@/lib/catalog'
 import { HOME_CAROUSEL_SLUGS, HOME_GRID_SLUGS } from '@/lib/catalog/seed/products'
@@ -54,6 +55,7 @@ export default async function Page() {
   const velocidadeProducts = allProducts.filter((product) => product.featured).slice(0, 3)
   const categoryName = (slug: string) => categories.find((category) => category.slug === slug)?.name
   return <main id="top" className="min-h-screen bg-white">
+    <AuthErrorRedirect />
     <SiteHeader variant="overlay" />
     <section className="hero-type relative h-screen w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
       <script dangerouslySetInnerHTML={{ __html: HERO_FONT_SCRIPT }} />

@@ -1,7 +1,7 @@
-# Roteiro de teste do /admin (login por link mágico, importador, edição e fila do fornecedor)
+# Roteiro de teste do /admin (login com e-mail e senha, importador, edição e fila do fornecedor)
 
-O login do painel usa um link mágico enviado por e-mail: só você consegue clicar nele. Este roteiro é o passo a passo
-exato. O script `pnpm supabase:ativar` (docs/backend/supabase.md) já testou tudo o que não depende de clique (conexão,
+O login do painel é por **e-mail e senha** (sem link, sem código, sem e-mail de login). A senha é definida por você, no
+seu terminal, com `pnpm admin:senha`. Este roteiro é o passo a passo exato. O script `pnpm supabase:ativar` (docs/backend/supabase.md) já testou tudo o que não depende de clique (conexão,
 tabelas, regras de acesso, baixa de estoque e o importador, pela mesma camada de código do painel). Aqui você confere
 o que ele não consegue: o e-mail, a tela e o fluxo de uso.
 
@@ -13,15 +13,11 @@ Faça uma vez, no projeto (https://supabase.com/dashboard):
    quais tabelas ou funções faltam.
 2. **Authentication → Sign In / Providers → Email:** ligado. Em **Authentication → Sign In / Up**, deixe **Allow new
    users to sign up** DESLIGADO (o painel não cria usuários).
-3. **Authentication → Users → Add user → Create new user:** o MESMO e-mail que está em `ADMIN_EMAILS`, com *Auto
-   Confirm User* marcado. (O painel só envia o link para quem já existe.)
-4. **Authentication → URL Configuration:**
-   - *Site URL*: `http://localhost:3000` (para este teste local; na prévia da Vercel, a URL dela, ver o fim deste arquivo);
-   - *Redirect URLs*: `http://localhost:3000/admin/entrar/callback` (e, depois, a URL da prévia + `/admin/entrar/callback`).
-5. **E-mail do link mágico:** o envio padrão do Supabase é só para teste (limite baixo por hora e, em projetos novos,
-   só entrega para e-mails da própria equipe do projeto em Organization → Team). Se o link não chegar, configure um
-   SMTP próprio em **Authentication → Emails → SMTP Settings** (Resend, Brevo, Amazon SES...). O modelo do e-mail
-   padrão ("Magic Link") serve como está.
+3. **Authentication → Sign In / Up → Password:** comprimento mínimo da senha **10** (o `pnpm admin:senha` recusa menos).
+   Já está assim no projeto desta branch (definido pela Management API).
+4. **O usuário administrador** é criado (ou tem a senha trocada) pelo `pnpm admin:senha` (passo 1): não precisa criar
+   pelo painel. Não há mais *Site URL* nem *Redirect URLs* envolvidas no login (não existe link).
+5. **E-mail:** o login não envia e-mail nenhum. O SMTP do Supabase só importa se você usar outros e-mails do Auth.
 6. **Storage:** o bucket `produtos` deve existir e ser **Public** (o setup cria; o script confere).
 7. **`.env.local`** com as 4 variáveis: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API) e `ADMIN_EMAILS` (o mesmo e-mail do passo 3, em minúsculas).
@@ -31,11 +27,18 @@ Confirme: `pnpm supabase:ativar` deve terminar com **✖ falharam: 0**.
 
 ## 1. Entrar
 
-1. `pnpm dev` e abra http://localhost:3000/admin/entrar.
-2. Digite o e-mail de administrador e envie. A tela diz "Se este e-mail tiver acesso, o link chega em instantes".
-3. Abra o e-mail **no mesmo navegador** onde pediu (o login usa PKCE: o link precisa voltar para o mesmo navegador) e
-   clique em **Log In** (o link vale 1 hora).
-4. Você cai em `/admin` (painel). Se voltar para `/admin/entrar`, veja o fim deste roteiro ("Se algo falhar").
+1. **Defina a senha** (uma vez, e de novo sempre que precisar recuperar o acesso). No SEU terminal, na pasta do projeto, rode `pnpm admin:senha`.
+   O comando pede a senha e a confirmação com a digitação **oculta** (nada aparece enquanto você digita), troca a senha
+   do usuário de `ADMIN_EMAILS` (ou cria o usuário, com o e-mail já confirmado) e garante a linha em `admin_emails`. Avisa
+   se a senha tiver menos de 12 caracteres (aceita se você confirmar; abaixo de 10 recusa). A senha nunca é gravada.
+2. `pnpm dev` e abra http://localhost:3000/admin/entrar.
+3. Digite o e-mail e a senha e clique em **Entrar**. Você cai em `/admin`.
+4. Confira que **Produtos**, **Pedidos**, **Fornecedor** ("Comprar no fornecedor") e **Cupons** carregam. **Sair** (canto
+   superior direito) volta para `/admin/entrar`.
+5. Teste os erros: senha errada mostra "E-mail ou senha incorretos." (a resposta demora um pouco mais a cada erro); depois
+   de várias tentativas seguidas, "Muitas tentativas. Tente de novo em alguns minutos."
+
+**Recuperar o acesso:** esqueceu a senha? Rode `pnpm admin:senha` de novo. Não há e-mail de recuperação (de propósito).
 
 ## 2. Importar o CSV de exemplo
 
@@ -89,8 +92,10 @@ Storage em `produtos/importados/teste-importador-bone/`: apague pela aba Storage
 
 | Sintoma | Causa provável |
 | --- | --- |
-| O e-mail não chega | SMTP padrão limitado: configure um SMTP próprio (item 0.5), olhe o spam e confira o e-mail do passo 3 |
-| Clicou no link e voltou para `/admin/entrar` | A *Redirect URL* não está cadastrada (item 0.4), ou abriu o link em outro navegador (PKCE) |
+| "E-mail ou senha incorretos" com a senha certa | O e-mail digitado não é o de `ADMIN_EMAILS`, ou a senha não foi definida: rode `pnpm admin:senha` |
+| "Acesso negado" | Senha certa, mas o e-mail não está em `ADMIN_EMAILS` (`.env.local` / Vercel) **e** em `admin_emails` (o `pnpm admin:senha` e o `pnpm supabase:ativar` inserem) |
+| "Muitas tentativas" | Passou de 10 tentativas por IP ou 6 por e-mail em 15 minutos: espere |
+| Voltou para a página inicial com `?error=` | Resto de um link antigo: a raiz do site redireciona sozinha para `/admin/entrar` |
 | "Sem permissão" ao importar | O e-mail não está em `admin_emails` no banco (o `pnpm supabase:ativar` insere os de `ADMIN_EMAILS`) |
 | Produtos importados não aparecem na loja | Cache de 60 s do catálogo; ou o produto entrou como **rascunho** (foto que falhou: veja o relatório) |
 | O pedido não aparece em "Comprar no fornecedor" | Só entram itens **sob encomenda** de pedidos **pagos**; o Pix simulado fica "aguardando pagamento": use o cartão |
@@ -110,9 +115,9 @@ a prévia continua com pagamento simulado.
 | `ADMIN_EMAILS` | seus e-mails de administrador, separados por vírgula | em minúsculas |
 | `NEXT_PUBLIC_SITE_URL` | URL estável da prévia desta branch | ver abaixo |
 
-`NEXT_PUBLIC_SITE_URL` é obrigatória na prévia: o link mágico volta para `SITE_URL`, que sem a variável aponta para o
-site de produção. Use a URL **da branch** (não a de cada deploy), no formato
-`https://<projeto>-git-feat-carros-<time>.vercel.app` (Vercel → Deployments → a prévia → Domains), e ao criar a
-variável restrinja a **Preview → branch `feat/carros`**. Depois cadastre essa URL no Supabase: *Redirect URLs* =
-`<URL>/admin/entrar/callback` (e, se quiser, `*` curingas: `https://<projeto>-git-*-<time>.vercel.app/**`).
-Faça um novo deploy depois de criar as variáveis (elas valem a partir do próximo build).
+`NEXT_PUBLIC_SITE_URL` é a URL **da branch** (não a de cada deploy), no formato
+`https://<projeto>-git-feat-carros-<time>.vercel.app` (Vercel → Deployments → a prévia → Domains); restrinja a variável a
+**Preview → branch `feat/carros`**. Com o login por senha, o Supabase **não precisa** de Redirect URL da prévia.
+O limite de tentativas do login usa `RATE_LIMIT_SALT` (também só em Preview, *Sensitive*).
+Faça um novo deploy depois de criar as variáveis (elas valem a partir do próximo build). Na prévia, defina a senha com
+`pnpm admin:senha` (é o mesmo banco: a senha vale nos dois lugares).

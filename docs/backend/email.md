@@ -35,17 +35,11 @@ O conteúdo dos e-mails não é guardado. Modelos em `lib/email/templates.ts` (p
 6. Teste: faça um pedido com Pix (credenciais de teste do Mercado Pago) usando o seu e-mail; deve chegar "Pedido
    recebido". No `/admin`, o detalhe do pedido mostra "pedido-recebido · enviado".
 
-## E-mails do login do painel (Supabase Auth, SMTP)
+## E-mails do Supabase Auth (SMTP)
 
-O link mágico do `/admin/entrar` é enviado pelo **Supabase**, não pela loja. O servidor de e-mail padrão do Supabase é só
-para testes (limite baixo de envios por hora e remetente genérico). Para produção, use o mesmo Resend como SMTP:
-
-1. Supabase → Project Settings → Authentication → **SMTP Settings** → Enable custom SMTP.
-2. Host `smtp.resend.com`, porta `465`, usuário `resend`, senha = uma API key do Resend (pode ser outra, só de envio),
-   remetente = um endereço do domínio verificado (ex.: `painel@sua-loja.com.br`), nome = nome da loja.
-3. Authentication → Rate Limits: ajuste o limite de e-mails por hora se precisar.
-4. Authentication → Email Templates → "Magic Link": traduza o texto se quiser (o link `{{ .ConfirmationURL }}` precisa
-   continuar no corpo).
+O login do painel é por e-mail e senha: **não envia e-mail**. O SMTP do Supabase só importa se você usar outros e-mails do
+Auth (convites, confirmação). O servidor padrão do Supabase é só para testes; para produção, configure um SMTP próprio
+(Project Settings → Authentication → SMTP Settings; ex.: Resend em `smtp.resend.com`, porta 465, usuário `resend`).
 
 ## O que não foi testado
 

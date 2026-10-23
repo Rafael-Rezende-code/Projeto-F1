@@ -18,6 +18,7 @@
 //      pnpm supabase:ativar --sem-importador   (pula o item f)
 // Roda com `tsx --tsconfig tsconfig.scripts.json` (que troca o pacote "server-only", só do Next, por um arquivo vazio). Não grava segredo em lugar nenhum.
 // Sai com código 0 se nada FALHOU, 1 se algo falhou e 2 se faltam variáveis.
+import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -29,6 +30,7 @@ const results: { group: string; name: string; status: Status; detail: string }[]
 // ---------------------------------------------------------------------------------------------------------------------
 // Saída sem segredos
 let mask = createMask([]);
+let knownSecrets: string[] = [];
 let currentGroup = "";
 const group = (title: string) => {
   currentGroup = title;
@@ -52,7 +54,8 @@ async function main() {
     process.exit(2);
   }
   const env = loadEnvFile(envPath);
-  mask = createMask(secretsFrom(env));
+  knownSecrets = secretsFrom(env);
+  mask = createMask(knownSecrets);
 
   // ---- variáveis
   group("0. Variáveis do .env.local");
@@ -328,28 +331,24 @@ async function importerTest(service: SupabaseClient, anon: SupabaseClient, url: 
   let tempUserId: string | null = null;
   let storagePaths: string[] = [];
   try {
-    // Administrador TEMPORÁRIO: usuário criado pela API de administração, link mágico gerado (sem enviar e-mail) e
-    // trocado por uma sessão. Tudo é apagado no fim.
-    const created = await service.auth.admin.createUser({ email: tempEmail, email_confirm: true });
+    // Administrador TEMPORÁRIO: usuário criado pela API de administração com uma senha aleatória que só existe na memória
+    // (e entra na máscara da saída); a sessão vem de signInWithPassword. Tudo é apagado no fim.
+    const tempPassword = randomBytes(24).toString("base64url");
+    mask = createMask([...knownSecrets, tempPassword]);
+    const created = await service.auth.admin.createUser({ email: tempEmail, password: tempPassword, email_confirm: true });
     if (created.error || !created.data.user) {
       report("administrador temporário", "falhou", errorText(created.error));
       return;
     }
     tempUserId = created.data.user.id;
     await service.from("admin_emails").upsert({ email: tempEmail }, { onConflict: "email" });
-    const link = await service.auth.admin.generateLink({ type: "magiclink", email: tempEmail });
-    const tokenHash = link.data?.properties?.hashed_token;
-    if (link.error || !tokenHash) {
-      report("sessão do administrador temporário", "falhou", errorText(link.error) || "sem token");
-      return;
-    }
     const admin = createClient(url, anonKey, opts);
-    const session = await admin.auth.verifyOtp({ token_hash: tokenHash, type: "magiclink" });
+    const session = await admin.auth.signInWithPassword({ email: tempEmail, password: tempPassword });
     if (session.error || !session.data.session) {
       report("sessão do administrador temporário", "falhou", errorText(session.error));
       return;
     }
-    report("administrador temporário com sessão (sem clicar em link)", "ok");
+    report("administrador temporário com sessão (e-mail e senha)", "ok");
 
     const { analyzeImportText, executeImport } = await import("@/lib/admin/import-run");
     const analyzed = await analyzeImportText(admin, csv);

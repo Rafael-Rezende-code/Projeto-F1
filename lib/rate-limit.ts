@@ -14,6 +14,26 @@ export async function clientIp() {
   return firstIp(list.get("x-forwarded-for")) ?? list.get("x-real-ip")?.trim() ?? null;
 }
 
+/** Chave de limite por e-mail (hash com sal, igual ao do IP): o e-mail nunca fica no banco em texto. */
+export const emailKey = (email: string) => `email:${email.trim().toLowerCase()}`;
+
+/** Registra uma ocorrência e devolve quantas existem na janela (inclui esta). Sem Supabase, devolve 1. */
+export async function recordHit(bucket: RateLimitBucket, key: string): Promise<number> {
+  if (!isOrderStoreConfigured()) return 1;
+  const salt = process.env.RATE_LIMIT_SALT ?? process.env.NEWSLETTER_IP_SALT ?? "";
+  const keyHash = hashIp(key, salt);
+  const { limit, windowSeconds } = RATE_LIMITS[bucket];
+  const service = createServiceClient();
+  const { error } = await service.rpc("rate_limit_hit", { p_bucket: bucket, p_key_hash: keyHash, p_limit: limit, p_window_seconds: windowSeconds });
+  if (error) {
+    console.error("[limite] falha ao contar:", bucket, error.code);
+    return 1;
+  }
+  const since = new Date(Date.now() - windowSeconds * 1000).toISOString();
+  const { count } = await service.from("rate_limit_hits").select("id", { count: "exact", head: true }).eq("bucket", bucket).eq("key_hash", keyHash).gte("created_at", since);
+  return count ?? 1;
+}
+
 /** true = pode seguir; false = passou do limite (responda "Muitas tentativas"). */
 export async function allowRequest(bucket: RateLimitBucket, ip?: string | null): Promise<boolean> {
   if (!isOrderStoreConfigured()) return true;

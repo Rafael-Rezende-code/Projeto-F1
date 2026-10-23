@@ -50,8 +50,8 @@ no banco**. Arquivo novo entra no teste automaticamente. Hoje (14 ações/rotas 
 - Rotas: `GET /admin/fornecedor/exportar`, `GET /admin/newsletter/exportar`, `GET /admin/pedidos/exportar`.
 - Páginas: início, cupons (lista, novo, editar), fornecedor, newsletter, pedidos (lista, detalhe), produtos (lista,
   novo, editar, importar).
-- Públicas de propósito: `/admin/entrar` (o link mágico só sai para `ADMIN_EMAILS`, e a resposta é a mesma para
-  qualquer e-mail), o retorno do link (`/admin/entrar/callback`), `/admin/sair` e o modelo VAZIO da planilha
+- Públicas de propósito: `/admin/entrar` (e-mail e senha: erro genérico, limite por IP e por e-mail com atraso
+  crescente, sessão encerrada se o e-mail não for admin), `/admin/sair` e o modelo VAZIO da planilha
   (`/admin/produtos/importar/modelo`).
 
 O teste achou e corrigiu um problema: no importador, o `try/catch` engolia o redirecionamento do `requireAdmin` (quem

@@ -65,11 +65,13 @@ e os pedidos continuam simulados, exatamente como antes. Com elas:
    insuficiente), tudo apagado no fim; (f) o importador com o `docs/modelos/produtos-exemplo.csv`, sem login manual (cria um
    administrador temporário), conferindo que custo e fornecedor ficam só na tabela privada e depois apagando tudo.
    `pnpm supabase:ativar --sem-importador` pula o item (f). Se faltar alguma variável, ele diz QUAL (não pede o valor).
-   Roteiro do que só você consegue testar (o clique no e-mail): `docs/backend/roteiro-teste-admin.md`.
-6. **Login do admin (Auth):** Authentication → Providers → Email (ligado). Em Authentication → URL Configuration,
-   coloque a URL do site em *Site URL* e `https://<seu-dominio>/admin/entrar/callback` em *Redirect URLs* (o painel
-   usa link mágico por e-mail). Desligue o cadastro aberto (Authentication → Sign In / Up → *Allow new users to sign
-   up*: desligado) e crie os usuários admin em Authentication → Users → Add user.
+   Roteiro do que só você consegue testar (a tela e o fluxo de uso): `docs/backend/roteiro-teste-admin.md`.
+6. **Login do admin (Auth):** o painel entra com **e-mail e senha** (sem link, sem código). Authentication → Providers →
+   Email (ligado), **comprimento mínimo da senha 10** (Sign In / Up) e cadastro aberto DESLIGADO (*Allow new users to sign
+   up*). O usuário e a senha são definidos com `pnpm admin:senha` (comando interativo, no seu terminal: pede a senha com a
+   digitação oculta, cria ou atualiza o usuário de `ADMIN_EMAILS` com o e-mail já confirmado e garante a linha em
+   `admin_emails`). **Recuperar o acesso = rodar `pnpm admin:senha` de novo** (não há e-mail de recuperação). O login
+   tem limite de tentativas (10 por IP e 6 por e-mail em 15 min, com atraso crescente) via `RATE_LIMIT_SALT`.
 7. **Deploy.** As páginas do catálogo são geradas no build; o painel admin chama `revalidatePath` depois de salvar.
 
 ## Como funciona o pedido

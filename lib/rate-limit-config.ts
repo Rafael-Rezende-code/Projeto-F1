@@ -4,6 +4,10 @@ export const RATE_LIMITS = {
   cupom: { limit: 20, windowSeconds: 10 * 60 },
   "consulta-pedido": { limit: 8, windowSeconds: 15 * 60 },
   newsletter: { limit: 5, windowSeconds: 60 * 60 },
+  // Login do painel: por IP, por e-mail e o contador de falhas (só serve ao atraso crescente; o limite alto nunca bloqueia).
+  "admin-login-ip": { limit: 10, windowSeconds: 15 * 60 },
+  "admin-login-email": { limit: 6, windowSeconds: 15 * 60 },
+  "admin-login-falha": { limit: 1000, windowSeconds: 15 * 60 },
 } as const;
 
 export type RateLimitBucket = keyof typeof RATE_LIMITS;

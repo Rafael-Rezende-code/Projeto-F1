@@ -6,7 +6,7 @@ export const ADMIN_ENV = [
   { name: "NEXT_PUBLIC_SUPABASE_ANON_KEY", why: "chave pública do Supabase" },
   { name: "SUPABASE_SERVICE_ROLE_KEY", why: "chave secreta do servidor (pedidos e estoque)" },
   { name: "ADMIN_EMAILS", why: "e-mails que podem entrar no painel" },
-  { name: "NEXT_PUBLIC_SITE_URL", why: "endereço do site (volta do link mágico)" },
+  { name: "NEXT_PUBLIC_SITE_URL", why: "endereço do site" },
 ] as const;
 
 export type EnvStatus = { name: string; why: string; set: boolean; public: boolean };

@@ -190,7 +190,7 @@ interna e sem arredondamento).
   Detalhes em `docs/backend/newsletter.md`.
 - **Redes sociais:** `lib/social.ts` lê `NEXT_PUBLIC_SOCIAL_*` (só https); o ícone só aparece com URL.
 - **Supabase local:** `pnpm supabase:ativar` (`scripts/supabase/ativar.ts`) lê o `.env.local` e confere conexão, tabelas,
-  admin_emails, permissões do anon, estoque e importador. Roteiro do login por link mágico e variáveis da Vercel (Preview) em
+  admin_emails, permissões do anon, estoque e importador. Roteiro do login por e-mail e senha e variáveis da Vercel (Preview) em
   `docs/backend/roteiro-teste-admin.md`. O importador tem camada sem login em `lib/admin/import-run.ts`.
 
 ## Decisões já tomadas
@@ -709,8 +709,9 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   no build: depois de mudar as variáveis, novo deploy. **Não testado contra o Mercado Pago real** (sem credenciais).
 - **Fase 11, painel admin (pronto, desligado):** `/admin` (layout próprio, `noindex`, `X-Robots-Tag` pelo
   `proxy.ts`, `Disallow: /admin`, fora do sitemap, sem dock). Sem Supabase, todas as rotas mostram como ativar
-  (`adminDisabled()` nas páginas). Login por link mágico do Supabase Auth (`/admin/entrar`, callback PKCE em
-  `/admin/entrar/callback`, só para `ADMIN_EMAILS`, sem criar usuário); sessão renovada pelo `proxy.ts` (Next 16, ex-
+  (`adminDisabled()` nas páginas). Login por **e-mail e senha** do Supabase Auth (`/admin/entrar`, `signInWithPassword`, `lib/admin/login.ts`; sem link e sem
+  código; e-mail nas duas listas, `ADMIN_EMAILS` e `admin_emails`; limite por IP e por e-mail com atraso crescente; senha definida
+  por `pnpm admin:senha`, interativo, com a digitação oculta; NUNCA por argumento, variável ou log); sessão renovada pelo `proxy.ts` (Next 16, ex-
   middleware, matcher só `/admin`). Duas travas: `ADMIN_EMAILS` (app, `lib/admin/auth.ts`) e `admin_emails` (RLS).
   Produtos: lista com busca/filtro, criar/editar (`components/admin/product-form.tsx`; validação em
   `lib/admin/product-schema.ts` com testes; preços em reais → centavos; SKU não pode ser de outro produto; publicar
