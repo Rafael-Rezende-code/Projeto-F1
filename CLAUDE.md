@@ -524,11 +524,17 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 
 ## Roteiro (próximos passos, em ordem)
 
-1. **Revisar e aprovar** `feat/conteudo` e `feat/backend` (prévias da Vercel).
-2. **Ativar Supabase e Mercado Pago em Preview** (guias em `docs/backend/`) e fazer o roteiro de testes.
-3. **Fotos dos carros** e recorte.
-4. **Licenciamento antes da venda:** fotos editoriais (originais ≥ 2880px de largura), fotos dos pilotos, das
-   equipes, dos produtos e dos carros.
+1. **Revisar e aprovar** `feat/carros` (contém conteúdo, backend, refino, lançamento, carros e a rodada de operação)
+   pela prévia da Vercel. Relatório da operação: `docs/operacao/relatorio.md`.
+2. **Banco do Preview:** rodar `supabase/atualizacao-2.sql` no projeto Supabase (NÃO o setup completo), depois
+   `pnpm supabase:ativar` e o roteiro de teste de `docs/lancamento.md` (seção 10).
+3. **Chaves:** trocar a service_role legada pela secret key nova; Production com variáveis próprias e novo deploy;
+   Site URL e Redirect URLs do Supabase Auth no domínio de produção (`docs/lancamento.md`, seções 1–3).
+4. **Domínio e e-mail próprios:** domínio na Vercel, Resend com domínio verificado (`EMAIL_FROM`), SMTP do Supabase.
+5. **Backups:** plano do Supabase com backup diário ou `supabase db dump` semanal + CSV do painel (seção 3b).
+6. **Política de Privacidade** citando GA4/Meta Pixel (se ligados), Resend, Mercado Pago, Supabase e Vercel.
+7. **Fotos dos carros** (sem logos/números) e **licenciamento** de todas as fotos antes da venda.
+8. Melhoria futura: Content-Security-Policy em modo relatório (`docs/backend/seguranca.md`).
 
 ## Branches (atualizado em 22/10/2026)
 
@@ -937,8 +943,8 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 - **Depende do responsável:** contas e chaves do Supabase e do Mercado Pago (lista exata em `docs/relatorio-final.md`),
   textos legais, razão social/CNPJ/endereço em `lib/company.ts`, dados [CONFIRMAR] da /sobre, fichas de produto,
   fotos licenciadas (editoriais, pilotos, produtos, carros), conferir as cores das equipes com os manuais de marca.
-- E-mails transacionais não implementados; cancelamento automático de Pix/boleto vencidos depende do aviso do Mercado
-  Pago (ou de uma rotina).
+- E-mails transacionais prontos e desligados (Resend; `docs/backend/email.md`); cancelamento automático de Pix/boleto
+  vencidos depende do aviso do Mercado Pago (ou de uma rotina). Rotina diária/semanal da loja: `docs/operacao/rotina.md`.
 - Supabase, Mercado Pago e o painel logado **não foram testados contra serviços reais** (sem credenciais).
 - **Fotos editoriais:** placeholders (licenciar antes da venda), inclusive as usadas no Diário.
 - O 404 de `/_vercel/insights/script.js` só ocorre localmente.

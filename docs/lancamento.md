@@ -3,8 +3,11 @@
 Lista do que falta antes de abrir a loja ao público, na ordem sugerida. Marque cada item ao concluir. Depois, siga o
 roteiro de teste de compra (seção 10) e só então ligue a indexação (seção 11).
 
-Estado em 22/10/2026 (branch `feat/lancamento`): Supabase, Mercado Pago e Melhor Envio estão **prontos e desligados**;
-o site roda com o catálogo de demonstração, pedidos simulados e frete simulado.
+Estado em 23/10/2026 (branch `feat/carros`): Supabase, Mercado Pago, Melhor Envio, Resend (e-mails), GA4/Meta Pixel
+e WhatsApp estão **prontos e desligados**; o site roda com o catálogo de demonstração, pedidos simulados e frete
+simulado. Banco que já recebeu o setup completo: rodar `supabase/atualizacao-2.sql` (cupons, consulta de pedido,
+limites, histórico, cancelamento, painel, e-mails). **Nunca** rode o `setup-completo.sql` de novo depois de cadastrar
+produtos reais: ele contém o seed de demonstração e repõe produtos de teste e estoque.
 
 ## 1. Contas e credenciais
 
@@ -15,7 +18,31 @@ o site roda com o catálogo de demonstração, pedidos simulados e frete simulad
       `docs/backend/mercadopago.md`.
 - [ ] **Melhor Envio** (opcional; sem ele o frete é simulado por tabela): conta, token (sandbox → produção) e CEP de
       origem. Guia: `docs/backend/frete.md`.
+- [ ] **Resend** (e-mails do pedido) com o domínio verificado (SPF/DKIM). Guia: `docs/backend/email.md`.
 - [ ] **Vercel**: plano compatível com uso comercial (o Hobby não permite) e as variáveis abaixo em **Production**.
+
+### Chave secreta do Supabase (trocar a service_role legada)
+
+O Supabase tem chaves novas: **publishable** (`sb_publishable_...`, substitui a anon) e **secret** (`sb_secret_...`,
+substitui a service_role legada em JWT). A secret nova pode ser revogada e trocada sem derrubar as outras, e não vale
+fora do servidor.
+
+- [ ] Project Settings → API Keys → criar uma **secret key** (ex.: "vercel-producao").
+- [ ] Na Vercel, colocar o valor em `SUPABASE_SERVICE_ROLE_KEY` (o nome da variável continua o mesmo; o código aceita
+      os dois formatos). Opcional: a publishable em `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- [ ] Novo deploy, conferir com `pnpm supabase:ativar` (localmente, com o `.env.local` apontando para o mesmo projeto) e
+      um pedido de teste.
+- [ ] Só então desativar as chaves legadas (API Keys → Legacy API keys → Disable). Se algo parar, reative e confira as
+      variáveis. **Não testado contra o Supabase real nesta sessão.**
+
+### Production separada de Preview
+
+- [ ] Na Vercel, cada variável tem ambientes: deixe as chaves **de produção** (Mercado Pago de produção, secret do
+      Supabase de produção, Resend) só em **Production**; em **Preview**, credenciais de teste (ou nenhuma: o site cai
+      no modo simulado). Hoje as variáveis do Supabase estão limitadas à branch `feat/carros` em Preview: ao ir para a
+      `main`, cadastre-as também em Production.
+- [ ] Toda mudança de variável vale só a partir do **próximo deploy** (Deployments → ⋯ → Redeploy). O `/admin` lista
+      as variáveis que faltam (só os nomes).
 
 ## 2. Variáveis de ambiente (Vercel → Settings → Environment Variables → Production)
 
@@ -31,6 +58,10 @@ o site roda com o catálogo de demonstração, pedidos simulados e frete simulad
 | `SHIPPING_ORIGIN_CEP` | CEP de onde a loja posta (padrão 37950-000) | Conferir |
 | `MELHOR_ENVIO_TOKEN`, `MELHOR_ENVIO_ENV=production`, `MELHOR_ENVIO_CONTACT_EMAIL`, `MELHOR_ENVIO_SERVICES` | Frete real | Opcional |
 | `LOCAL_DELIVERY_ENABLED`, `LOCAL_DELIVERY_PRICE_CENTS` | Entrega local | Opcional |
+| `RESEND_API_KEY`, `EMAIL_FROM` | E-mails do pedido (`docs/backend/email.md`) | Recomendado |
+| `RATE_LIMIT_SALT` | Sal do hash do IP no limite de tentativas (texto aleatório longo) | Recomendado |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Botão e links de WhatsApp (só dígitos, com 55) | Opcional |
+| `NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_META_PIXEL_ID` | Medição/marketing com banner de consentimento (citar na Política de Privacidade) | Opcional |
 | `NEXT_PUBLIC_ALLOW_INDEXING=true` | Liberar buscadores (**só no dia**, seção 11) | No dia |
 
 Lista completa com comentários: `.env.example`. Toda mudança de variável exige **novo deploy**.
@@ -40,9 +71,25 @@ Lista completa com comentários: `.env.example`. Toda mudança de variável exig
 - [ ] Registrar o domínio (registro.br para `.com.br`).
 - [ ] Vercel → Settings → Domains → adicionar `www.sua-loja.com.br` e o domínio sem `www` (redirecionando para um deles);
       apontar o DNS como a Vercel indicar.
-- [ ] Atualizar `NEXT_PUBLIC_SITE_URL`, a *Site URL* e a *Redirect URL* do Supabase Auth
-      (`https://SEU-DOMINIO/admin/entrar/callback`) e o webhook do Mercado Pago.
-- [ ] E-mail no domínio (ex.: `contato@sua-loja.com.br`) para o `NEXT_PUBLIC_CONTACT_EMAIL`.
+- [ ] Atualizar `NEXT_PUBLIC_SITE_URL` (Production) e o webhook do Mercado Pago.
+- [ ] **Supabase → Authentication → URL Configuration:** *Site URL* = `https://SEU-DOMINIO`; *Redirect URLs* =
+      `https://SEU-DOMINIO/admin/entrar/callback` (e, se usar o painel nas prévias, `https://*-SEU-TIME.vercel.app/admin/entrar/callback`).
+      Sem isso, o link mágico do painel volta para o endereço antigo.
+- [ ] E-mail no domínio (ex.: `contato@sua-loja.com.br`) para o `NEXT_PUBLIC_CONTACT_EMAIL`, e o domínio verificado no
+      Resend para o `EMAIL_FROM` (ex.: `pedidos@sua-loja.com.br`). SMTP do Supabase com o mesmo domínio
+      (`docs/backend/email.md`).
+
+## 3b. Backups e exportação periódica
+
+- [ ] Saber o que o plano do Supabase guarda: o gratuito **não** tem backup diário acessível pelo painel; o Pro tem
+      backups diários (7 dias) e, pago à parte, recuperação a um ponto no tempo (PITR). Para uma loja vendendo, Pro.
+- [ ] Cópia própria semanal (fora do Supabase): `supabase db dump --linked -f backup-AAAA-MM-DD.sql` (CLI, com o projeto
+      ligado) e guardar em local seguro (contém dados de clientes: criptografado e com acesso restrito).
+- [ ] Exportações do painel toda semana (e no fechamento do mês): **Pedidos → Exportar CSV** (período do mês) e
+      **Comprar no fornecedor → Exportar CSV**; a newsletter em **Newsletter → Exportar**. Servem para o contador e como
+      cópia legível.
+- [ ] Fotos dos produtos (bucket `produtos`): baixar de tempos em tempos ou manter os originais em outro lugar.
+- [ ] Testar uma restauração uma vez (num projeto Supabase de teste) antes de precisar.
 
 ## 4. Dados da empresa (Decreto 7.962/2013)
 
@@ -163,7 +210,22 @@ recusa por saldo (detalhes em `docs/backend/mercadopago.md`).
    - [ ] Aparece "Entrega local · São Sebastião do Paraíso, MG" com o preço e o prazo configurados (e grátis a partir do
          valor definido), além das outras opções.
    - [ ] Escolher, pagar e conferir no detalhe do pedido do admin que a forma de entrega é "Entrega local".
-7. **Geral**
+7. **Cupom** (criar em `/admin/cupons`: um de 10%, um de frete grátis e um com limite de 1 uso)
+   - [ ] Sacola e checkout mostram o desconto; o total cobrado no Mercado Pago é o total com desconto.
+   - [ ] Cupom vencido, inativo ou abaixo do mínimo: mensagem clara, pedido não sai com desconto.
+   - [ ] Cupom de 1 uso: o segundo pedido recusa; cancelar o primeiro no admin devolve o uso.
+8. **Acompanhamento e e-mails**
+   - [ ] E-mails "Pedido recebido" (Pix/boleto), "Pagamento aprovado", "Pedido a caminho" e "Pedido cancelado" chegam
+         uma vez cada (o detalhe do pedido no admin mostra o registro).
+   - [ ] `/pedido/consultar` com número + e-mail certos mostra status e rastreio; com e-mail errado, a mesma mensagem de
+         "não encontrado"; sem CPF nem endereço completo.
+9. **Admin**
+   - [ ] Cancelar um pedido pago (motivo obrigatório) → estoque e cupom voltam, histórico registra; "Marcar como
+         reembolsado" depois do estorno no Mercado Pago.
+   - [ ] Pedido enviado: o cancelamento pede a confirmação extra.
+   - [ ] Marcar os pedidos de teste como **teste** (somem dos indicadores do início do painel).
+   - [ ] Exportar CSV de pedidos (com período) e da fila do fornecedor: abre certo no Excel (acentos, colunas, vírgula).
+10. **Geral**
    - [ ] Celular (iPhone e Android) e computador; sem erros no console.
    - [ ] `pnpm qa:marcadores` sem páginas com marcadores; `pnpm qa:varredura` sem alertas.
    - [ ] Política de Privacidade, Termos e Trocas acessíveis pelo rodapé e pelo aceite do checkout.
