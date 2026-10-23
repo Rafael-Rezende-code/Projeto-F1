@@ -404,3 +404,6 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
 /* Banner de consentimento (operação, fase 4): fixo, acima do dock no celular. */
 .consent-banner { bottom: calc(var(--dock-space) + 12px); }
 @media (min-width: 640px) { .consent-banner { bottom: 16px; } }
+
+/* Miniatura que voa até a sacola (lib/fly-to-cart.ts): só transform/opacity; acima de tudo, sem capturar cliques. */
+.fly-to-cart { position: fixed; left: 0; top: 0; z-index: 120; width: 64px; height: 64px; object-fit: cover; border-radius: 12px; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.18); will-change: transform, opacity; }

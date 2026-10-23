@@ -49,3 +49,41 @@ export function ProductPageSkeleton() {
     </div>
   );
 }
+
+/** Página de formulário curto (ex.: /pedido/consultar): caminho, título, campos e botão. */
+export function FormPageSkeleton() {
+  return (
+    <div className="px-5 pb-24 pt-8 sm:px-10 sm:pt-10" role="status" aria-label="Carregando">
+      <div className="mx-auto max-w-[1400px]">
+        <div className="apex-skeleton h-3 w-40 rounded-md" />
+        <div className="apex-skeleton mt-10 h-3 w-24 rounded-md" />
+        <div className="apex-skeleton mt-4 h-12 w-2/3 max-w-lg rounded-xl" />
+        <div className="apex-skeleton mt-4 h-4 w-full max-w-md rounded-md" />
+        <div className="mt-10 flex max-w-[420px] flex-col gap-4">
+          {[0, 1].map((i) => (
+            <div key={i}>
+              <div className="apex-skeleton h-3 w-28 rounded-md" />
+              <div className="apex-skeleton mt-2 h-12 w-full rounded-xl" />
+            </div>
+          ))}
+          <div className="apex-skeleton mt-2 h-12 w-full rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Painel admin: título, cartões de números e linhas de tabela. */
+export function AdminSkeleton() {
+  return (
+    <div role="status" aria-label="Carregando">
+      <div className="apex-skeleton h-10 w-56 rounded-xl" />
+      <div className="mt-8 grid gap-3 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => <div key={i} className="apex-skeleton h-24 rounded-2xl" />)}
+      </div>
+      <div className="mt-6 flex flex-col gap-2 rounded-2xl bg-white p-6">
+        {[0, 1, 2, 3, 4].map((i) => <div key={i} className="apex-skeleton h-8 rounded-md" />)}
+      </div>
+    </div>
+  );
+}

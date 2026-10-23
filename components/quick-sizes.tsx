@@ -16,7 +16,7 @@ export function QuickSizes({ product, className = "" }: { product: Product; clas
             key={variant.sku}
             type="button"
             disabled={out}
-            onClick={() => addItem(product, variant, 1)}
+            onClick={(event) => addItem(product, variant, 1, event.currentTarget)}
             aria-label={out ? `${variant.size}, esgotado` : `Adicionar ${product.name}, tamanho ${variant.size}, à sacola`}
             className="flex h-9 min-w-9 flex-1 items-center justify-center rounded-xl bg-white/95 px-2 text-xs font-medium text-black transition hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-black/40 disabled:line-through"
           >

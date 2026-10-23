@@ -44,14 +44,14 @@ export function ProductPurchase({ product }: { product: Product }) {
     setQuantity((current) => Math.min(current, stock));
   };
 
-  const add = () => {
+  const add = (event?: { currentTarget: Element }) => {
     if (!variant) {
       setError("Escolha um tamanho.");
       sizesRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       sizesRef.current?.querySelector<HTMLInputElement>("input:not([disabled])")?.focus({ preventScroll: true });
       return;
     }
-    addItem(product, variant, quantity);
+    addItem(product, variant, quantity, event?.currentTarget);
   };
 
   return (
@@ -118,7 +118,7 @@ export function ProductPurchase({ product }: { product: Product }) {
         </div>
         <button
           type="button"
-          onClick={add}
+          onClick={(event) => add(event)}
           disabled={soldOut}
           className="flex-1 whitespace-nowrap rounded-xl bg-[#b94f01] px-3 py-3 text-sm font-medium text-white sm:px-6 transition hover:bg-[#9f4300] disabled:cursor-not-allowed disabled:bg-black/20 xl:text-base"
         >
@@ -138,7 +138,7 @@ export function ProductPurchase({ product }: { product: Product }) {
                 {variant && !single ? ` · Tam. ${variant.size}` : ""}
               </p>
             </div>
-            <button type="button" onClick={add} className="shrink-0 rounded-xl bg-[#b94f01] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#9f4300]">
+            <button type="button" onClick={(event) => add(event)} className="shrink-0 rounded-xl bg-[#b94f01] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#9f4300]">
               {variant ? "Adicionar" : "Escolher tamanho"}
             </button>
           </div>

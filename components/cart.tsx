@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { ShoppingBag } from 'lucide-react'
 import { CartDrawer } from '@/components/cart-drawer'
 import { track } from '@/lib/analytics'
+import { flyToCart } from '@/lib/fly-to-cart'
 import { CART_STORAGE_KEY } from '@/lib/cart/config'
 import { cartCount, cartReducer, cartSubtotal, initialCartState, type CartItem } from '@/lib/cart/reducer'
 import type { Product, ProductVariant } from '@/lib/catalog/types'
@@ -16,7 +17,8 @@ type CartContextValue = {
   subtotalCents: number
   /** true depois de ler o localStorage (antes disso a sacola aparece vazia, igual ao HTML do servidor). */
   ready: boolean
-  addItem: (product: Product, variant: ProductVariant, quantity?: number) => void
+  /** `from`: o botão clicado (origem da miniatura que voa até a sacola, lib/fly-to-cart.ts). */
+  addItem: (product: Product, variant: ProductVariant, quantity?: number, from?: Element | null) => void
   setQuantity: (sku: string, quantity: number) => void
   removeItem: (sku: string) => void
   clear: () => void
@@ -78,7 +80,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addItem = useCallback(
-    (product: Product, variant: ProductVariant, quantity = 1) => {
+    (product: Product, variant: ProductVariant, quantity = 1, from?: Element | null) => {
       const current = state.items.find((item) => item.sku === variant.sku)?.quantity ?? 0
       const room = variant.stock - current
       if (room <= 0) {
@@ -102,6 +104,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         },
       })
       announce(quantity > room ? `Só havia ${room} unidade(s) de ${product.name}: adicionamos o que restava` : `${product.name} foi adicionado à sacola`)
+      flyToCart(from)
       track({ name: 'add_to_cart', item: { id: product.slug, name: product.name, priceCents: product.priceCents, quantity: Math.min(quantity, room), category: product.categorySlug, variant: variant.size } })
     },
     [announce, state.items],
@@ -135,12 +138,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 export function CartButton() {
   const { count, open, isOpen } = useCart()
-  return <button type="button" onClick={open} aria-haspopup="dialog" aria-expanded={isOpen} aria-controls="sacola" aria-label={count > 0 ? `Sacola de compras, ${count} ${count === 1 ? 'item' : 'itens'}` : 'Sacola de compras'} className="relative transition-opacity hover:opacity-60"><ShoppingBag strokeWidth={1.5} />{count > 0 && <span aria-hidden="true" className="absolute -right-2 -top-2 flex size-4 items-center justify-center rounded-full bg-[#b94f01] text-[9px] text-white">{count > 9 ? '9+' : count}</span>}</button>
+  return <button type="button" onClick={open} aria-haspopup="dialog" aria-expanded={isOpen} aria-controls="sacola" aria-label={count > 0 ? `Sacola de compras, ${count} ${count === 1 ? 'item' : 'itens'}` : 'Sacola de compras'} data-cart-target className="relative transition-opacity hover:opacity-60"><ShoppingBag strokeWidth={1.5} />{count > 0 && <span aria-hidden="true" data-cart-count className="absolute -right-2 -top-2 flex size-4 items-center justify-center rounded-full bg-[#b94f01] text-[9px] text-white">{count > 9 ? '9+' : count}</span>}</button>
 }
 
 /** Compra rápida no card (produto de variante única). */
 export function AddToCartButton({ product, className }: { product: Product; className?: string }) {
   const { addItem } = useCart()
   const variant = product.variants.find((item) => item.stock > 0)
-  return <button type="button" disabled={!variant} onClick={() => variant && addItem(product, variant, 1)} aria-label={`Adicionar ${product.name} à sacola`} className={className}>Adicionar à sacola</button>
+  return <button type="button" disabled={!variant} onClick={(event) => variant && addItem(product, variant, 1, event.currentTarget)} aria-label={`Adicionar ${product.name} à sacola`} className={className}>Adicionar à sacola</button>
 }

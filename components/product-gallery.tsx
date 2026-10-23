@@ -27,6 +27,7 @@ export function ProductGallery({ images, name, transitionName }: { images: Produ
         type="button"
         onClick={() => setZoom(true)}
         aria-label={`Ampliar foto: ${current.alt}`}
+        data-fly-image
         className="group relative aspect-[4/5] cursor-zoom-in overflow-hidden rounded-2xl bg-[#e9e8e4] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
       >
         <ImageReveal key={current.src} className="absolute inset-0">

@@ -20,6 +20,16 @@ export const duration = {
   reveal: 1,
 } as const;
 
+/** Miniatura que voa até a sacola ao adicionar (operação, fase 6; lib/fly-to-cart.ts). Sempre ligada. */
+export const flyToCart = {
+  duration: 0.6,
+  /** altura do arco, em fração da distância (sobe antes de descer na sacola) */
+  arc: 0.18,
+  /** pulso do contador quando a miniatura chega */
+  pulse: 0.35,
+  size: 64,
+} as const;
+
 /** Curvas cubic-bezier (formato do motion). */
 export const ease = {
   out: [0.16, 1, 0.3, 1] as [number, number, number, number],

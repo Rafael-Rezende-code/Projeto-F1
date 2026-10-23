@@ -3,7 +3,8 @@
 // MagneticDock (código recebido). Alterações mínimas para o projeto:
 // 1) import de "framer-motion" → "motion/react" (o projeto usa motion);
 // 2) aria-label={item.label} e aria-current no botão (acessibilidade: o botão só tem ícone);
-// 3) leve elevação do item ativo (activeLift somado ao deslocamento vertical do hover).
+// 3) leve elevação do item ativo (activeLift somado ao deslocamento vertical do hover);
+// 4) data-dock-id no botão e data-cart-count no badge (destino da miniatura que voa até a sacola, lib/fly-to-cart.ts).
 import * as React from "react"
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence, type MotionValue } from "motion/react"
 import { cn } from "@/lib/utils"
@@ -97,6 +98,7 @@ function DockItem({
             type="button"
             aria-label={item.label}
             aria-current={item.isActive ? "page" : undefined}
+            data-dock-id={item.id}
             onClick={item.onClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -152,6 +154,7 @@ function DockItem({
             <AnimatePresence>
                 {item.badge !== undefined && item.badge > 0 && (
                     <motion.div
+                        data-cart-count
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}

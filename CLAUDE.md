@@ -911,6 +911,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   sessão e com sessão não admin (exceções públicas listadas no teste). Achou e corrigiu: o importador engolia o
   redirect do `requireAdmin` num try/catch (**`requireAdmin` sempre FORA de try**). `pnpm supabase:ativar` confere com a
   chave pública as tabelas e funções novas. Guia: `docs/backend/seguranca.md`.
+- **Microinterações (fase 6):** "voar para a sacola" (`lib/fly-to-cart.ts`, token `flyToCart` em `lib/motion.ts`): ao
+  adicionar, uma miniatura (a `currentSrc` da foto já carregada) sai do card (`[data-fly-scope]` + `[data-fly-image]`) ou
+  da foto principal da galeria e voa em arco até o ícone da sacola visível (`[data-cart-target]` no cabeçalho;
+  `[data-dock-id="sacola"]` no dock, adaptação APEX 4 do MagneticDock) em 0,6 s; ao chegar, o contador
+  (`[data-cart-count]`) pulsa. Só transform/opacity, WAAPI, uma leitura de posição, `pointer-events: none`; sempre
+  ligada. `addItem(produto, variante, qtd, origem)` recebe o botão clicado. Sem foto visível (barra fixa), só o pulso.
+  Esqueletos: `FormPageSkeleton` (/pedido/consultar) e `AdminSkeleton` (`app/admin/loading.tsx`).
 
 ## Pendências (atualizado em 22/10/2026)
 

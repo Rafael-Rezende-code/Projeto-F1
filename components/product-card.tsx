@@ -37,9 +37,9 @@ export function ProductCard({
   const single = product.variants.length === 1 ? product.variants[0] : null;
   const discount = discountPercent(product.priceCents, product.compareAtPriceCents);
   return (
-    <article className="group relative">
+    <article data-fly-scope className="group relative">
       <SharedTransition name={transition ? productTransitionName(product.slug) : undefined}>
-      <div className="relative isolate aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4]">
+      <div data-fly-image className="relative isolate aspect-[4/5] overflow-hidden rounded-2xl bg-[#e9e8e4]">
         {/* Entrada sutil (fade) quando a foto ainda não carregou. Sem placeholder desfocado: as fotos de produto são
             remotas, e este card também roda no cliente (favoritos), onde o mapa de placeholders pesaria no JS. */}
         <ImageReveal className="absolute inset-0">
