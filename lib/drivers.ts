@@ -44,8 +44,6 @@ export type Driver = {
    * o carro entra pelo lado de trás dele, andando para a frente. Padrão: "right". Gerado por scripts/carros/padronizar.mjs.
    */
   carFacing?: "left" | "right";
-  /** Luz atrás do carro (gradiente radial claro, contido no slot) e contorno claro estático: separa o carro do fundo. */
-  carLight?: { glow: string; glowOpacity: number; rim: string };
   href: string;
   /** Efeito do HoverTransition e direção de entrada. */
   effect: HoverTransitionEffect;
@@ -67,8 +65,6 @@ export const drivers: Driver[] = [
   {
     slug: "norris",
     carFacing: "right",
-    // Luz atrás do carro e contorno claro (feat/carros A3), conferidos sobre a cor da equipe.
-    carLight: { glow: "#ffe2bd", glowOpacity: 0.45, rim: "rgba(255, 244, 230, 0.55)" },
     name: "Lando Norris",
     team: "McLaren",
     color: "#FF8000",
@@ -85,8 +81,6 @@ export const drivers: Driver[] = [
   {
     slug: "verstappen",
     carFacing: "left",
-    // Luz atrás do carro e contorno claro (feat/carros A3), conferidos sobre a cor da equipe.
-    carLight: { glow: "#9dbcff", glowOpacity: 0.55, rim: "rgba(214, 228, 255, 0.85)" },
     name: "Max Verstappen",
     team: "Red Bull Racing",
     color: "#1B2A5C",
@@ -103,8 +97,6 @@ export const drivers: Driver[] = [
   {
     slug: "hamilton",
     carFacing: "right",
-    // Luz atrás do carro e contorno claro (feat/carros A3), conferidos sobre a cor da equipe.
-    carLight: { glow: "#ffc2ba", glowOpacity: 0.4, rim: "rgba(255, 236, 232, 0.6)" },
     name: "Lewis Hamilton",
     team: "Ferrari",
     color: "#DC0000",
@@ -125,8 +117,6 @@ export const drivers: Driver[] = [
   {
     slug: "bortoleto",
     carFacing: "right",
-    // Luz atrás do carro e contorno claro (feat/carros A3), conferidos sobre a cor da equipe.
-    carLight: { glow: "#ffc9d2", glowOpacity: 0.4, rim: "rgba(255, 236, 240, 0.6)" },
     name: "Gabriel Bortoleto",
     team: "Audi",
     color: "#0B0B0B",

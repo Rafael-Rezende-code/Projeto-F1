@@ -86,7 +86,5 @@ export function carKeyframes(options: CarClockOptions, samples = 61) {
     shadow: states.map((s) => ({ transform: carTransforms.shadow(s), opacity: f(s.shadowOpacity, 4) })),
     coverX: states.map((s) => ({ transform: carTransforms.coverX(s, options.dir) })),
     coverY: states.map((s) => ({ transform: carTransforms.coverY(s) })),
-    /** luz atrás do carro (A3): acende na mesma curva da posição */
-    glow: states.map((s) => ({ opacity: f(s.eased, 4) })),
   };
 }

@@ -19,8 +19,6 @@ type Props = {
   sizes: string;
   /** Cor do fundo do bloco (a da equipe): o painel que esconde o texto até o carro passar. */
   cover: string;
-  /** Luz atrás do carro e contorno claro (feat/carros A3; lib/drivers.ts). */
-  light?: { glow: string; glowOpacity: number; rim: string };
   /** Texto do topo (frase + curiosidades), revelado pela passagem do carro. */
   children?: ReactNode;
   className?: string;
@@ -41,7 +39,7 @@ type Props = {
 /** Milissegundos até o instante `at` (performance.now), nunca negativo. */
 const msUntil = (at: number) => Math.max(0, at - performance.now());
 
-export function DriverCar({ src, width, height, facing, cue, blur, sizes, cover, light, children, className = "" }: Props) {
+export function DriverCar({ src, width, height, facing, cue, blur, sizes, cover, children, className = "" }: Props) {
   const stageRef = useRef<HTMLDivElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -63,7 +61,6 @@ export function DriverCar({ src, width, height, facing, cue, blur, sizes, cover,
   const ghostRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLSpanElement>(null);
   const coverRef = useRef<HTMLSpanElement>(null);
-  const glowRef = useRef<HTMLSpanElement>(null);
 
   // Inclinação com o mouse (depois de parar): alvo → spring → rampa.
   const tiltX = useMotionValue(0);
@@ -131,7 +128,6 @@ export function DriverCar({ src, width, height, facing, cue, blur, sizes, cover,
         [ghostRef.current, frames.ghost],
         [shadowRef.current, frames.shadow],
         [coverRef.current, mobile ? frames.coverY : frames.coverX],
-        [glowRef.current, frames.glow],
       ];
       // Criadas na mesma tarefa, as animações recebem o MESMO instante de início do navegador (no primeiro quadro em que
       // o compositor as recebe): um relógio só, sem "alcançar" um início no passado.
@@ -217,16 +213,15 @@ export function DriverCar({ src, width, height, facing, cue, blur, sizes, cover,
         data-state={state}
         data-facing={facing}
         className="driver-car"
-        style={{ "--car-ratio": `${width} / ${height}`, "--ghost-blur": `${car.ghostBlur}px`, ...(light ? { "--car-glow": light.glow, "--car-glow-opacity": light.glowOpacity, "--car-rim": light.rim } : {}) } as CSSProperties}
+        style={{ "--car-ratio": `${width} / ${height}`, "--ghost-blur": `${car.ghostBlur}px` } as CSSProperties}
       >
-        {light && <span ref={glowRef} className="driver-car__glow" />}
         <div ref={moveRef} className="driver-car__move" style={{ transform: carTransforms.move(initial) }}>
           <span ref={shadowRef} className="driver-car__shadow" style={{ transform: carTransforms.shadow(initial), opacity: initial.shadowOpacity }} />
           <div ref={ghostRef} className="driver-car__ghost" style={{ transform: carTransforms.ghost(initial), opacity: initial.ghostOpacity }}>
             <div className="driver-car__ghost-blur">{image()}</div>
           </div>
           <motion.div ref={tiltRef} className="driver-car__tilt" style={{ transform: tiltTransform }}>
-            <div className={light ? "driver-car__lit" : "absolute inset-0"}>{image(imgRef)}</div>
+            <div className="absolute inset-0">{image(imgRef)}</div>
           </motion.div>
         </div>
       </div>

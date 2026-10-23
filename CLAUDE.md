@@ -833,10 +833,8 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 - **Inclinação:** depois de assentar, desktop com mouse (`hover: hover`, `pointer: fine`, ≥ 768px): springs do motion com
   rampa de 0,5 s (sem salto), máx. 6°; `will-change` só enquanto o mouse mexe (`.is-tilting`).
 - GIFs da entrada (desktop e celular, câmera lenta 0,25× refeita em tempo real) em `docs/carros/gifs/`; prints em
-  `docs/carros/prints/`. **Contraste (A3):** luz suave atrás do carro (gradiente radial claro no tom da equipe, contido no slot,
-  acende com a chegada pelo mesmo relógio) e contorno de luz ESTÁTICO (drop-shadow claro num filho não composto), com
-  valores por piloto em `carLight` (`lib/drivers.ts`); o Verstappen (azul-marinho sobre azul-marinho) tem a luz mais forte.
-  Comparações em `docs/carros/a3/`.
+  `docs/carros/prints/`. **Sem destaque atrás do carro** (decisão do dono): a luz radial e o contorno de luz do A3 foram removidos; só a
+  sombra no chão da animação fica. Não trocar por outra técnica de destaque.
 
 ## Operação e conversão (feat/carros, parte B)
 

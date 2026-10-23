@@ -99,8 +99,6 @@ export type Driver = {
   carImage?: string;
   /** Para que lado o carro aponta no arquivo (a página não espelha: o carro entra pelo lado de trás dele). */
   carFacing?: "left" | "right";
-  /** Luz atrás do carro e contorno claro (lib/drivers.ts). */
-  carLight?: { glow: string; glowOpacity: number; rim: string };
 };
 
 /** Resultado da busca (sobreposição de busca do site). */
