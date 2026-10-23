@@ -1,19 +1,32 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CancelOrderDialog, RefundDialog } from "@/components/admin/order-dialogs";
 import { ShipForm } from "@/components/admin/ship-form";
+import { setOrderTest } from "@/app/admin/pedidos/actions";
+import { canCancel, needsShippedConfirmation } from "@/lib/admin/order-actions";
 import { adminDisabled, requireAdmin } from "@/lib/admin/auth";
 import { ORDER_ITEM_STATUS_ADMIN_LABELS, ORDER_STATUS_LABELS, orderUrl, PAYMENT_LABELS } from "@/lib/checkout/order";
 import { formatPrice } from "@/lib/format";
 import { orderFromRow, type OrderRow } from "@/lib/orders/mapping";
 
-// Detalhe do pedido: itens, cliente, entrega, pagamento e envio (código de rastreio).
+type Extra = { is_test?: boolean; cancel_reason?: string | null; cancelled_at?: string | null; refunded_at?: string | null; refund_note?: string | null };
+type EventRow = { id: number; kind: string; message: string; actor: string; created_at: string };
+const when = (iso: string) => new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+
+// Detalhe do pedido: itens, cliente, entrega, pagamento, envio (código de rastreio), histórico (order_events),
+// cancelamento/reembolso (com confirmação) e a marca de pedido de teste.
 export default async function AdminPedido({ params }: { params: Promise<{ id: string }> }) {
   if (adminDisabled()) return null;
   const { supabase } = await requireAdmin();
   const id = decodeURIComponent((await params).id);
-  const { data } = await supabase.from("orders").select("*, order_items(*)").eq("id", id).maybeSingle();
+  const [{ data }, { data: eventRows }] = await Promise.all([
+    supabase.from("orders").select("*, order_items(*)").eq("id", id).maybeSingle(),
+    supabase.from("order_events").select("id, kind, message, actor, created_at").eq("order_id", id).order("id", { ascending: true }),
+  ]);
   if (!data) notFound();
   const row = data as OrderRow;
+  const extra = data as Extra;
+  const events = (eventRows ?? []) as EventRow[];
   const order = orderFromRow(row);
   const card = order.payment.details?.card;
   return (
@@ -21,7 +34,11 @@ export default async function AdminPedido({ params }: { params: Promise<{ id: st
       <Link href="/admin/pedidos" className="text-sm text-black/60 hover:underline">← Pedidos</Link>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-4xl tracking-[-0.05em]">{order.id}</h1>
-        <span className="rounded-xl bg-white px-3 py-2 text-sm font-medium">{ORDER_STATUS_LABELS[order.status]}</span>
+        <span className="flex flex-wrap gap-2">
+          {extra.is_test && <span className="rounded-md bg-[#fff4d6] px-2 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7a5200]">Teste</span>}
+          {extra.refunded_at && <span className="rounded-md bg-[#e8f3ec] px-2 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#1f5a33]">Reembolsado</span>}
+          <span className="rounded-xl bg-white px-3 py-2 text-sm font-medium">{ORDER_STATUS_LABELS[order.status]}</span>
+        </span>
       </div>
       <p className="mt-1 text-sm text-black/60">{new Date(order.createdAt).toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short" })}</p>
 
@@ -54,6 +71,7 @@ export default async function AdminPedido({ params }: { params: Promise<{ id: st
           </ul>
           <dl className="mt-4 space-y-1 border-t border-black/10 pt-4 text-sm">
             <div className="flex justify-between"><dt className="text-black/60">Subtotal</dt><dd>{formatPrice(order.subtotalCents)}</dd></div>
+            {order.coupon && order.coupon.discountCents > 0 && <div className="flex justify-between"><dt className="text-black/60">Cupom {order.coupon.code}</dt><dd>−{formatPrice(order.coupon.discountCents)}</dd></div>}
             <div className="flex justify-between"><dt className="text-black/60">Entrega ({order.shipping.label})</dt><dd>{order.shipping.priceCents ? formatPrice(order.shipping.priceCents) : "Grátis"}</dd></div>
             <div className="flex justify-between font-medium"><dt>Total</dt><dd>{formatPrice(order.totalCents)}</dd></div>
           </dl>
@@ -85,8 +103,40 @@ export default async function AdminPedido({ params }: { params: Promise<{ id: st
             )}
             {order.tracking?.shippedAt && <p className="mt-3 text-xs text-black/60">Enviado em {new Date(order.tracking.shippedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}.</p>}
           </section>
+          <section className="rounded-2xl bg-white p-6 text-sm">
+            <h2 className="font-medium">Cancelamento e reembolso</h2>
+            {extra.cancel_reason && <p className="mt-2 text-black/70">Cancelado{extra.cancelled_at ? ` em ${when(extra.cancelled_at)}` : ""}: {extra.cancel_reason}</p>}
+            {extra.refunded_at && <p className="mt-2 text-black/70">Reembolso registrado em {when(extra.refunded_at)}: {extra.refund_note}</p>}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {canCancel(order.status) && <div><CancelOrderDialog id={order.id} shipped={needsShippedConfirmation(order.status)} /></div>}
+              {order.status === "cancelado" && !extra.refunded_at && <div><RefundDialog id={order.id} /></div>}
+            </div>
+            <form action={setOrderTest} className="mt-5 border-t border-black/10 pt-4">
+              <input type="hidden" name="id" value={order.id} />
+              <input type="hidden" name="isTest" value={extra.is_test ? "false" : "true"} />
+              <p className="text-xs text-black/60">{extra.is_test ? "Pedido de teste: fora dos indicadores." : "Pedido de teste? Ele sai dos indicadores do painel."}</p>
+              <button type="submit" className="mt-2 rounded-xl border border-black/15 px-3 py-2 text-xs font-medium hover:border-black">{extra.is_test ? "Desmarcar teste" : "Marcar como teste"}</button>
+            </form>
+          </section>
         </div>
       </div>
+
+      <section aria-labelledby="historico" className="mt-6 rounded-2xl bg-white p-6">
+        <h2 id="historico" className="font-medium">Histórico</h2>
+        {events.length ? (
+          <ol className="mt-4 border-l border-black/10 pl-5">
+            {events.map((event) => (
+              <li key={event.id} className="relative pb-4 text-sm last:pb-0">
+                <span aria-hidden="true" className={`absolute -left-[25px] top-1.5 size-2 rounded-full ${event.kind === "cancelado" ? "bg-[#b42318]" : event.kind === "reembolsado" ? "bg-[#1f7a3a]" : "bg-black/40"}`} />
+                <p>{event.message}</p>
+                <p className="text-xs text-black/60"><time dateTime={event.created_at}>{when(event.created_at)}</time> · {event.actor}</p>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-2 text-sm text-black/60">Sem registros (pedidos anteriores à migração de histórico não têm eventos).</p>
+        )}
+      </section>
     </div>
   );
 }

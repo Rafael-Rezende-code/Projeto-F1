@@ -99,3 +99,18 @@ fornecedor") está em `docs/backend/roteiro-teste-admin.md`.
 
 O painel foi verificado no modo desligado (sem Supabase). O fluxo logado não foi exercitado contra um projeto real
 (sem credenciais). As regras de acesso do banco (RLS) estão cobertas por `supabase/tests/loja.test.ts`.
+
+## Histórico, cancelamento, reembolso, testes e exportações (operação, fase 2)
+
+Requer a migração `20261028000000_eventos_e_cancelamento.sql` (vem no `supabase/atualizacao-2.sql`).
+
+- **Início do painel:** pedidos pagos, faturamento e ticket médio de hoje / 7 / 30 / 90 dias (dias contados no horário de
+  Brasília), faturamento por dia, mais vendidos, pedidos pagos sem envio, itens a comprar no fornecedor e estoque baixo
+  (limite ajustável no campo "Limite"). Pedidos marcados como **teste** ficam fora, salvo "Incluir os de teste".
+- **Histórico do pedido:** cada mudança (criação, status, rastreio, status de item, cancelamento, reembolso, teste) fica
+  registrada com data e quem fez (e-mail do admin ou "sistema").
+- **Cancelar pedido:** botão no detalhe, com motivo obrigatório. Devolve estoque e o uso do cupom na mesma operação.
+  Pedido já enviado pede uma confirmação a mais. **Não estorna o pagamento**: faça o reembolso no painel do Mercado Pago.
+- **Marcar como reembolsado:** só em pedido cancelado; anote como e quando o dinheiro foi devolvido.
+- **Exportar CSV:** em Pedidos (respeita status, período e testes) e na fila do fornecedor. Abre direto no Excel/Google
+  Planilhas (UTF-8, ";", vírgula decimal).

@@ -70,7 +70,10 @@ export default async function FilaFornecedor() {
 
   return (
     <div>
-      <h1 className="text-4xl tracking-[-0.05em]">Comprar no fornecedor</h1>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <h1 className="text-4xl tracking-[-0.05em]">Comprar no fornecedor</h1>
+        <a href="/admin/fornecedor/exportar" className="rounded-xl border border-black/15 bg-white px-4 py-2.5 text-sm font-medium hover:border-black">Exportar CSV</a>
+      </div>
       <p className="mt-2 max-w-[70ch] text-sm leading-6 text-black/60">
         Itens sob encomenda de pedidos pagos. A compra é manual: abra o fornecedor, cole os dados do cliente (ou o endereço
         da loja, se a peça vier para cá antes), finalize lá e marque como comprado aqui.

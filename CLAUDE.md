@@ -876,6 +876,19 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   Peças puras em `lib/orders/lookup.ts`; action em `app/(loja)/pedido/consultar/actions.ts`. Links: rodapé (Ajuda),
   menu, página do pedido gravado e `/pedido/[id]` sem chave válida. Testes: `supabase/tests/consulta.test.ts`,
   `lib/orders/lookup.test.ts`, `e2e/consulta-pedido.spec.ts`. Prints em `docs/operacao/prints/consulta-*.png`.
+- **Fase 2 (histórico, cancelamento, CSV, painel):** migração `20261028000000_eventos_e_cancelamento.sql`. `order_events`
+  (linha do tempo gravada por GATILHOS em `orders`/`order_items` e pelas funções; quem fez = e-mail do JWT ou "sistema";
+  só admin lê). `cancel_order(pedido, motivo, confirmar_enviado)`: transação que cancela e chama `release_order_stock`
+  (estoque e cupom, idempotente); enviado/entregue exige confirmação; o checkout também cancela por ela
+  (`cancelStoredOrder`). `mark_order_refunded(pedido, nota)`: só registro manual, só em cancelado. Permissão
+  `can_manage_orders()` (service_role pelo parâmetro `role`/JWT, ou `is_admin()`). `orders.is_test` (+ `cancel_reason`,
+  `cancelled_at`, `refunded_at`, `refund_note`). `admin_dashboard(desde, limite, incluir_testes)` (security invoker).
+  Painel: `/admin` com período hoje/7/30/90 (dia de São Paulo; `lib/admin/dashboard.ts`), barras SVG
+  (`components/admin/revenue-bars.tsx`, com tabela), mais vendidos, pendências e estoque baixo (`?estoque=`).
+  Detalhe do pedido: histórico, modais de cancelar/reembolsar (`components/admin/order-dialogs.tsx`, `<dialog>` nativo),
+  marcar teste. Lista com período e filtro de teste (`lib/admin/order-filters.ts`). CSV (`lib/admin/csv.ts`: BOM, ";",
+  vírgula decimal, proteção contra fórmula): `/admin/pedidos/exportar` (mesmos filtros) e `/admin/fornecedor/exportar`.
+  Testes: `supabase/tests/cancelamento.test.ts` (inclui falha no meio desfazendo tudo), `lib/admin/*.test.ts`.
 
 ## Pendências (atualizado em 22/10/2026)
 

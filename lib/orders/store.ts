@@ -99,9 +99,13 @@ export async function releaseStock(id: string) {
   await createServiceClient().rpc("release_order_stock", { p_order_id: id });
 }
 
-export async function cancelStoredOrder(id: string) {
-  await createServiceClient().from("orders").update({ status: "cancelado" }).eq("id", id);
-  await releaseStock(id);
+/** Cancela pelo servidor (cancel_order: status, estoque, uso do cupom e histórico numa transação). */
+export async function cancelStoredOrder(id: string, reason = "Pagamento não concluído no checkout.") {
+  const { error } = await createServiceClient().rpc("cancel_order", { p_order_id: id, p_reason: reason, p_confirm_shipped: false });
+  if (error) {
+    console.error("[pedido] cancel_order falhou:", error.code);
+    await releaseStock(id); // ao menos o estoque volta
+  }
 }
 
 /** Webhook: a notificação já foi processada? (o Mercado Pago reenvia a mesma até receber 200/201) */
