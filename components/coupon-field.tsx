@@ -121,7 +121,7 @@ export function CouponField({
               autoComplete="off"
               aria-invalid={Boolean(error)}
               aria-describedby={error ? "cupom-erro" : undefined}
-              className="min-w-0 flex-1 rounded-xl border border-black/15 bg-white px-4 py-2.5 text-base uppercase outline-none focus-visible:border-black sm:text-sm"
+              className="w-0 min-w-0 flex-1 rounded-xl border border-black/15 bg-white px-4 py-2.5 text-base uppercase outline-none focus-visible:border-black sm:text-sm"
             />
             <button type="submit" disabled={pending || !typed.trim()} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-black/15 bg-white px-4 text-sm font-medium transition hover:border-black disabled:opacity-60">
               {pending && <Loader2 size={14} className="animate-spin" aria-hidden="true" />} Aplicar
