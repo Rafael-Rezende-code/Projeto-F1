@@ -904,6 +904,13 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   Recusar / Aceitar todos do mesmo peso + Personalizar; `ConsentPreferencesButton` no rodapé reabre. Disparos: página de
   produto (`TrackEvent`), `addItem` da sacola, checkout (início e compra), busca (1,2 s parado, 3+ letras). **A Política de
   Privacidade precisa citar GA4/Meta Pixel quando ligados** (`docs/lancamento.md`). Prints `docs/operacao/prints/consentimento-*`.
+- **Segurança (fase 5):** cabeçalhos em `lib/security-headers.mjs` (nosniff, Referrer-Policy, Permissions-Policy,
+  X-Frame-Options SAMEORIGIN, HSTS só em produção; **sem CSP**, melhoria futura) aplicados pelo `next.config.mjs`. Limite
+  por IP central (`allowRequest`) em checkout, cupom, consulta de pedido e newsletter. `app/admin/autorizacao.test.ts`
+  descobre (import.meta.glob) toda ação/rota/página do admin e exige redirecionamento ao login sem tocar no banco, sem
+  sessão e com sessão não admin (exceções públicas listadas no teste). Achou e corrigiu: o importador engolia o
+  redirect do `requireAdmin` num try/catch (**`requireAdmin` sempre FORA de try**). `pnpm supabase:ativar` confere com a
+  chave pública as tabelas e funções novas. Guia: `docs/backend/seguranca.md`.
 
 ## Pendências (atualizado em 22/10/2026)
 

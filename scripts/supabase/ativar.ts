@@ -4,7 +4,8 @@
 //  (a) a conexão com o projeto (URL, chaves anon e service_role, e se não estão trocadas);
 //  (b) as tabelas, as funções e o bucket de fotos, e quantos registros o seed trouxe (aponta o que faltar);
 //  (c) cada e-mail de ADMIN_EMAILS em admin_emails (idempotente: só insere o que falta);
-//  (d) com a chave pública (anon): o catálogo é legível, a tabela privada de custo e fornecedor NÃO é, e nenhuma escrita
+//  (d) com a chave pública (anon): o catálogo é legível; custo/fornecedor, newsletter, cupons, histórico, e-mails e
+//      limites NÃO são; as funções de pedido/painel não executam; e nenhuma escrita
 //      é permitida (nem upload de foto, nem criar pedido);
 //  (e) a baixa de estoque (função create_order) com um pedido de teste, inclusive estoque insuficiente; tudo é apagado
 //      e o estoque volta ao que era;
@@ -106,13 +107,14 @@ async function main() {
     product_variants: seedData.products.reduce((sum, product) => sum + product.variants.length, 0),
     product_images: seedData.products.reduce((sum, product) => sum + product.images.length, 0),
   };
-  const tables = ["admin_emails", "categories", "teams", "drivers", "products", "product_variants", "product_images", "product_private", "customers", "orders", "order_items", "payment_events", "newsletter_subscribers"];
+  const tables = ["admin_emails", "categories", "teams", "drivers", "products", "product_variants", "product_images", "product_private", "customers", "orders", "order_items", "payment_events", "newsletter_subscribers", "coupons", "coupon_redemptions", "rate_limit_hits", "order_events", "email_log"];
+  // Tabelas da operação (cupons, limites, histórico, e-mails): vêm no supabase/atualizacao-2.sql num banco já ativo.
   const missingTables: string[] = [];
   for (const table of tables) {
     const { count, error } = await service.from(table).select("*", { count: "exact", head: true });
     if (error) {
       const absent = /does not exist|schema cache|PGRST205|42P01/i.test(`${error.code} ${error.message}`);
-      report(`tabela ${table}`, "falhou", absent ? "NÃO EXISTE (rode o supabase/setup-completo.sql)" : errorText(error));
+      report(`tabela ${table}`, "falhou", absent ? "NÃO EXISTE (banco novo: setup-completo.sql; banco ativo: atualizacao-2.sql)" : errorText(error));
       if (absent) missingTables.push(table);
       continue;
     }
@@ -185,7 +187,8 @@ async function publicAccess(service: SupabaseClient, anon: SupabaseClient) {
   report("ler tamanhos e estoque", variants.error || !variants.data?.length ? "falhou" : "ok", variants.error ? errorText(variants.error) : "");
 
   // Tabelas que a chave pública não pode ler: erro de permissão OU zero linhas (RLS). Linhas = vazamento.
-  for (const table of ["product_private", "orders", "order_items", "customers", "payment_events", "admin_emails"]) {
+  // Operação (fase 5): cupons, usos, histórico, e-mails, limites e a lista da newsletter também precisam ficar fechados.
+  for (const table of ["product_private", "orders", "order_items", "customers", "payment_events", "admin_emails", "newsletter_subscribers", "coupons", "coupon_redemptions", "order_events", "email_log", "rate_limit_hits"]) {
     const { data, error } = await anon.from(table).select("*").limit(5);
     if (error) report(`${table}: leitura pública`, "ok", `bloqueada (${error.code ?? "erro"})`);
     else if (!data?.length) report(`${table}: leitura pública`, (await service.from(table).select("*", { count: "exact", head: true })).count ? "ok" : "aviso", "0 linhas visíveis (RLS filtra)");
@@ -215,9 +218,26 @@ async function publicAccess(service: SupabaseClient, anon: SupabaseClient) {
       const hack = await anon.from("products").update({ price_cents: price.data.price_cents }).eq("slug", price.data.slug).select();
       report("alterar preço de produto", (hack.data?.length ?? 0) > 0 ? "falhou" : "ok", hack.error ? "bloqueado" : "0 linhas alteradas");
     }
-    for (const [name, args] of [["create_order", { p_order: { id: "APX-TESTE-ANON", items: [] } }], ["release_order_stock", { p_order_id: "APX-TESTE-ANON" }], ["import_products", { p_items: [] }]] as const) {
+    const rpcs = [
+      ["create_order", { p_order: { id: "APX-TESTE-ANON", items: [] } }],
+      ["release_order_stock", { p_order_id: "APX-TESTE-ANON" }],
+      ["import_products", { p_items: [] }],
+      ["cancel_order", { p_order_id: "APX-TESTE-ANON", p_reason: "teste anon", p_confirm_shipped: false }],
+      ["mark_order_refunded", { p_order_id: "APX-TESTE-ANON", p_note: "teste anon" }],
+      ["admin_dashboard", { p_since: new Date().toISOString(), p_low_stock: 3, p_include_test: false }],
+      ["lookup_order", { p_order_id: "APX-TESTE-ANON", p_email: "teste@example.invalid" }],
+      ["rate_limit_hit", { p_bucket: "teste", p_key_hash: "0".repeat(64), p_limit: 1, p_window_seconds: 60 }],
+      ["claim_order_email", { p_order_id: "APX-TESTE-ANON", p_type: "pedido-recebido" }],
+      ["log_order_event", { p_order_id: "APX-TESTE-ANON", p_kind: "nota", p_message: "teste anon" }],
+    ] as const;
+    for (const [name, args] of rpcs) {
       const call = await anon.rpc(name, args as Record<string, unknown>);
-      report(`função ${name} com a chave pública`, call.error && /permission denied|42501|not allowed|JWT/i.test(`${call.error.code} ${call.error.message}`) ? "ok" : call.error ? "aviso" : "falhou", call.error ? `bloqueada (${call.error.code ?? "erro"})` : "A CHAVE PÚBLICA EXECUTOU A FUNÇÃO");
+      const missing = call.error && /PGRST202|Could not find the function|42883/i.test(`${call.error.code} ${call.error.message}`);
+      report(
+        `função ${name} com a chave pública`,
+        missing ? "aviso" : call.error && /permission denied|42501|not allowed|JWT|SEM_PERMISSAO/i.test(`${call.error.code} ${call.error.message}`) ? "ok" : call.error ? "aviso" : "falhou",
+        missing ? "não existe ainda (rode o atualizacao-2.sql)" : call.error ? `bloqueada (${call.error.code ?? "erro"})` : "A CHAVE PÚBLICA EXECUTOU A FUNÇÃO",
+      );
     }
     const upload = await anon.storage.from("produtos").upload(`zz-teste/${stamp}.txt`, new Blob(["teste"]), { upsert: true });
     if (!upload.error) await service.storage.from("produtos").remove([`zz-teste/${stamp}.txt`]);

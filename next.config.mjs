@@ -1,3 +1,5 @@
+import { securityHeaders } from './lib/security-headers.mjs'
+
 // Fotos enviadas pelo painel admin (Supabase Storage, fase 11): o host do projeto entra nos remotePatterns quando a
 // variável existe. Sem Supabase, nada muda.
 const supabaseHost = (() => {
@@ -17,7 +19,11 @@ const nextConfig = {
   // O `next dev` do Next 16.3 acrescenta um bloco próprio ao CLAUDE.md a cada início; o CLAUDE.md é do projeto.
   agentRules: false,
   async headers() {
-    return allowIndexing ? [] : [{ source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
+    // Segurança (operação, fase 5; lib/security-headers.mjs) em todas as respostas; HSTS só no build de produção.
+    const security = securityHeaders({ production: process.env.NODE_ENV === 'production' })
+    return [
+      { source: '/:path*', headers: [...security, ...(allowIndexing ? [] : [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }])] },
+    ]
   },
   typescript: {
     ignoreBuildErrors: true,

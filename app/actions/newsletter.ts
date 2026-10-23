@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { firstIp, hashIp, isValidEmail, NEWSLETTER_CONSENT_TEXT, readSubscription } from "@/lib/newsletter";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createPublicClient } from "@/lib/supabase/server";
+import { allowRequest } from "@/lib/rate-limit";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit-config";
 
 export type NewsletterState = { status: "idle" | "ok" | "error" | "disabled"; message?: string };
 
@@ -22,6 +24,8 @@ export async function subscribeNewsletter(_: NewsletterState, form: FormData): P
   if (!input.consent) return { status: "error", message: "Marque a caixa para concordar em receber as novidades." };
 
   const ip = firstIp((await headers()).get("x-forwarded-for"));
+  // Limite central por IP (lib/rate-limit.ts, com service role) além do gatilho da própria tabela.
+  if (!(await allowRequest("newsletter", ip))) return { status: "error", message: RATE_LIMIT_MESSAGE };
   const salt = process.env.NEWSLETTER_IP_SALT ?? "";
   const { error } = await createPublicClient()
     .from("newsletter_subscribers")

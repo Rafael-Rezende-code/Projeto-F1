@@ -8,6 +8,8 @@ import { z } from "zod";
 import { newOrderId, type Order, type OrderLine } from "@/lib/checkout/order";
 import { cancelStoredOrder, createStoredOrder, recordPayment } from "@/lib/orders/store";
 import { queueOrderEmails } from "@/lib/email/order-emails";
+import { allowRequest } from "@/lib/rate-limit";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit-config";
 import { getPaymentProvider } from "@/lib/payments";
 import { isOrderStoreConfigured } from "@/lib/supabase/config";
 import { couponMessage, normalizeCouponCode } from "@/lib/coupons";
@@ -40,6 +42,8 @@ export async function previewCoupon(input: unknown): Promise<CouponPreview> {
     .object({ code: z.string().max(60), items: z.array(orderItemSchema).min(1).max(50), cep: z.string().optional(), shippingId: z.string().max(40).optional() })
     .safeParse(input);
   if (!parsed.success) return { ok: false, message: "Confira o cupom e a sacola." };
+  // Limite por IP (lib/rate-limit.ts): impede testar códigos em massa.
+  if (!(await allowRequest("cupom"))) return { ok: false, message: RATE_LIMIT_MESSAGE };
   const code = normalizeCouponCode(parsed.data.code);
   if (!code) return { ok: false, message: couponMessage("formato") };
   let subtotalCents = 0;
@@ -81,6 +85,8 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const parsed = checkoutSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: "Confira os dados destacados.", errors: fieldErrors(parsed.error) };
   const data = parsed.data;
+  // Limite por IP (lib/rate-limit.ts): pedidos em massa travam estoque e disparam cobranças.
+  if (!(await allowRequest("checkout"))) return { ok: false, message: RATE_LIMIT_MESSAGE };
 
   const lines: OrderLine[] = [];
   const stockIssues: { sku: string; available: number }[] = [];

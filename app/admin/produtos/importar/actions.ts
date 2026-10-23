@@ -21,9 +21,11 @@ const toPreview = (row: ImportRow): PreviewRow =>
     ? { line: row.line, ok: true, action: row.action, name: row.product.name, slug: row.product.slug, priceCents: row.product.priceCents, fulfillment: row.product.fulfillment, images: row.product.imageUrls.length, status: row.product.status, warnings: row.warnings }
     : row;
 
+// requireAdmin FORA do try: o redirecionamento para o login é uma exceção que o catch engoliria (achado pelo
+// app/admin/autorizacao.test.ts).
 export async function previewImport(text: string): Promise<PreviewResult> {
+  const { supabase } = await requireAdmin();
   try {
-    const { supabase } = await requireAdmin();
     const analyzed = await analyzeImportText(supabase, text);
     if ("error" in analyzed) return { ok: false, message: analyzed.error! };
     return { ok: true, rows: analyzed.result.rows.map(toPreview), unknownColumns: analyzed.result.unknownColumns ?? [] };
@@ -33,8 +35,8 @@ export async function previewImport(text: string): Promise<PreviewResult> {
 }
 
 export async function runImport(text: string): Promise<ImportReport> {
+  const { supabase } = await requireAdmin();
   try {
-    const { supabase } = await requireAdmin();
     const report = await executeImport(supabase, text);
     if (report.ok) {
       clearCatalogCache();
