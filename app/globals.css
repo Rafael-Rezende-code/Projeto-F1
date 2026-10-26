@@ -265,6 +265,13 @@ h1, h2, .font-display {
 }
 .group:focus-visible .hover-underline::after { transform: scaleX(1); }
 
+/* Galeria do produto (components/product-gallery.tsx): crossfade na troca de foto e a lupa (desktop com mouse), que
+   aparece por opacidade e amplia a partir do cursor (transform-origin escrito pelo componente). */
+@keyframes gallery-fade { from { opacity: 0; } to { opacity: 1; } }
+.gallery-fade { animation: gallery-fade var(--motion-medium) var(--ease-out) both; }
+.gallery-lens { opacity: 0; transition: opacity var(--motion-short) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .group:hover > .gallery-lens { opacity: 1; } }
+
 /* Dock do celular (components/mobile-dock.tsx): espaço que ele ocupa embaixo (ícones 44 + respiro + área segura).
    Usado pelo espaçador no fim da página, pelo aviso da sacola e pela barra fixa de compra do produto. */
 :root { --dock-space: 0px; }
