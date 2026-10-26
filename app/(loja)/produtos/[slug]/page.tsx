@@ -9,6 +9,8 @@ import { productTransitionName } from "@/components/motion/view-transition";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductGrid } from "@/components/product-grid";
 import { ProductPurchase } from "@/components/product-purchase";
+import { RecentlyViewed } from "@/components/recently-viewed";
+import { completeTheLook } from "@/lib/catalog/look";
 import { WhatsAppTopic } from "@/components/whatsapp";
 import { TrackEvent } from "@/components/track-event";
 import { ShippingEstimator } from "@/components/shipping-estimator";
@@ -44,19 +46,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function ProductPage({ params }: Params) {
   const product = await catalog.getProductBySlug((await params).slug);
   if (!product) notFound();
-  const [category, team, driver, related] = await Promise.all([
+  const [category, team, driver, all] = await Promise.all([
     catalog.getCategoryBySlug(product.categorySlug),
     product.teamSlug ? catalog.getTeamBySlug(product.teamSlug) : null,
     product.driverSlug ? catalog.getDriverBySlug(product.driverSlug) : null,
-    catalog.getRelatedProducts(product, 12),
+    catalog.getProducts(),
   ]);
-  // "Complete o look": até 4 relacionados priorizando categorias diferentes da do produto (uma peça de cada tipo).
-  const look = [
-    ...related.filter((item, index, list) => item.categorySlug !== product.categorySlug && list.findIndex((other) => other.categorySlug === item.categorySlug) === index),
-    ...related,
-  ]
-    .filter((item, index, list) => list.findIndex((other) => other.id === item.id) === index)
-    .slice(0, 4);
+  // "Complete o look" (lib/catalog/look.ts): 3 a 4 peças de OUTRAS categorias, preferindo o mesmo piloto e a mesma equipe.
+  const look = completeTheLook(product, all);
   const discount = discountPercent(product.priceCents, product.compareAtPriceCents);
   // Parcelamento anunciado: só se a loja configurou parcelas SEM JUROS (lib/store-policy.ts); senão, nada aparece.
   const offer = installmentOffer(product.priceCents);
@@ -219,6 +216,7 @@ export default async function ProductPage({ params }: Params) {
             <ProductGrid products={look} />
           </section>
         )}
+        <RecentlyViewed slug={product.slug} />
       </div>
     </div>
   );
