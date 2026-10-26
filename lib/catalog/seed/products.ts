@@ -320,6 +320,3 @@ const CURATION: Record<string, Pick<Product, "bestsellerManual" | "bestsellerRan
 
 export const products: Product[] = [...featured, ...driverProducts, ...teamProducts].map((item) => (CURATION[item.slug] ? { ...item, ...CURATION[item.slug] } : item));
 
-/** Produtos da home (mesma ordem das seções originais). */
-export const HOME_GRID_SLUGS = ["scuderia-racing-jacket", "ferrari-team-cap", "monaco-racing-tee", "classic-racing-hoodie"];
-export const HOME_CAROUSEL_SLUGS = ["ferrari-team-cap", "monaco-racing-tee", "classic-racing-hoodie", "pit-lane-overshirt", "apex-circuit-tote"];

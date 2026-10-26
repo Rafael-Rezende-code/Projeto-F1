@@ -39,7 +39,7 @@ export default async function GiftsPage({ searchParams }: { searchParams: Promis
         <nav aria-label="Faixas de preço" className="mt-12 border-y border-black/10 py-5">
           <ul className="flex flex-wrap gap-2">
             <li>
-              <Link href="/presentes" scroll={false} aria-current={!band ? "page" : undefined} className={`${chip} ${!band ? "border-black bg-black text-white" : "border-black/15 hover:border-black"}`}>
+              <Link href="/presentes" scroll={false} aria-current={!band ? "page" : undefined} className={`${chip} ${!band ? "border-black bg-black text-white" : "border-black/15 text-black hover:border-black"}`}>
                 Todos <span className={!band ? "text-white/70" : "text-black/60"}>{all.length}</span>
               </Link>
             </li>
@@ -52,7 +52,7 @@ export default async function GiftsPage({ searchParams }: { searchParams: Promis
                       {item.label} <span>0</span>
                     </span>
                   ) : (
-                    <Link href={`/presentes?faixa=${item.value}`} scroll={false} aria-current={active ? "page" : undefined} className={`${chip} ${active ? "border-black bg-black text-white" : "border-black/15 hover:border-black"}`}>
+                    <Link href={`/presentes?faixa=${item.value}`} scroll={false} aria-current={active ? "page" : undefined} className={`${chip} ${active ? "border-black bg-black text-white" : "border-black/15 text-black hover:border-black"}`}>
                       {item.label} <span className={active ? "text-white/70" : "text-black/60"}>{item.count}</span>
                     </Link>
                   )}

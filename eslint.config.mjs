@@ -12,7 +12,7 @@ const eslintConfig = defineConfig([
     files: ["components/ui/glyph-portal.tsx"],
     rules: { "react-hooks/immutability": "off" },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", ".claude/**"]),
 ]);
 
 export default eslintConfig;

@@ -1,12 +1,11 @@
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
-import { HOME_CAROUSEL_SLUGS } from "@/lib/catalog/seed/products";
 
-// "Mais desejados": sugestões abaixo dos estados vazios (sacola e favoritos). Mesma lista do carrossel "O que o grid
-// veste" da home (as peças às quais a comunidade sempre retorna), 4 primeiras. Server component: os componentes de
+// "Mais desejados": sugestões abaixo dos estados vazios (sacola e favoritos): as 4 primeiras de "Mais vendidos" (curadoria
+// + vendas reais; lib/catalog/curation.ts). Server component: os componentes de
 // cliente (CartContents, FavoritesList) recebem pronto e só mostram quando a lista está vazia.
 export async function MostWanted() {
-  const products = (await catalog.getProductsBySlugs(HOME_CAROUSEL_SLUGS)).slice(0, 4);
+  const products = await catalog.getBestsellers(4);
   if (products.length === 0) return null;
   return (
     <section aria-labelledby="mais-desejados" className="mt-16 sm:mt-20">

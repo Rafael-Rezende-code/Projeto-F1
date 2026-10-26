@@ -13,7 +13,7 @@ const SIZES = "(min-width: 1480px) 700px, (min-width: 1024px) calc((100vw - 120p
 export function CollectionHighlight({ product, categoryName }: { product: Product; categoryName?: string }) {
   const lead = product.description.split("\n\n")[0];
   return (
-    <article className="group relative grid items-center gap-6 rounded-2xl bg-[#f5f5f3] p-4 sm:p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-12">
+    <article className="group relative grid items-center gap-6 rounded-2xl bg-[#f5f5f3] p-4 text-black sm:p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-12">
       <SharedTransition name={productTransitionName(product.slug)}>
         <ImageReveal className="relative isolate aspect-[4/3] overflow-hidden rounded-2xl bg-[#e9e8e4]">
           <Image src={product.images[0].src} alt={product.images[0].alt} fill sizes={SIZES} quality={85} className="object-cover transition duration-700 group-hover:scale-[1.04]" />

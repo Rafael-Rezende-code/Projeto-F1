@@ -76,7 +76,7 @@ export default async function CollectionPage({ params }: Params) {
         ) : (
           <section aria-labelledby="em-breve" className="mx-auto mt-16 max-w-lg rounded-2xl bg-[#f5f5f3] px-6 py-14 text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Em breve</p>
-            <h2 id="em-breve" className="mt-3 text-2xl font-medium tracking-[-0.05em]">Esta coleção ainda está nos boxes.</h2>
+            <h2 id="em-breve" className="mt-3 text-2xl text-black font-medium tracking-[-0.05em]">Esta coleção ainda está nos boxes.</h2>
             <p className="mt-3 text-sm leading-6 text-black/60">As primeiras peças chegam em breve. Entre na lista e saiba quando a coleção abrir.</p>
             <Link href="/#newsletter" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-black px-6 py-3 text-xs font-medium text-white transition hover:bg-[#b94f01]">
               Quero saber primeiro
@@ -90,7 +90,7 @@ export default async function CollectionPage({ params }: Params) {
             <ul className="flex flex-wrap gap-2">
               {others.map(({ collection: other }) => (
                 <li key={other.slug}>
-                  <Link href={`/colecoes/${other.slug}`} className="inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 text-sm transition hover:border-black">
+                  <Link href={`/colecoes/${other.slug}`} className="inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 text-sm text-black transition hover:border-black">
                     {other.title}
                   </Link>
                 </li>
