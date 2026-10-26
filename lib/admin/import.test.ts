@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeImport, headerKey, importTemplate, isPublicHttpUrl, parseCsv, parseMoney, parseSizes, type ImportContext } from "./import";
+import { analyzeImport, headerKey, importTemplate, isPublicHttpUrl, parseCsv, parseDate, parseMoney, parseSizes, parseYesNo, type ImportContext } from "./import";
 
 const context: ImportContext = {
   categories: [{ slug: "teamwear", name: "Teamwear" }, { slug: "colecionaveis", name: "Colecionáveis" }],
@@ -108,5 +108,30 @@ describe("importador CSV: URLs das imagens", () => {
     expect(isPublicHttpUrl("https://images.unsplash.com/photo-1")).toBe(true);
     for (const url of ["http://localhost:3000/x.jpg", "http://127.0.0.1/x", "http://10.0.0.5/x", "http://192.168.1.1/x", "http://172.20.0.1/x", "http://169.254.169.254/latest", "http://[::1]/x", "ftp://x/y", "file:///etc/passwd", "nao-e-url"])
       expect(isPublicHttpUrl(url)).toBe(false);
+  });
+});
+
+describe("importador CSV: curadoria da vitrine (refino 3)", () => {
+  const head = `${HEADER};destaque;mais vendido;ordem_mais_vendido;novo até`;
+  const line = (extra: string) => `Boné Curadoria;;Boné de teste da curadoria.;teamwear;;;R$ 99,90;;Único:3;;;;;;;;https://images.unsplash.com/photo-1;${extra}`;
+
+  it("sim/não, ordem e data (AAAA-MM-DD ou DD/MM/AAAA); vazio não altera", () => {
+    expect(parseYesNo("Sim")).toBe(true);
+    expect(parseYesNo("não")).toBe(false);
+    expect(parseYesNo("")).toBeUndefined();
+    expect(parseYesNo("talvez")).toBeNull();
+    expect(parseDate("31/12/2026")).toBe("2026-12-31");
+    expect(parseDate("2026-12-31")).toBe("2026-12-31");
+    expect(parseDate("31/02/2026")).toBeNull();
+    expect(parseDate("")).toBeUndefined();
+    const { rows } = analyzeImport([head, line("sim;sim;3;31/12/2026"), line(";;;").replace("Boné Curadoria", "Boné Curadoria 2")].join("\n"), context);
+    expect(rows[0]).toMatchObject({ ok: true, product: { curation: { featured: true, bestsellerManual: true, bestsellerRank: 3, newUntil: "2026-12-31" } } });
+    expect(rows[1]).toMatchObject({ ok: true, product: { curation: { featured: undefined, bestsellerManual: undefined, bestsellerRank: undefined, newUntil: undefined } } });
+  });
+
+  it("valores inválidos viram erro da linha", () => {
+    const { rows } = analyzeImport([head, line("talvez;sim;0;32/13/2026")].join("\n"), context);
+    expect(rows[0].ok).toBe(false);
+    expect(!rows[0].ok && rows[0].errors.join(" ")).toMatch(/Destaque.*Ordem.*Data/s);
   });
 });

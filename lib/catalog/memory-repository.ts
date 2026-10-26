@@ -1,3 +1,4 @@
+import { isNewProduct, pickBestsellers, todayInStore } from "./curation";
 import type { CatalogRepository } from "./repository";
 import type { Category, Driver, Product, ProductFilters, Team } from "./types";
 
@@ -6,13 +7,24 @@ export type CatalogData = { products: Product[]; categories: Category[]; teams: 
 
 // Repositório em memória: recebe o catálogo de uma fonte (`load`) e faz filtros, ordenação e busca aqui. Usado pelo
 // seed (lib/catalog/seed-repository.ts) e pelo Supabase (lib/catalog/supabase-repository.ts, que carrega as tabelas com
-// cache curto). Só produtos com status "active" aparecem.
+// cache curto). Só produtos com status "active" aparecem. `isNew` já sai calculado (is_new OU new_until no prazo).
+// `loadSales`: slugs mais vendidos de verdade, em ordem (Supabase: função bestseller_slugs); o seed não tem vendas.
 export class MemoryCatalogRepository implements CatalogRepository {
-  constructor(protected load: () => Promise<CatalogData>) {}
+  constructor(
+    protected load: () => Promise<CatalogData>,
+    protected loadSales: () => Promise<string[]> = async () => [],
+  ) {}
 
   private async data() {
     const data = await this.load();
-    return { ...data, active: data.products.filter((product) => product.status === "active") };
+    const today = todayInStore();
+    const active = data.products.filter((product) => product.status === "active").map((product) => ({ ...product, isNew: isNewProduct(product, today) }));
+    return { ...data, active };
+  }
+
+  async getBestsellers(limit?: number) {
+    const [{ active }, sold] = await Promise.all([this.data(), this.loadSales().catch(() => [] as string[])]);
+    return pickBestsellers(active, sold, limit);
   }
 
   async getProducts(filters: ProductFilters = {}) {

@@ -229,6 +229,81 @@ Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mun
 Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 63990, null, 'racing', 'cadillac', null, array['jaqueta', 'cadillac']::text[], false, false, 'active', true, 65, '2026-04-11T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8)
 on conflict (code) do update set slug = excluded.slug, name = excluded.name, description = excluded.description, details = excluded.details, details_pending = excluded.details_pending, price_cents = excluded.price_cents, compare_at_price_cents = excluded.compare_at_price_cents, category_slug = excluded.category_slug, team_slug = excluded.team_slug, driver_slug = excluded.driver_slug, tags = excluded.tags, is_new = excluded.is_new, featured = excluded.featured, status = excluded.status, illustrative = excluded.illustrative, position = excluded.position, created_at = excluded.created_at, fulfillment = excluded.fulfillment, dispatch_min_days = excluded.dispatch_min_days, dispatch_max_days = excluded.dispatch_max_days, origin = excluded.origin, weight_grams = excluded.weight_grams, length_cm = excluded.length_cm, width_cm = excluded.width_cm, height_cm = excluded.height_cm;
 
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'bestseller_manual') then
+    update public.products p set bestseller_manual = v.manual, bestseller_rank = v.rank, new_until = v.until
+    from (values
+      ('APX-001', true, 2::integer, null::date),
+      ('APX-002', false, null::integer, null::date),
+      ('APX-003', false, null::integer, null::date),
+      ('APX-004', false, null::integer, null::date),
+      ('APX-005', false, null::integer, null::date),
+      ('APX-006', false, null::integer, null::date),
+      ('APX-051', false, null::integer, null::date),
+      ('APX-052', false, null::integer, null::date),
+      ('APX-053', false, null::integer, '2026-12-31'::date),
+      ('APX-054', false, null::integer, null::date),
+      ('APX-055', false, null::integer, null::date),
+      ('APX-056', false, null::integer, null::date),
+      ('APX-057', false, null::integer, null::date),
+      ('APX-058', false, null::integer, null::date),
+      ('APX-059', true, 1::integer, null::date),
+      ('APX-060', false, null::integer, null::date),
+      ('APX-061', false, null::integer, null::date),
+      ('APX-062', false, null::integer, null::date),
+      ('APX-063', true, 4::integer, null::date),
+      ('APX-064', false, null::integer, null::date),
+      ('APX-065', false, null::integer, null::date),
+      ('APX-066', false, null::integer, '2026-12-31'::date),
+      ('APX-007', false, null::integer, null::date),
+      ('APX-008', true, 3::integer, null::date),
+      ('APX-009', false, null::integer, null::date),
+      ('APX-010', false, null::integer, null::date),
+      ('APX-011', false, null::integer, null::date),
+      ('APX-012', false, null::integer, null::date),
+      ('APX-013', false, null::integer, null::date),
+      ('APX-014', false, null::integer, null::date),
+      ('APX-015', false, null::integer, null::date),
+      ('APX-016', false, null::integer, null::date),
+      ('APX-017', false, null::integer, null::date),
+      ('APX-018', false, null::integer, null::date),
+      ('APX-019', false, null::integer, null::date),
+      ('APX-020', false, null::integer, null::date),
+      ('APX-021', false, null::integer, null::date),
+      ('APX-022', false, null::integer, null::date),
+      ('APX-023', false, null::integer, null::date),
+      ('APX-024', false, null::integer, null::date),
+      ('APX-025', false, null::integer, null::date),
+      ('APX-026', false, null::integer, null::date),
+      ('APX-027', false, null::integer, null::date),
+      ('APX-028', false, null::integer, null::date),
+      ('APX-029', false, null::integer, null::date),
+      ('APX-030', false, null::integer, null::date),
+      ('APX-031', false, null::integer, null::date),
+      ('APX-032', false, null::integer, null::date),
+      ('APX-033', false, null::integer, null::date),
+      ('APX-034', false, null::integer, null::date),
+      ('APX-035', false, null::integer, null::date),
+      ('APX-036', false, null::integer, null::date),
+      ('APX-037', false, null::integer, null::date),
+      ('APX-038', false, null::integer, null::date),
+      ('APX-039', false, null::integer, null::date),
+      ('APX-040', false, null::integer, null::date),
+      ('APX-041', false, null::integer, null::date),
+      ('APX-042', false, null::integer, null::date),
+      ('APX-043', false, null::integer, null::date),
+      ('APX-044', false, null::integer, null::date),
+      ('APX-045', false, null::integer, null::date),
+      ('APX-046', false, null::integer, null::date),
+      ('APX-047', false, null::integer, null::date),
+      ('APX-048', false, null::integer, null::date),
+      ('APX-049', false, null::integer, null::date),
+      ('APX-050', false, null::integer, null::date)
+    ) as v(code, manual, rank, until)
+    where p.code = v.code;
+  end if;
+end $$;
+
 insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-P', (select id from public.products where code = 'APX-001'), 'P', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
 insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-M', (select id from public.products where code = 'APX-001'), 'M', null, 9, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
 insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-G', (select id from public.products where code = 'APX-001'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;

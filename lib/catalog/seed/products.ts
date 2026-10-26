@@ -306,7 +306,18 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
   ];
 });
 
-export const products: Product[] = [...featured, ...driverProducts, ...teamProducts];
+// Curadoria de EXEMPLO (refino 3, item 1.2): "Mais vendidos" escolhidos pela loja (com ordem) e "NOVO" com prazo.
+// No seed não há vendas: a seção "Mais vendidos" mostra estes 4, depois os destaques (lib/catalog/curation.ts).
+const CURATION: Record<string, Pick<Product, "bestsellerManual" | "bestsellerRank" | "newUntil">> = {
+  "camiseta-hamilton": { bestsellerManual: true, bestsellerRank: 1 },
+  "scuderia-racing-jacket": { bestsellerManual: true, bestsellerRank: 2 },
+  "bone-ferrari": { bestsellerManual: true, bestsellerRank: 3 },
+  "camiseta-bortoleto": { bestsellerManual: true, bestsellerRank: 4 },
+  "poster-bortoleto": { newUntil: "2026-12-31" },
+  "miniatura-capacete-norris": { newUntil: "2026-12-31" },
+};
+
+export const products: Product[] = [...featured, ...driverProducts, ...teamProducts].map((item) => (CURATION[item.slug] ? { ...item, ...CURATION[item.slug] } : item));
 
 /** Produtos da home (mesma ordem das seções originais). */
 export const HOME_GRID_SLUGS = ["scuderia-racing-jacket", "ferrari-team-cap", "monaco-racing-tee", "classic-racing-hoodie"];

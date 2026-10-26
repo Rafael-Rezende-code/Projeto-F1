@@ -1,11 +1,11 @@
 -- Apex: SETUP COMPLETO do Supabase (gerado por scripts/supabase/setup-completo.mjs; NÃO editar à mão).
 --
 -- !!! Contém o seed de demonstração: reaplicar repõe produtos de teste e estoque. NÃO rode de novo depois de cadastrar produtos reais.
--- !!! Banco que já está no ar: use supabase/atualizacao-2.sql (só as migrations novas, sem seed).
+-- !!! Banco que já está no ar: use as atualizações (supabase/atualizacao-N.sql, só as migrations novas, sem seed), em ordem.
 --
 -- Cole tudo no SQL Editor do projeto e clique em Run. Passo a passo em docs/backend/supabase.md.
 --
--- Contém, nesta ordem: 20261022000000_loja.sql, 20261023000000_modelo_de_venda.sql, 20261024000000_importador.sql, 20261025000000_newsletter.sql, 20261026000000_cupons.sql, 20261027000000_consulta_e_limites.sql, 20261028000000_eventos_e_cancelamento.sql, 20261029000000_emails.sql e o seed do catálogo (supabase/seed.sql).
+-- Contém, nesta ordem: 20261022000000_loja.sql, 20261023000000_modelo_de_venda.sql, 20261024000000_importador.sql, 20261025000000_newsletter.sql, 20261026000000_cupons.sql, 20261027000000_consulta_e_limites.sql, 20261028000000_eventos_e_cancelamento.sql, 20261029000000_emails.sql, 20261030000000_curadoria.sql e o seed do catálogo (supabase/seed.sql).
 -- Pode rodar de novo: tabelas, índices, colunas, políticas e gatilhos são recriados só se faltarem, e o seed atualiza
 -- o que já existe. ATENÇÃO: rodar de novo devolve o ESTOQUE dos produtos do seed aos valores de exemplo; depois que a
 -- loja estiver vendendo, rode só as migrations novas.
@@ -1224,6 +1224,140 @@ revoke all on function public.finish_order_email(text, text, boolean, text, text
 grant execute on function public.finish_order_email(text, text, boolean, text, text, text) to service_role;
 
 -- =====================================================================================================
+-- 20261030000000_curadoria.sql
+-- =====================================================================================================
+-- Curadoria da vitrine (refino 3, itens 1.2 e 1.3). Idempotente pelo gerador (add column if not exists / create or replace).
+--
+-- 1) Campos de curadoria em products (públicos, como o resto da linha de produto):
+--    featured (já existia), bestseller_manual (entra em "Mais vendidos" por escolha da loja), bestseller_rank (ordem
+--    entre os manuais; vazio = depois dos numerados) e new_until (data: "NOVO" até esse dia, além do is_new).
+-- 2) bestseller_slugs(dias, limite): os produtos ATIVOS mais vendidos em pedidos pagos (pago, enviado, entregue) dos
+--    últimos N dias, sem pedidos de teste. Devolve SÓ o slug e a posição: nenhuma quantidade sai do banco (a loja não
+--    exibe contagens de vendas). Pode ser chamada com a chave pública (security definer, leitura agregada).
+-- 3) import_products recriada com as colunas de curadoria (featured, mais_vendido, ordem_mais_vendido, novo_ate):
+--    campo ausente no item = mantém o valor atual (atualização) ou o padrão (criação).
+
+alter table public.products
+  add column if not exists bestseller_manual boolean not null default false,
+  add column if not exists bestseller_rank integer check (bestseller_rank is null or (bestseller_rank between 1 and 9999)),
+  add column if not exists new_until date;
+
+create index if not exists products_bestseller_idx on public.products (bestseller_rank) where bestseller_manual;
+
+create or replace function public.bestseller_slugs(p_days integer default 90, p_limit integer default 8)
+returns table (slug text, place integer)
+language sql stable security definer set search_path = public as $$
+  select ranked.slug, (row_number() over (order by ranked.quantity desc, ranked.slug))::integer as place
+  from (
+    select p.slug, sum(i.quantity) as quantity
+    from public.order_items i
+    join public.orders o on o.id = i.order_id
+    join public.products p on p.slug = i.product_slug
+    where o.status in ('pago', 'enviado', 'entregue')
+      and not coalesce(o.is_test, false)
+      and o.created_at >= now() - make_interval(days => least(greatest(coalesce(p_days, 90), 1), 365))
+      and p.status = 'active'
+    group by p.slug
+  ) ranked
+  order by ranked.quantity desc, ranked.slug
+  limit least(greatest(coalesce(p_limit, 8), 1), 24);
+$$;
+revoke all on function public.bestseller_slugs(integer, integer) from public;
+grant execute on function public.bestseller_slugs(integer, integer) to anon, authenticated, service_role;
+
+create or replace function public.import_products(p_items jsonb) returns jsonb
+language plpgsql security invoker set search_path = public as $$
+declare
+  v_item jsonb;
+  v_id uuid;
+  v_existed boolean;
+  v_owner text;
+  v_skus text[];
+  v_private jsonb;
+  v_result jsonb := '[]'::jsonb;
+begin
+  if not public.is_admin() then raise exception 'SEM_PERMISSAO'; end if;
+  if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then raise exception 'IMPORTACAO_VAZIA'; end if;
+
+  for v_item in select * from jsonb_array_elements(p_items) loop
+    v_id := (select id from public.products where slug = v_item ->> 'slug');
+    v_existed := v_id is not null;
+    if v_existed then
+      update public.products set
+        name = v_item ->> 'name', description = v_item ->> 'description', category_slug = v_item ->> 'category_slug',
+        team_slug = nullif(v_item ->> 'team_slug', ''), driver_slug = nullif(v_item ->> 'driver_slug', ''),
+        price_cents = (v_item ->> 'price_cents')::integer, compare_at_price_cents = (v_item ->> 'compare_at_price_cents')::integer,
+        tags = coalesce((select array_agg(t) from jsonb_array_elements_text(v_item -> 'tags') t), '{}'),
+        status = v_item ->> 'status', illustrative = false,
+        fulfillment = v_item ->> 'fulfillment', dispatch_min_days = (v_item ->> 'dispatch_min_days')::integer,
+        dispatch_max_days = (v_item ->> 'dispatch_max_days')::integer, origin = v_item ->> 'origin',
+        weight_grams = (v_item ->> 'weight_grams')::integer, length_cm = (v_item ->> 'length_cm')::numeric,
+        width_cm = (v_item ->> 'width_cm')::numeric, height_cm = (v_item ->> 'height_cm')::numeric,
+        featured = case when v_item ? 'featured' then (v_item ->> 'featured')::boolean else featured end,
+        bestseller_manual = case when v_item ? 'bestseller_manual' then (v_item ->> 'bestseller_manual')::boolean else bestseller_manual end,
+        bestseller_rank = case when v_item ? 'bestseller_rank' then (v_item ->> 'bestseller_rank')::integer else bestseller_rank end,
+        new_until = case when v_item ? 'new_until' then (v_item ->> 'new_until')::date else new_until end
+      where id = v_id;
+    else
+      insert into public.products (slug, name, description, details, details_pending, category_slug, team_slug, driver_slug,
+          price_cents, compare_at_price_cents, tags, status, illustrative, position, fulfillment, dispatch_min_days,
+          dispatch_max_days, origin, weight_grams, length_cm, width_cm, height_cm, featured, bestseller_manual,
+          bestseller_rank, new_until)
+        values (v_item ->> 'slug', v_item ->> 'name', v_item ->> 'description', '[]', false, v_item ->> 'category_slug',
+          nullif(v_item ->> 'team_slug', ''), nullif(v_item ->> 'driver_slug', ''), (v_item ->> 'price_cents')::integer,
+          (v_item ->> 'compare_at_price_cents')::integer,
+          coalesce((select array_agg(t) from jsonb_array_elements_text(v_item -> 'tags') t), '{}'),
+          v_item ->> 'status', false, 1000, v_item ->> 'fulfillment', (v_item ->> 'dispatch_min_days')::integer,
+          (v_item ->> 'dispatch_max_days')::integer, v_item ->> 'origin', (v_item ->> 'weight_grams')::integer,
+          (v_item ->> 'length_cm')::numeric, (v_item ->> 'width_cm')::numeric, (v_item ->> 'height_cm')::numeric,
+          coalesce((v_item ->> 'featured')::boolean, false), coalesce((v_item ->> 'bestseller_manual')::boolean, false),
+          (v_item ->> 'bestseller_rank')::integer, (v_item ->> 'new_until')::date)
+        returning id into v_id;
+    end if;
+
+    -- Variantes: SKU de OUTRO produto é erro (nada é gravado); as que saíram da planilha são removidas.
+    v_skus := array(select x ->> 'sku' from jsonb_array_elements(v_item -> 'variants') x);
+    if coalesce(array_length(v_skus, 1), 0) = 0 then raise exception 'SEM_TAMANHOS' using detail = v_item ->> 'slug'; end if;
+    select p.slug into v_owner from public.product_variants pv join public.products p on p.id = pv.product_id
+      where pv.sku = any (v_skus) and pv.product_id <> v_id limit 1;
+    if v_owner is not null then raise exception 'SKU_DE_OUTRO_PRODUTO' using detail = v_owner; end if;
+    insert into public.product_variants (sku, product_id, size, stock, position)
+      select x ->> 'sku', v_id, x ->> 'size', (x ->> 'stock')::integer, (n - 1)::integer
+      from jsonb_array_elements(v_item -> 'variants') with ordinality as t(x, n)
+      on conflict (sku) do update set size = excluded.size, stock = excluded.stock, position = excluded.position;
+    delete from public.product_variants where product_id = v_id and sku <> all (v_skus);
+
+    -- Fotos: só quando a planilha trouxe (lista nova substitui; os arquivos do Storage ficam).
+    if jsonb_typeof(v_item -> 'images') = 'array' then
+      delete from public.product_images where product_id = v_id;
+      insert into public.product_images (product_id, src, alt, storage_path, illustrative, position)
+        select v_id, x ->> 'src', coalesce(nullif(x ->> 'alt', ''), v_item ->> 'name'), x ->> 'storage_path', false, (n - 1)::integer
+        from jsonb_array_elements(v_item -> 'images') with ordinality as t(x, n);
+    end if;
+
+    -- Dados PRIVADOS (product_private): campo ausente mantém o valor atual.
+    v_private := v_item -> 'private';
+    if jsonb_typeof(v_private) = 'object' and v_private <> '{}'::jsonb then
+      insert into public.product_private as pp (product_id, cost_cents, supplier_shipping_cents, supplier_url, notes)
+        values (v_id, (v_private ->> 'cost_cents')::integer, (v_private ->> 'supplier_shipping_cents')::integer,
+          v_private ->> 'supplier_url', coalesce(v_private ->> 'notes', ''))
+        on conflict (product_id) do update set
+          cost_cents = case when v_private ? 'cost_cents' then excluded.cost_cents else pp.cost_cents end,
+          supplier_shipping_cents = case when v_private ? 'supplier_shipping_cents' then excluded.supplier_shipping_cents else pp.supplier_shipping_cents end,
+          supplier_url = case when v_private ? 'supplier_url' then excluded.supplier_url else pp.supplier_url end,
+          notes = case when v_private ? 'notes' then excluded.notes else pp.notes end;
+    end if;
+
+    v_result := v_result || jsonb_build_object('slug', v_item ->> 'slug', 'id', v_id, 'action', case when v_existed then 'atualizado' else 'criado' end);
+  end loop;
+  return v_result;
+end;
+$$;
+
+revoke all on function public.import_products(jsonb) from public, anon;
+grant execute on function public.import_products(jsonb) to authenticated;
+
+-- =====================================================================================================
 -- seed.sql (catálogo de demonstração)
 -- =====================================================================================================
 -- Gerado por scripts/supabase/seed.ts a partir de lib/catalog/seed/. Não editar à mão.
@@ -1456,6 +1590,81 @@ Para as manhãs frias de corrida e para as madrugadas de GP do outro lado do mun
 
 Dobra fácil na mochila e segura o vento e a garoa. A peça que todo fã quer ter à mão em dia de autódromo.', '[{"label":"Material","value":"Poliamida leve com acabamento repelente à água"},{"label":"Caimento","value":"Regular, com espaço para uma camada por baixo"},{"label":"Detalhes","value":"Capuz embutido na gola, zíper frontal"},{"label":"Cuidados","value":"Lavar à mão ou em ciclo delicado; não passar"}]'::jsonb, true, 63990, null, 'racing', 'cadillac', null, array['jaqueta', 'cadillac']::text[], false, false, 'active', true, 65, '2026-04-11T00:00:00.000Z', 'sob_encomenda', 7, 12, 'nacional', 900, 35, 30, 8)
 on conflict (code) do update set slug = excluded.slug, name = excluded.name, description = excluded.description, details = excluded.details, details_pending = excluded.details_pending, price_cents = excluded.price_cents, compare_at_price_cents = excluded.compare_at_price_cents, category_slug = excluded.category_slug, team_slug = excluded.team_slug, driver_slug = excluded.driver_slug, tags = excluded.tags, is_new = excluded.is_new, featured = excluded.featured, status = excluded.status, illustrative = excluded.illustrative, position = excluded.position, created_at = excluded.created_at, fulfillment = excluded.fulfillment, dispatch_min_days = excluded.dispatch_min_days, dispatch_max_days = excluded.dispatch_max_days, origin = excluded.origin, weight_grams = excluded.weight_grams, length_cm = excluded.length_cm, width_cm = excluded.width_cm, height_cm = excluded.height_cm;
+
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'bestseller_manual') then
+    update public.products p set bestseller_manual = v.manual, bestseller_rank = v.rank, new_until = v.until
+    from (values
+      ('APX-001', true, 2::integer, null::date),
+      ('APX-002', false, null::integer, null::date),
+      ('APX-003', false, null::integer, null::date),
+      ('APX-004', false, null::integer, null::date),
+      ('APX-005', false, null::integer, null::date),
+      ('APX-006', false, null::integer, null::date),
+      ('APX-051', false, null::integer, null::date),
+      ('APX-052', false, null::integer, null::date),
+      ('APX-053', false, null::integer, '2026-12-31'::date),
+      ('APX-054', false, null::integer, null::date),
+      ('APX-055', false, null::integer, null::date),
+      ('APX-056', false, null::integer, null::date),
+      ('APX-057', false, null::integer, null::date),
+      ('APX-058', false, null::integer, null::date),
+      ('APX-059', true, 1::integer, null::date),
+      ('APX-060', false, null::integer, null::date),
+      ('APX-061', false, null::integer, null::date),
+      ('APX-062', false, null::integer, null::date),
+      ('APX-063', true, 4::integer, null::date),
+      ('APX-064', false, null::integer, null::date),
+      ('APX-065', false, null::integer, null::date),
+      ('APX-066', false, null::integer, '2026-12-31'::date),
+      ('APX-007', false, null::integer, null::date),
+      ('APX-008', true, 3::integer, null::date),
+      ('APX-009', false, null::integer, null::date),
+      ('APX-010', false, null::integer, null::date),
+      ('APX-011', false, null::integer, null::date),
+      ('APX-012', false, null::integer, null::date),
+      ('APX-013', false, null::integer, null::date),
+      ('APX-014', false, null::integer, null::date),
+      ('APX-015', false, null::integer, null::date),
+      ('APX-016', false, null::integer, null::date),
+      ('APX-017', false, null::integer, null::date),
+      ('APX-018', false, null::integer, null::date),
+      ('APX-019', false, null::integer, null::date),
+      ('APX-020', false, null::integer, null::date),
+      ('APX-021', false, null::integer, null::date),
+      ('APX-022', false, null::integer, null::date),
+      ('APX-023', false, null::integer, null::date),
+      ('APX-024', false, null::integer, null::date),
+      ('APX-025', false, null::integer, null::date),
+      ('APX-026', false, null::integer, null::date),
+      ('APX-027', false, null::integer, null::date),
+      ('APX-028', false, null::integer, null::date),
+      ('APX-029', false, null::integer, null::date),
+      ('APX-030', false, null::integer, null::date),
+      ('APX-031', false, null::integer, null::date),
+      ('APX-032', false, null::integer, null::date),
+      ('APX-033', false, null::integer, null::date),
+      ('APX-034', false, null::integer, null::date),
+      ('APX-035', false, null::integer, null::date),
+      ('APX-036', false, null::integer, null::date),
+      ('APX-037', false, null::integer, null::date),
+      ('APX-038', false, null::integer, null::date),
+      ('APX-039', false, null::integer, null::date),
+      ('APX-040', false, null::integer, null::date),
+      ('APX-041', false, null::integer, null::date),
+      ('APX-042', false, null::integer, null::date),
+      ('APX-043', false, null::integer, null::date),
+      ('APX-044', false, null::integer, null::date),
+      ('APX-045', false, null::integer, null::date),
+      ('APX-046', false, null::integer, null::date),
+      ('APX-047', false, null::integer, null::date),
+      ('APX-048', false, null::integer, null::date),
+      ('APX-049', false, null::integer, null::date),
+      ('APX-050', false, null::integer, null::date)
+    ) as v(code, manual, rank, until)
+    where p.code = v.code;
+  end if;
+end $$;
 
 insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-P', (select id from public.products where code = 'APX-001'), 'P', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
 insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-M', (select id from public.products where code = 'APX-001'), 'M', null, 9, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;

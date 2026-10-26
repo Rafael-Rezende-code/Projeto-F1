@@ -26,6 +26,10 @@ export type ProductRow = {
   tags: string[];
   is_new: boolean;
   featured: boolean;
+  // Curadoria (migração 20261030000000_curadoria.sql). Opcionais na leitura: banco sem a migração cai nos padrões.
+  bestseller_manual?: boolean;
+  bestseller_rank?: number | null;
+  new_until?: string | null;
   status: Product["status"];
   illustrative: boolean;
   position: number;
@@ -107,6 +111,9 @@ export function productFromRow(row: ProductRow): Product {
     tags: row.tags ?? [],
     isNew: row.is_new,
     featured: row.featured || undefined,
+    bestsellerManual: row.bestseller_manual || undefined,
+    bestsellerRank: row.bestseller_rank ?? undefined,
+    newUntil: row.new_until ? row.new_until.slice(0, 10) : undefined,
     status: row.status,
     illustrative: row.illustrative || undefined,
     createdAt: row.created_at,
@@ -122,9 +129,15 @@ export function productFromRow(row: ProductRow): Product {
   };
 }
 
-/** Produto → linhas (sem `id`: o banco gera; `code` guarda o id legível do seed, ex.: APX-001). */
+/** Produto → linhas (sem `id`: o banco gera; `code` guarda o id legível do seed, ex.: APX-001). A curadoria vem à parte
+ *  (`curation`): o seed.sql a grava num bloco que só roda se as colunas existirem (banco antes da migração de curadoria). */
 export function productToRows(product: Product, position: number) {
-  const row: Omit<ProductRow, "id" | "product_variants" | "product_images"> = {
+  const curation = {
+    bestseller_manual: product.bestsellerManual ?? false,
+    bestseller_rank: product.bestsellerRank ?? null,
+    new_until: product.newUntil ?? null,
+  };
+  const row: Omit<ProductRow, "id" | "product_variants" | "product_images" | keyof typeof curation> = {
     code: product.id,
     slug: product.slug,
     name: product.name,
@@ -154,5 +167,5 @@ export function productToRows(product: Product, position: number) {
   };
   const variants = product.variants.map((variant, index) => ({ sku: variant.sku, size: variant.size, color: variant.color ?? null, stock: variant.stock, position: index }));
   const images = product.images.map((image, index) => ({ src: image.src, alt: image.alt, illustrative: image.illustrative ?? false, position: index }));
-  return { row, variants, images };
+  return { row, variants, images, curation };
 }

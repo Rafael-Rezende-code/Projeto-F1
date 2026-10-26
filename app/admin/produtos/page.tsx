@@ -1,8 +1,30 @@
 import Link from "next/link";
 import { adminDisabled, requireAdmin } from "@/lib/admin/auth";
+import { todayInStore } from "@/lib/catalog/curation";
 import { formatPrice } from "@/lib/format";
 
-type Row = { id: string; code: string | null; slug: string; name: string; status: string; price_cents: number; product_variants: { stock: number }[]; product_images: { src: string; position: number }[] };
+type Row = {
+  id: string;
+  code: string | null;
+  slug: string;
+  name: string;
+  status: string;
+  price_cents: number;
+  featured: boolean;
+  bestseller_manual: boolean;
+  bestseller_rank: number | null;
+  is_new: boolean;
+  new_until: string | null;
+  product_variants: { stock: number }[];
+  product_images: { src: string; position: number }[];
+};
+
+// Filtro de vitrine (refino 3): destaque, mais vendido manual e "NOVO" (is_new ou new_until no prazo).
+const VITRINE = [
+  { value: "destaque", label: "Destaques" },
+  { value: "mais-vendido", label: "Mais vendidos (manual)" },
+  { value: "novo", label: "Com selo Novo" },
+] as const;
 
 const STATUS: Record<string, { label: string; className: string }> = {
   active: { label: "Publicado", className: "bg-[#1f7a3a]/10 text-[#1f7a3a]" },
@@ -10,13 +32,21 @@ const STATUS: Record<string, { label: string; className: string }> = {
   archived: { label: "Arquivado", className: "bg-[#b42318]/10 text-[#b42318]" },
 };
 
-// Lista de produtos com busca (nome, slug ou código) e filtro por status.
-export default async function AdminProdutos({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
+// Lista de produtos com busca (nome, slug ou código) e filtros por status e vitrine.
+export default async function AdminProdutos({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; vitrine?: string }> }) {
   if (adminDisabled()) return null;
   const { supabase } = await requireAdmin();
-  const { q = "", status = "" } = await searchParams;
-  let query = supabase.from("products").select("id, code, slug, name, status, price_cents, product_variants(stock), product_images(src, position)").order("position").order("created_at", { ascending: false }).limit(300);
+  const { q = "", status = "", vitrine = "" } = await searchParams;
+  let query = supabase
+    .from("products")
+    .select("id, code, slug, name, status, price_cents, featured, bestseller_manual, bestseller_rank, is_new, new_until, product_variants(stock), product_images(src, position)")
+    .order("position")
+    .order("created_at", { ascending: false })
+    .limit(300);
   if (status) query = query.eq("status", status);
+  if (vitrine === "destaque") query = query.eq("featured", true);
+  if (vitrine === "mais-vendido") query = query.eq("bestseller_manual", true).order("bestseller_rank", { ascending: true, nullsFirst: false });
+  if (vitrine === "novo") query = query.or(`is_new.eq.true,new_until.gte.${todayInStore()}`);
   if (q.trim()) {
     const term = q.trim().replace(/[%,()]/g, " ");
     query = query.or(`name.ilike.%${term}%,slug.ilike.%${term}%,code.ilike.%${term}%`);
@@ -46,6 +76,13 @@ export default async function AdminProdutos({ searchParams }: { searchParams: Pr
           <option value="draft">Rascunhos</option>
           <option value="archived">Arquivados</option>
         </select>
+        <label className="sr-only" htmlFor="vitrine">Vitrine</label>
+        <select id="vitrine" name="vitrine" defaultValue={vitrine} className="rounded-xl border border-black/15 bg-white px-3 py-2.5 text-sm">
+          <option value="">Toda a vitrine</option>
+          {VITRINE.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
         <button className="rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white">Filtrar</button>
       </form>
       {error && <p role="alert" className="mt-4 text-sm text-[#b42318]">Erro ao carregar: {error.message}</p>}
@@ -55,6 +92,7 @@ export default async function AdminProdutos({ searchParams }: { searchParams: Pr
             <tr>
               <th className="px-4 py-3 font-medium">Produto</th>
               <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">Vitrine</th>
               <th className="px-4 py-3 font-medium">Preço</th>
               <th className="px-4 py-3 font-medium">Estoque</th>
             </tr>
@@ -78,13 +116,22 @@ export default async function AdminProdutos({ searchParams }: { searchParams: Pr
                     </Link>
                   </td>
                   <td className="px-4 py-3"><span className={`rounded-md px-2 py-1 text-xs font-medium ${badge.className}`}>{badge.label}</span></td>
+                  <td className="px-4 py-3 text-xs text-black/70">
+                    {[
+                      row.bestseller_manual && `Mais vendido${row.bestseller_rank ? ` #${row.bestseller_rank}` : ""}`,
+                      row.featured && "Destaque",
+                      (row.is_new || (row.new_until && row.new_until >= todayInStore())) && "Novo",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
+                  </td>
                   <td className="px-4 py-3">{formatPrice(row.price_cents)}</td>
                   <td className="px-4 py-3">{stock}{out > 0 && <span className="ml-2 text-xs text-[#b42318]">{out} sem estoque</span>}</td>
                 </tr>
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-10 text-center text-black/60">Nenhum produto encontrado.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-black/60">Nenhum produto encontrado.</td></tr>
             )}
           </tbody>
         </table>

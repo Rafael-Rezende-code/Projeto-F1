@@ -105,6 +105,15 @@ export async function executeImport(supabase: SupabaseClient, text: string): Pro
         width_cm: product.widthCm,
         height_cm: product.heightCm,
         variants: product.variants,
+        // Curadoria (refino 3): só vai o que a planilha preencheu (campo ausente = o banco mantém o valor atual).
+        ...Object.fromEntries(
+          Object.entries({
+            featured: product.curation.featured,
+            bestseller_manual: product.curation.bestsellerManual,
+            bestseller_rank: product.curation.bestsellerRank,
+            new_until: product.curation.newUntil,
+          }).filter(([, value]) => value !== undefined),
+        ),
         // Sem coluna de imagens (ou todas falharam): mantém as fotos atuais do produto.
         images: stored && stored.length ? stored : null,
         private: Object.fromEntries(

@@ -40,9 +40,22 @@ function loadCached() {
   return cached.data;
 }
 
+// Mais vendidos de verdade (pedidos pagos dos últimos 90 dias, sem testes): só os slugs, em ordem (função
+// bestseller_slugs, migração 20261030000000_curadoria.sql). Banco sem a função: lista vazia (a seção usa a curadoria).
+let sales: { at: number; data: Promise<string[]> } | null = null;
+async function loadSalesFromSupabase() {
+  const { data, error } = await createPublicClient().rpc("bestseller_slugs", { p_days: 90, p_limit: 8 });
+  if (error) return [];
+  return ((data ?? []) as { slug: string; place: number }[]).sort((a, b) => a.place - b.place).map((row) => row.slug);
+}
+function loadSalesCached() {
+  if (!sales || Date.now() - sales.at > CACHE_MS) sales = { at: Date.now(), data: loadSalesFromSupabase() };
+  return sales.data;
+}
+
 export class SupabaseCatalogRepository extends MemoryCatalogRepository {
   constructor() {
-    super(loadCached);
+    super(loadCached, loadSalesCached);
   }
 
   async getVariantBySku(sku: string) {
@@ -59,4 +72,5 @@ export class SupabaseCatalogRepository extends MemoryCatalogRepository {
 /** Esquece o cache (o painel admin chama depois de salvar). */
 export const clearCatalogCache = () => {
   cached = null;
+  sales = null;
 };

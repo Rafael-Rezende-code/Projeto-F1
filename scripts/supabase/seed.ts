@@ -34,6 +34,22 @@ function upsert(table: string, rows: Record<string, unknown>[], conflict: string
   return `insert into public.${table} (${columns.join(", ")}) values\n${values}\non conflict (${conflict}) do update set ${updates};\n`;
 }
 
+// Curadoria (migração 20261030000000_curadoria.sql) num bloco à parte: só roda se as colunas existirem, para o mesmo
+// seed.sql servir a bancos de antes da migração (o PL/pgSQL só compila o UPDATE quando o "if" é verdadeiro).
+function curationSql() {
+  const values = products.map(({ row, curation }) => `(${q(row.code)}, ${curation.bestseller_manual}, ${q(curation.bestseller_rank)}::integer, ${q(curation.new_until)}::date)`).join(",\n      ");
+  return `do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'bestseller_manual') then
+    update public.products p set bestseller_manual = v.manual, bestseller_rank = v.rank, new_until = v.until
+    from (values
+      ${values}
+    ) as v(code, manual, rank, until)
+    where p.code = v.code;
+  end if;
+end $$;
+`;
+}
+
 function toSql() {
   const productId = (code: string) => `(select id from public.products where code = ${q(code)})`;
   const parts = [
@@ -43,6 +59,7 @@ function toSql() {
     upsert("teams", teams, "slug"),
     upsert("drivers", drivers, "slug"),
     upsert("products", products.map((p) => p.row), "code"),
+    curationSql(),
   ];
   for (const { row, variants, images } of products) {
     for (const variant of variants)
@@ -69,7 +86,7 @@ async function push() {
   check(await db.from("categories").upsert(categories, { onConflict: "slug" }), "categorias");
   check(await db.from("teams").upsert(teams, { onConflict: "slug" }), "equipes");
   check(await db.from("drivers").upsert(drivers, { onConflict: "slug" }), "pilotos");
-  const saved = check<{ id: string; code: string }[]>(await db.from("products").upsert(products.map((p) => p.row), { onConflict: "code" }).select("id, code"), "produtos");
+  const saved = check<{ id: string; code: string }[]>(await db.from("products").upsert(products.map((p) => ({ ...p.row, ...p.curation })), { onConflict: "code" }).select("id, code"), "produtos");
   const idOf = new Map(saved.map((row) => [row.code, row.id]));
   const variants = products.flatMap(({ row, variants }) => variants.map((variant) => ({ ...variant, product_id: idOf.get(row.code!)! })));
   check(await db.from("product_variants").upsert(variants, { onConflict: "sku" }), "variantes");

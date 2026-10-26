@@ -61,8 +61,14 @@ export type Product = {
   dispatchDays: DispatchDays;
   origin: ProductOrigin;
   package: ProductPackage;
-  /** Destaque: aparece primeiro nas vitrines curtas (seção VELOCIDADE, miniaturas do topo do piloto). */
+  /** Destaque: aparece primeiro nas vitrines curtas (seção VELOCIDADE, miniaturas do topo do piloto, "Mais vendidos"). */
   featured?: boolean;
+  /** "Mais vendidos" por escolha da loja (refino 3): entram primeiro na seção, na ordem de bestsellerRank. */
+  bestsellerManual?: boolean;
+  /** Ordem entre os "mais vendidos" manuais (1 = primeiro; vazio = depois dos numerados). */
+  bestsellerRank?: number;
+  /** Selo "NOVO" até esta data (AAAA-MM-DD, inclusive), além de isNew. Ver lib/catalog/curation.ts. */
+  newUntil?: string;
 };
 
 export type Category = {

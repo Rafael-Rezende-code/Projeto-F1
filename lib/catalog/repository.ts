@@ -8,6 +8,8 @@ export interface CatalogRepository {
   getProductBySlug(slug: string): Promise<Product | null>;
   getProductsBySlugs(slugs: string[]): Promise<Product[]>;
   getRelatedProducts(product: Product, limit?: number): Promise<Product[]>;
+  /** "Mais vendidos" (lib/catalog/curation.ts): manuais, vendas reais dos últimos 90 dias e destaques; nunca vazia. */
+  getBestsellers(limit?: number): Promise<Product[]>;
   /** Produto e variante de um SKU (usado pelo checkout para conferir preço e estoque no servidor). */
   getVariantBySku(sku: string): Promise<{ product: Product; variant: ProductVariant } | null>;
   getPriceRange(): Promise<{ minCents: number; maxCents: number }>;

@@ -31,6 +31,11 @@ export const IMPORT_COLUMNS = [
   { key: "imagens", label: "imagens", required: false, help: "URLs das fotos (https), separadas por | ; a primeira é a principal" },
   { key: "tags", label: "tags", required: false, help: "Palavras para a busca, separadas por vírgula" },
   { key: "status", label: "status", required: false, help: "publicado (padrão) ou rascunho" },
+  // Curadoria da vitrine (refino 3). Célula vazia = mantém o valor atual (ou o padrão, em produto novo).
+  { key: "destaque", label: "destaque", required: false, help: "sim/não: destaque nas vitrines curtas" },
+  { key: "mais_vendido", label: "mais_vendido", required: false, help: "sim/não: entra em \"Mais vendidos\" por escolha da loja" },
+  { key: "ordem_mais_vendido", label: "ordem_mais_vendido", required: false, help: "Ordem entre os mais vendidos manuais (1 = primeiro)" },
+  { key: "novo_ate", label: "novo_ate", required: false, help: "Selo NOVO até esta data (AAAA-MM-DD ou DD/MM/AAAA)" },
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number]["key"];
@@ -43,6 +48,8 @@ const ALIASES: Record<string, ImportColumn> = {
   prazo_minimo: "prazo_min", prazo_maximo: "prazo_max", peso: "peso_g", peso_gramas: "peso_g", comprimento: "comprimento_cm", largura: "largura_cm",
   altura: "altura_cm", custo_do_produto: "custo", frete_do_fornecedor: "frete_fornecedor", fornecedor: "link_fornecedor", url_fornecedor: "link_fornecedor", link_do_fornecedor: "link_fornecedor", url_do_fornecedor: "link_fornecedor",
   notas_internas: "notas", fotos: "imagens", urls_das_imagens: "imagens", imagem: "imagens",
+  featured: "destaque", bestseller: "mais_vendido", bestseller_manual: "mais_vendido", bestseller_rank: "ordem_mais_vendido",
+  ordem: "ordem_mais_vendido", new_until: "novo_ate", novo_ate_data: "novo_ate", novo_ate_dia: "novo_ate",
 };
 
 export const normalizeKey = (text: string) =>
@@ -112,6 +119,26 @@ export function parseMoney(value: string): number | null {
   return Math.round(Number(normalized) * 100);
 }
 
+/** sim/não (também s/n, x, 1/0, true/false, verdadeiro/falso). Vazio → undefined; inválido → null. */
+export function parseYesNo(value: string): boolean | undefined | null {
+  const key = normalizeKey(value);
+  if (!key) return undefined;
+  if (["sim", "s", "x", "1", "true", "verdadeiro", "yes", "y"].includes(key)) return true;
+  if (["nao", "n", "0", "false", "falso", "no"].includes(key)) return false;
+  return null;
+}
+
+/** Data "AAAA-MM-DD" ou "DD/MM/AAAA" → "AAAA-MM-DD". Vazio → undefined; inválida → null. */
+export function parseDate(value: string): string | undefined | null {
+  const clean = value.trim();
+  if (!clean) return undefined;
+  const match = clean.match(/^(\d{4})-(\d{2})-(\d{2})$/) ?? clean.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return null;
+  const [year, month, day] = clean.includes("/") ? [match[3], match[2], match[1]] : [match[1], match[2], match[3]];
+  const date = new Date(`${year}-${month}-${day}T12:00:00Z`);
+  return Number.isNaN(date.getTime()) || date.getUTCDate() !== Number(day) ? null : `${year}-${month}-${day}`;
+}
+
 /** Número inteiro ou decimal com vírgula ("2,5"). Vazio → null; inválido → NaN. */
 export function parseNumber(value: string): number | null {
   const clean = value.trim().replace(",", ".");
@@ -173,6 +200,8 @@ export type ImportProduct = {
   tags: string[];
   status: "active" | "draft";
   imageUrls: string[];
+  /** Curadoria (refino 3). `undefined` = célula vazia = não altera. */
+  curation: { featured?: boolean; bestsellerManual?: boolean; bestsellerRank?: number | null; newUntil?: string | null };
 };
 
 /** PRIVADO (product_private). `undefined` = célula vazia = não altera o que já existe. */
@@ -304,6 +333,29 @@ export function analyzeImport(text: string, context: ImportContext) {
     const existing = context.existing.get(slug);
     if (!existing && status === "active" && !imageUrls.length) warnings.push("Sem imagens: entra como rascunho.");
 
+    // Curadoria: célula vazia não altera; "-" na ordem ou na data limpa o valor.
+    const yesNo = (key: ImportColumn, label: string) => {
+      const value = parseYesNo(get(key));
+      if (value === null) errors.push(`${label} "${get(key)}" inválido (use sim ou não).`);
+      return value ?? undefined;
+    };
+    const featuredFlag = yesNo("destaque", "Destaque");
+    const bestsellerFlag = yesNo("mais_vendido", "Mais vendido");
+    let bestsellerRank: number | null | undefined;
+    if (get("ordem_mais_vendido") === "-") bestsellerRank = null;
+    else if (get("ordem_mais_vendido")) {
+      const rank = Number(get("ordem_mais_vendido"));
+      if (!Number.isInteger(rank) || rank < 1 || rank > 9999) errors.push(`Ordem de mais vendido "${get("ordem_mais_vendido")}" inválida (1 a 9999).`);
+      else bestsellerRank = rank;
+    }
+    let newUntil: string | null | undefined;
+    if (get("novo_ate") === "-") newUntil = null;
+    else {
+      const parsedDate = parseDate(get("novo_ate"));
+      if (parsedDate === null) errors.push(`Data "${get("novo_ate")}" inválida (use AAAA-MM-DD ou DD/MM/AAAA).`);
+      else newUntil = parsedDate;
+    }
+
     // SKUs: mantém os do produto existente (mesmo tamanho); senão, gera SLUG-TAMANHO.
     const variants = (sizes ?? []).map((item) => {
       const sku = existing?.variants.find((variant) => normalizeKey(variant.size) === normalizeKey(item.size))?.sku ?? skuFor(slug, item.size);
@@ -343,6 +395,7 @@ export function analyzeImport(text: string, context: ImportContext) {
         tags: get("tags").split(",").map((tag) => tag.trim().toLowerCase()).filter(Boolean),
         status: status === "active" && !existing && !imageUrls.length ? "draft" : status!,
         imageUrls,
+        curation: { featured: featuredFlag, bestsellerManual: bestsellerFlag, bestsellerRank, newUntil },
       },
       secret: {
         costCents: cost ?? undefined,
@@ -359,8 +412,8 @@ export function analyzeImport(text: string, context: ImportContext) {
 export function importTemplate() {
   const header = IMPORT_COLUMNS.map((column) => column.label);
   const examples = [
-    ["Camiseta Exemplo Ferrari", "", "Camiseta de algodão com estampa frontal.\n\nSegundo parágrafo da descrição.", "teamwear", "ferrari", "", "R$ 199,90", "R$ 249,90", "P:5 | M:8 | G:6 | GG:2", "estoque_proprio", "1", "2", "nacional", "250", "30", "25", "3", "R$ 62,00", "", "", "", "https://images.unsplash.com/photo-xxxxx", "camiseta, ferrari", "publicado"],
-    ["Miniatura Exemplo 1:43", "miniatura-exemplo-143", "Miniatura em escala 1:43 com base expositora.", "colecionaveis", "", "hamilton", "R$ 1.299,90", "", "Único:3", "sob_encomenda", "15", "30", "importado", "900", "20", "20", "20", "R$ 640,00", "R$ 55,00", "https://fornecedor.exemplo/produto/123", "Pedir com caixa original", "", "miniatura", "rascunho"],
+    ["Camiseta Exemplo Ferrari", "", "Camiseta de algodão com estampa frontal.\n\nSegundo parágrafo da descrição.", "teamwear", "ferrari", "", "R$ 199,90", "R$ 249,90", "P:5 | M:8 | G:6 | GG:2", "estoque_proprio", "1", "2", "nacional", "250", "30", "25", "3", "R$ 62,00", "", "", "", "https://images.unsplash.com/photo-xxxxx", "camiseta, ferrari", "publicado", "sim", "sim", "1", "31/12/2026"],
+    ["Miniatura Exemplo 1:43", "miniatura-exemplo-143", "Miniatura em escala 1:43 com base expositora.", "colecionaveis", "", "hamilton", "R$ 1.299,90", "", "Único:3", "sob_encomenda", "15", "30", "importado", "900", "20", "20", "20", "R$ 640,00", "R$ 55,00", "https://fornecedor.exemplo/produto/123", "Pedir com caixa original", "", "miniatura", "rascunho", "", "", "", ""],
   ];
   const quote = (cell: string) => (/[;"\n,]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell);
   return "﻿" + [header, ...examples].map((row) => row.map(quote).join(";")).join("\r\n") + "\r\n";

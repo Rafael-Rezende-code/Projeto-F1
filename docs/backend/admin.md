@@ -57,6 +57,19 @@ Storage (pode estar em uso em pedidos ou cache); limpe pelo painel do Supabase s
 - **Marcar como enviado** (detalhe do pedido): grava o rastreio do pedido e passa os itens já separados/comprados para
   "enviado" com o mesmo código.
 
+## Vitrine: destaques, mais vendidos e "Novo até" (refino 3)
+
+- No formulário do produto, quadro **Vitrine**: *Mais vendido (escolha da loja)* + *Ordem em "Mais vendidos"* (1 = primeiro) e
+  *Selo "Novo" até* (data). *Destaque* continua em Publicação. Na lista, filtro **Vitrine** (destaques, mais vendidos manuais,
+  com selo Novo) e a coluna com o que está marcado.
+- A seção **Mais vendidos** da home mostra, nesta ordem: os manuais (pela ordem), as vendas reais dos últimos 90 dias (pedidos
+  pagos, enviados ou entregues, sem pedidos de teste; função `bestseller_slugs`, que devolve só os slugs, sem quantidades) e os
+  destaques; nunca fica vazia (completa com o catálogo). Regras em `lib/catalog/curation.ts`.
+- **Importador/CSV:** colunas `destaque` e `mais_vendido` (sim/não), `ordem_mais_vendido` (1–9999) e `novo_ate` (AAAA-MM-DD ou
+  DD/MM/AAAA). Célula vazia mantém o valor atual; `-` na ordem ou na data limpa. Estão no modelo para download e em
+  `docs/modelos/produtos-exemplo.csv`.
+- Banco: migração `20261030000000_curadoria.sql` (vai na `supabase/atualizacao-3.sql`).
+
 ## Importar produtos por CSV (lançamento)
 
 `/admin/produtos/importar` (botão "Importar CSV" na lista de produtos).

@@ -53,3 +53,20 @@ describe("atualização 2 (banco já ativo)", async () => {
     expect((await db.query<{ n: number }>("select count(*)::int n from information_schema.tables where table_name = 'coupons'")).rows[0].n).toBe(1);
   }, 60_000);
 });
+
+describe("atualização 3 (banco já ativo, vitrine)", async () => {
+  const { createDb, read } = await import("./db");
+  it("aplica só as migrations da vitrine sobre o banco com a atualização 2, duas vezes, sem mexer em produtos nem estoque", async () => {
+    const db = await createDb({ upTo: "20261029000000" });
+    const before = (await db.query<{ n: number; s: number }>("select count(*)::int n, sum(stock)::int s from product_variants")).rows[0];
+    const update = read("supabase/atualizacao-3.sql");
+    // sem seed (a import_products tem um "insert into public.products (slug, ...", que não conta)
+    expect(update).not.toMatch(/insert into public\.products \(code/);
+    expect(update).not.toMatch(/20261029000000_emails/);
+    await db.exec(update);
+    await db.exec(update);
+    const after = (await db.query<{ n: number; s: number }>("select count(*)::int n, sum(stock)::int s from product_variants")).rows[0];
+    expect(after).toEqual(before);
+    expect((await db.query<{ n: number }>("select count(*)::int n from information_schema.columns where table_name = 'products' and column_name = 'bestseller_manual'")).rows[0].n).toBe(1);
+  }, 60_000);
+});

@@ -42,13 +42,19 @@ export function idempotent(sql) {
 // Aviso exigido no topo do setup e em docs/backend/supabase.md (operação, regras de banco).
 export const SEED_WARNING = "Contém o seed de demonstração: reaplicar repõe produtos de teste e estoque. NÃO rode de novo depois de cadastrar produtos reais.";
 
-// Banco JÁ ATIVO: a atualização 2 leva só as migrations depois desta (a última que o banco ativo recebeu).
-const ACTIVE_UNTIL = "20261025000000";
+// Bancos JÁ ATIVOS recebem só as migrations novas, sem seed, em "atualizações" numeradas. Cada uma leva as migrations
+// depois de `after` e até `until` (inclusive). A 2 já foi aplicada no banco de Preview: não muda mais. A 3 é a da
+// vitrine (refino 3). Ao criar uma rodada nova de migrations, feche a última (`until`) e acrescente a próxima.
+const UPDATES = [
+  { number: 2, after: "20261025000000", until: "20261029000000" },
+  { number: 3, after: "20261029000000" },
+];
+const LATEST = UPDATES[UPDATES.length - 1].number;
 
 const header = `-- Apex: SETUP COMPLETO do Supabase (gerado por scripts/supabase/setup-completo.mjs; NÃO editar à mão).
 --
 -- !!! ${SEED_WARNING}
--- !!! Banco que já está no ar: use supabase/atualizacao-2.sql (só as migrations novas, sem seed).
+-- !!! Banco que já está no ar: use as atualizações (supabase/atualizacao-N.sql, só as migrations novas, sem seed), em ordem.
 --
 -- Cole tudo no SQL Editor do projeto e clique em Run. Passo a passo em docs/backend/supabase.md.
 --
@@ -70,23 +76,29 @@ parts.push(`
 -- insert into public.admin_emails (email) values ('seu-email@exemplo.com') on conflict do nothing;
 `);
 
-// Atualização 2: SÓ as migrations novas (depois de ACTIVE_UNTIL), SEM seed, para aplicar sobre o banco já ativo.
-const newer = files.filter((file) => file.slice(0, 14) > ACTIVE_UNTIL);
-const update = [
-  `-- Apex: ATUALIZAÇÃO 2 do Supabase (gerado por scripts/supabase/setup-completo.mjs; NÃO editar à mão).
--- Para o banco que JÁ ESTÁ NO AR (já recebeu o setup completo até ${ACTIVE_UNTIL}). NÃO contém seed: não mexe em produtos
+// Atualizações: SÓ as migrations novas de cada rodada, SEM seed, para aplicar sobre o banco já ativo (em ordem).
+const updates = UPDATES.map(({ number, after, until }) => {
+  const newer = files.filter((file) => file.slice(0, 14) > after && (!until || file.slice(0, 14) <= until));
+  const text = [
+    `-- Apex: ATUALIZAÇÃO ${number} do Supabase (gerado por scripts/supabase/setup-completo.mjs; NÃO editar à mão).
+-- Para o banco que JÁ ESTÁ NO AR (já recebeu o setup completo até ${after}${number > 2 ? ` e as atualizações anteriores (2${number > 3 ? ` a ${number - 1}` : ""})` : ""}). NÃO contém seed: não mexe em produtos
 -- nem em estoque. Pode rodar mais de uma vez. Cole tudo no SQL Editor e clique em Run (docs/backend/supabase.md).
 --
 -- Contém, nesta ordem: ${newer.join(", ")}.
 `,
-  ...newer.flatMap((file) => [`\n-- =====================================================================================================\n-- ${file}\n-- =====================================================================================================\n`, idempotent(lf(readFileSync(path.join(dir, file), "utf8")))]),
-];
+    ...newer.flatMap((file) => [`\n-- =====================================================================================================\n-- ${file}\n-- =====================================================================================================\n`, idempotent(lf(readFileSync(path.join(dir, file), "utf8")))]),
+  ];
+  return { number, newer, text: text.join("") };
+});
 
 if (process.argv[1] === import.meta.filename) {
   const out = path.join(root, "supabase/setup-completo.sql");
   writeFileSync(out, parts.join(""));
   console.log(`setup-completo.sql: ${files.length} migrations + seed → ${path.relative(process.cwd(), out)}`);
-  const outUpdate = path.join(root, "supabase/atualizacao-2.sql");
-  writeFileSync(outUpdate, update.join(""));
-  console.log(`atualizacao-2.sql: ${newer.length} migrations novas, sem seed → ${path.relative(process.cwd(), outUpdate)}`);
+  for (const update of updates) {
+    const outUpdate = path.join(root, `supabase/atualizacao-${update.number}.sql`);
+    writeFileSync(outUpdate, update.text);
+    console.log(`atualizacao-${update.number}.sql: ${update.newer.length} migrations, sem seed → ${path.relative(process.cwd(), outUpdate)}`);
+  }
+  console.log(`Banco ativo: aplique a atualização ${LATEST} (as anteriores já devem estar aplicadas).`);
 }

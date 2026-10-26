@@ -33,6 +33,10 @@ export const productFormSchema = z
     tags: z.string(),
     isNew: z.boolean(),
     featured: z.boolean(),
+    // Curadoria (refino 3): "Mais vendidos" manual (com ordem) e "NOVO" até uma data.
+    bestsellerManual: z.boolean(),
+    bestsellerRank: z.union([z.literal(""), z.string().regex(/^\d{1,4}$/, "Use um número de 1 a 9999.")]),
+    newUntil: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida.")]),
     status: z.enum(["draft", "active", "archived"]),
     variants: z
       .array(
@@ -72,6 +76,7 @@ export const productFormSchema = z
       if (Number.isNaN(toCents(value[key]))) ctx.addIssue({ code: "custom", path: [key], message: "Valor inválido (ex.: 89,90)." });
     const skus = value.variants.map((variant) => variant.sku.toUpperCase());
     if (new Set(skus).size !== skus.length) ctx.addIssue({ code: "custom", path: ["variants"], message: "Há SKUs repetidos." });
+    if (value.bestsellerRank !== "" && Number(value.bestsellerRank) < 1) ctx.addIssue({ code: "custom", path: ["bestsellerRank"], message: "Use um número de 1 a 9999." });
     if (value.status === "active" && value.images.length === 0) ctx.addIssue({ code: "custom", path: ["images"], message: "Para publicar, envie pelo menos uma foto." });
   });
 

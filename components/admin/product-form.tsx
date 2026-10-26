@@ -30,6 +30,9 @@ const EMPTY: ProductForm = {
   tags: "",
   isNew: false,
   featured: false,
+  bestsellerManual: false,
+  bestsellerRank: "",
+  newUntil: "",
   status: "draft",
   variants: [{ sku: "", size: "Único", color: "", stock: 0 }],
   images: [],
@@ -326,7 +329,23 @@ export function ProductFormView({ options, initial, code }: { options: Options; 
               ))}
             </fieldset>
             <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isNew} onChange={(e) => set("isNew", e.target.checked)} className="size-4 accent-[#b94f01]" /> Selo &quot;Novo&quot;</label>
-            <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} className="size-4 accent-[#b94f01]" /> Destaque (VELOCIDADE e topo do piloto)</label>
+            <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => set("featured", e.target.checked)} className="size-4 accent-[#b94f01]" /> Destaque (VELOCIDADE, topo do piloto e reserva de &quot;Mais vendidos&quot;)</label>
+          </section>
+
+          <section className="rounded-2xl bg-white p-6">
+            <h2 className="font-medium">Vitrine</h2>
+            <p className="mt-1 text-xs leading-5 text-black/60">&quot;Mais vendidos&quot; mostra primeiro os marcados aqui (na ordem), depois as vendas reais dos últimos 90 dias e os destaques. Nenhuma contagem aparece na loja.</p>
+            <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.bestsellerManual} onChange={(e) => set("bestsellerManual", e.target.checked)} className="size-4 accent-[#b94f01]" /> Mais vendido (escolha da loja)</label>
+            <label className="mt-3 block text-sm">
+              <span className="mb-1 block text-xs font-medium text-black/70">Ordem em &quot;Mais vendidos&quot; (1 = primeiro)</span>
+              <input inputMode="numeric" value={form.bestsellerRank} onChange={(e) => set("bestsellerRank", e.target.value.replace(/\D/g, "").slice(0, 4))} disabled={!form.bestsellerManual} aria-invalid={Boolean(errors.bestsellerRank)} className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm disabled:bg-black/5" />
+              {errors.bestsellerRank && <span className="mt-1 block text-xs text-[#b42318]">{errors.bestsellerRank}</span>}
+            </label>
+            <label className="mt-3 block text-sm">
+              <span className="mb-1 block text-xs font-medium text-black/70">Selo &quot;Novo&quot; até (opcional)</span>
+              <input type="date" value={form.newUntil} onChange={(e) => set("newUntil", e.target.value)} aria-invalid={Boolean(errors.newUntil)} className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm" />
+              {errors.newUntil && <span className="mt-1 block text-xs text-[#b42318]">{errors.newUntil}</span>}
+            </label>
           </section>
 
           <section className="rounded-2xl bg-white p-6">
