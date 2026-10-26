@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { useCart } from "@/components/cart";
 import { FavoriteButton } from "@/components/favorites";
-import { SizeGuide } from "@/components/size-guide";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/catalog/types";
 
@@ -98,9 +97,6 @@ export function ProductPurchase({ product }: { product: Product }) {
               {error}
             </p>
           )}
-          <div className="mt-3">
-            <SizeGuide />
-          </div>
         </fieldset>
       )}
 

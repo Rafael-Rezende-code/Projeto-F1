@@ -60,7 +60,6 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
       { label: "Consultar pedido", href: "/pedido/consultar" },
       { label: "Envio", href: "/envio" },
       { label: "Trocas e devoluções", href: "/trocas-e-devolucoes" },
-      { label: "Guia de tamanhos", href: "/faq" },
       { label: "FAQ", href: "/faq" },
     ],
   },

@@ -119,7 +119,6 @@ colchetes). Rode de novo depois de escrever os textos: a meta é **0 páginas co
 | `/contato` | `[CONTEÚDO A SER REDIGIDO]` ×4 | `lib/institutional.ts` (os dados de contato já vêm de `lib/company.ts`) |
 | `/sobre` | `[CONFIRMAR]` ×2 (prazos de envio/entrega; política de trocas) | `lib/content/sobre.ts` (`howWeWork`) |
 | `/produtos/*` (as 66 páginas do catálogo de demonstração) | `[CONFERIR COM O PRODUTO REAL]` ×1 (ficha), `[CONTEÚDO A SER REDIGIDO]` ×2 (abas "Envio" e "Trocas e devoluções") | Ficha: desmarcar "Ficha ainda não conferida" no admin (ou `detailsPending` no seed); abas: `app/(loja)/produtos/[slug]/page.tsx:174` e `:183` |
-| `/produtos/*` com tamanhos (no guia de tamanhos, aberto por botão; não aparece no HTML) | `[MEDIDAS A CONFIRMAR COM O FORNECEDOR]` e tabela de medidas de exemplo | `components/size-guide.tsx:67` |
 
 Os textos jurídicos (Privacidade, Termos, Trocas) são escritos pelo responsável (com advogado), não pelo assistente.
 
@@ -153,7 +152,6 @@ Outros conteúdos provisórios **sem colchetes**:
 - [ ] Para cada produto: preço (calculadora), tamanhos e estoque, modelo de venda (estoque próprio / sob encomenda),
       prazo de envio realista, origem, **peso e medidas da embalagem** (o frete depende disso), custo e fornecedor
       (privados), ficha conferida e descrição.
-- [ ] Guia de tamanhos real (`components/size-guide.tsx`).
 - [ ] Testar uma compra no próprio fornecedor de cada produto sob encomenda (`docs/operacao/modelo-de-venda.md`).
 
 ## 8. Fotos e licenças

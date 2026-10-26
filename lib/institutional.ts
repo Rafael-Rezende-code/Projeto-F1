@@ -89,7 +89,7 @@ export const institutionalPages: Record<string, InstitutionalPage> = {
     description: "Dúvidas comuns sobre produtos, pedidos, entregas e trocas.",
     sections: [],
     questions: [
-      "Como escolho o tamanho certo? (guia de tamanhos)",
+      "Como escolho o tamanho certo?",
       "Quais formas de pagamento são aceitas?",
       "Qual é o prazo de entrega?",
       "Como acompanho meu pedido?",

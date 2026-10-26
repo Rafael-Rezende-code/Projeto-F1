@@ -120,7 +120,7 @@ interna e sem arredondamento).
   segunda foto no hover (no seed, placeholder marcado `illustrative`), favoritar (`components/favorites.tsx`,
   localStorage `apex:favoritos:v1` + `useSyncExternalStore`; página `/favoritos`) e chips de tamanho para compra
   rápida no hover do desktop (`components/quick-sizes.tsx`). Página de produto: lightbox nas fotos (setas, ← →, Esc),
-  guia de tamanhos em modal (tabela placeholder `[MEDIDAS A CONFIRMAR]`), favoritar, barra fixa de compra no celular
+  favoritar (o guia de tamanhos foi REMOVIDO no refino 3, decisão do dono), barra fixa de compra no celular
   acima do dock (aparece quando o botão principal sai da tela) e "Complete o look" (até 4 relacionados, priorizando
   categorias diferentes).
 - **Páginas dos pilotos (polimento, fase 7; refeito em feat/ajustes):** o nome é escrito a caneta pelo **Signature da
@@ -368,8 +368,7 @@ Decisões tomadas durante o trabalho autônomo (branch `feat/loja`), para revis�
 - **Esquema de cores claro nas páginas da loja:** o `globals.css` troca `color-scheme` para escuro no modo escuro do
   sistema, o que deixava selects, rádios e checkboxes nativos escuros. O layout `app/(loja)` força
   `[color-scheme:light]` (o site não tem modo escuro).
-- **Rodapé (fase 6):** "Trocas" virou "Trocas e devoluções"; "Guia de tamanhos" aponta para o FAQ (não há página
-  própria ainda). Circuitos e Cultura F1 continuam apontando para seções da home.
+- **Rodapé (fase 6):** "Trocas" virou "Trocas e devoluções"; o link "Guia de tamanhos" foi removido no refino 3 (o guia saiu do site). Circuitos e Cultura F1 continuam apontando para seções da home.
 - **Testes e2e (fase 7):** Playwright instalado só como pacote (`@playwright/test`, ~14 MB), rodando no Edge do
   sistema, para não baixar navegadores. Os botões de compra rápida ganharam nome próprio ("Adicionar X à sacola").
 - **Cabeçalho da equipe:** bloco `rounded-2xl` na cor da equipe que entra da esquerda (clip-path) ao abrir a

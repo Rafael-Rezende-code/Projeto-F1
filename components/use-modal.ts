@@ -2,7 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 
-// Comportamento de diálogo modal reaproveitado (menu, busca, guia de tamanhos, lightbox): foco inicial, foco preso
+// Comportamento de diálogo modal reaproveitado (menu, busca, lightbox): foco inicial, foco preso
 // dentro do painel, Esc fecha, a página atrás não rola e o foco volta para quem abriu.
 export function useModal(open: boolean, panelRef: RefObject<HTMLElement | null>, onClose: () => void, initialFocus?: string) {
   useEffect(() => {
