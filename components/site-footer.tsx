@@ -3,6 +3,8 @@ import Link from "next/link";
 import { FooterColumn } from "@/components/footer-column";
 import { SocialIcon } from "@/components/social-icons";
 import { company, companyFacts } from "@/lib/company";
+import { catalog } from "@/lib/catalog";
+import { collectionsWithProducts } from "@/lib/catalog/collections";
 import { footerColumns, legalLinks } from "@/lib/navigation";
 import { socialLinks, whatsappLink } from "@/lib/social";
 import { whatsappMessages } from "@/lib/store-policy";
@@ -10,9 +12,14 @@ import { MessageCircle } from "lucide-react";
 import { ConsentPreferencesButton } from "@/components/consent";
 
 // Rodapé do site (home e páginas internas). Mesmo visual do rodapé original da home; links em lib/navigation.ts.
-export function SiteFooter() {
+export async function SiteFooter() {
   // WhatsApp (lib/social.ts): mesmo link do botão flutuante, com a mensagem geral. Sem número, nada aparece.
   const whatsapp = whatsappLink(whatsappMessages.generic());
+  // Coleções com produto publicado entram em "Comprar" (as vazias, "Em breve", ficam de fora).
+  const collectionLinks = collectionsWithProducts(await catalog.getProducts()).map(({ collection }) => ({ label: collection.title, href: `/colecoes/${collection.slug}` }));
+  const columns = footerColumns.map((column) =>
+    column.heading === "Comprar" ? { ...column, links: [column.links[0], ...collectionLinks, ...column.links.slice(1)] } : column,
+  );
   return (
     <footer className="bg-[#080808] px-5 py-16 text-white sm:px-10 sm:py-20">
       {/* Celular: grupos de links em acordeão (FooterColumn); dados da empresa sempre visíveis, abaixo. */}
@@ -25,7 +32,7 @@ export function SiteFooter() {
         </div>
         {/* espaço entre a marca e os acordeões no celular */}
         <div aria-hidden="true" className="h-8 sm:hidden" />
-        {footerColumns.map((column) => (
+        {columns.map((column) => (
           <FooterColumn key={column.heading} heading={column.heading} links={column.links} />
         ))}
       </div>

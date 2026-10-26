@@ -9,7 +9,7 @@ import { useModal } from "@/components/use-modal";
 import { menuLinks, menuSecondaryLinks } from "@/lib/navigation";
 
 // Menu em tela cheia (celular). Diálogo modal: foco preso, Esc e o X fecham, e qualquer link fecha ao navegar.
-export function MobileMenu() {
+export function MobileMenu({ collections = [] }: { collections?: { label: string; href: string }[] }) {
   const { panel, closePanel } = useSiteUI();
   const pathname = usePathname();
   const open = panel === "menu";
@@ -54,6 +54,20 @@ export function MobileMenu() {
             })}
           </ul>
         </nav>
+        {collections.length > 0 && (
+          <nav aria-label="Coleções" className="mt-8">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-black/60">Coleções</p>
+            <ul role="list" className="flex flex-wrap gap-2">
+              {collections.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} onClick={closePanel} aria-current={link.href === pathname ? "page" : undefined} className="inline-flex min-h-11 items-center rounded-xl border border-black/15 px-4 text-sm text-black transition hover:border-black aria-[current=page]:border-black aria-[current=page]:bg-black aria-[current=page]:text-white">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
         <ul role="list" className="mt-8 grid grid-cols-2 gap-x-4 gap-y-3 text-sm text-black/70">
           {menuSecondaryLinks.map((link) => (
             <li key={link.href}>

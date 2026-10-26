@@ -6,6 +6,8 @@ import { trackingConfigured } from '@/lib/consent'
 import { HydrationMark } from '@/components/hydration-mark'
 import { WhatsAppButton } from '@/components/whatsapp'
 import { LazyShell } from '@/components/lazy-shell'
+import { catalog } from '@/lib/catalog'
+import { collectionsWithProducts } from '@/lib/catalog/collections'
 import { SearchRoot } from '@/components/search-root'
 import { SiteUIProvider } from '@/components/site-ui'
 import { fontVariables } from '@/lib/fonts'
@@ -34,7 +36,7 @@ export const viewport: Viewport = {
   ],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -46,7 +48,8 @@ export default function RootLayout({
         <SiteUIProvider>
           <CartProvider>
             {children}
-            <LazyShell />
+            {/* Menu do celular: só as coleções com produto publicado (refino 3). */}
+            <LazyShell collections={collectionsWithProducts(await catalog.getProducts()).map(({ collection }) => ({ label: collection.title, href: `/colecoes/${collection.slug}` }))} />
             <SearchRoot />
             <WhatsAppButton />
             {/* Consentimento e GA4/Meta Pixel: só com NEXT_PUBLIC_GA_ID ou NEXT_PUBLIC_META_PIXEL_ID (lib/consent.ts). */}

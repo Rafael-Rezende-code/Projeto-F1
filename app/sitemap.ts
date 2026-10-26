@@ -19,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categories.map((c) => ({ url: url(`/categorias/${c.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
     // Coleções: só as que têm produto publicado (as vazias mostram "Em breve" e ficam fora do índice).
     { url: url("/colecoes"), changeFrequency: "weekly", priority: 0.8 },
+    { url: url("/presentes"), changeFrequency: "weekly", priority: 0.8 },
     ...collectionsWithProducts(products).map(({ collection }) => ({ url: url(`/colecoes/${collection.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
     ...teams.map((t) => ({ url: url(`/equipes/${t.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
     ...drivers.map((d) => ({ url: url(`/pilotos/${d.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),

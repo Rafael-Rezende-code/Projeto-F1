@@ -2,16 +2,21 @@ import { BRAND } from "@/lib/brand";
 // Links do cabeçalho e do rodapé. Âncoras da home usam "/#..." para funcionar também nas páginas internas.
 export type NavLink = { label: string; href: string };
 
+// Refino 3: "Coleção" virou "Produtos" (catálogo) para não confundir com "Coleções" (landings editoriais).
 export const headerLinks: NavLink[] = [
-  { label: "Coleção", href: "/produtos" },
+  { label: "Produtos", href: "/produtos" },
+  { label: "Coleções", href: "/colecoes" },
+  { label: "Presentes", href: "/presentes" },
   { label: "Manifesto", href: "/#story" },
   { label: "Diário", href: "/diario" },
 ];
 
-// Menu (celular): navegação principal em destaque + atalhos de ajuda.
+// Menu (celular): navegação principal em destaque + as coleções com produto (vindas do servidor) + atalhos de ajuda.
 export const menuLinks: NavLink[] = [
   { label: "Início", href: "/" },
-  { label: "Coleção", href: "/produtos" },
+  { label: "Produtos", href: "/produtos" },
+  { label: "Coleções", href: "/colecoes" },
+  { label: "Presentes", href: "/presentes" },
   { label: "Equipes", href: "/equipes" },
   { label: "Pilotos", href: "/pilotos" },
   { label: "Novidades", href: "/produtos?ordem=novidades" },
@@ -27,14 +32,13 @@ export const menuSecondaryLinks: NavLink[] = [
   { label: "Contato", href: "/contato" },
 ];
 
+// "Comprar" recebe, entre "Todos os produtos" e "Presentes", as coleções com produto publicado (components/site-footer.tsx).
 export const footerColumns: { heading: string; links: NavLink[] }[] = [
   {
     heading: "Comprar",
     links: [
-      { label: "Teamwear", href: "/categorias/teamwear" },
-      { label: "Racing", href: "/categorias/racing" },
-      { label: "Colecionáveis", href: "/categorias/colecionaveis" },
-      { label: "Acessórios", href: "/categorias/acessorios" },
+      { label: "Todos os produtos", href: "/produtos" },
+      { label: "Presentes", href: "/presentes" },
       { label: "Novidades", href: "/produtos?ordem=novidades" },
     ],
   },

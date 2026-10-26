@@ -32,7 +32,7 @@ export function EditorialHeader({
         {children}
       </div>
       {image && (
-        <ImageReveal className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#e9e8e4]">
+        <ImageReveal className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-[#e9e8e4] lg:aspect-[4/3]">
           <Image src={image.src} alt={image.alt} fill priority sizes={COVER_SIZES} quality={85} className="object-cover" style={image.position ? { objectPosition: image.position } : undefined} />
         </ImageReveal>
       )}
