@@ -23,6 +23,7 @@ import { editorial, editorialQuality } from '@/lib/editorial'
 import { BRAND } from '@/lib/brand'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { AuthErrorRedirect } from '@/components/auth-error-redirect'
+import { BenefitsStrip } from '@/components/benefits-strip'
 import { HERO_FONT_SCRIPT } from '@/lib/hero'
 import { catalog } from '@/lib/catalog'
 import { HOME_CAROUSEL_SLUGS, HOME_GRID_SLUGS } from '@/lib/catalog/seed/products'
@@ -63,6 +64,8 @@ export default async function Page() {
       <div className="pointer-events-none absolute left-0 right-0 top-[14%] z-50 flex flex-col items-center px-5 text-center text-white"><h1 className="leading-[0.95]" style={{ fontSize: '14px' }}><span className="hero-serif block text-5xl font-normal italic sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.05em' }}>Feita para</span><span className="mt-[-0.08em] block text-5xl font-normal italic sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.08em' }}>pilotos</span></h1></div>
       <p className="absolute bottom-14 left-10 z-50 hidden max-w-[260px] text-sm leading-relaxed text-white/80 md:left-14 sm:block">Cada milissegundo é projetado. Das superfícies aerodinâmicas às unidades de potência construídas com precisão, a Fórmula 1 é onde tecnologia, velocidade e habilidade humana encontram o limite.</p><div className="absolute bottom-[calc(var(--dock-space)+2.5rem)] left-5 right-5 z-50 flex max-w-full flex-col items-start gap-4 sm:bottom-24 sm:left-auto sm:right-10 sm:max-w-[260px] sm:gap-5 md:right-14"><p className="text-xs leading-relaxed text-white/90 sm:text-sm">Explore camisetas premium de Fórmula 1, memorabilia das pistas, colecionáveis e peças inspiradas nas máquinas e equipes que definem o automobilismo.</p><a href="#collection" className="group inline-flex items-center gap-3 rounded-xl bg-[#b94f01] px-7 py-3 text-sm font-medium text-white transition-all hover:scale-[1.03] hover:bg-[#9f4300] active:scale-95">Ver coleção <ArrowUpRight /></a></div><div className="absolute bottom-6 left-1/2 z-50 hidden -translate-x-1/2 items-center gap-3 text-[10px] uppercase tracking-[0.25em] text-white/60 lg:flex"><span className="h-px w-8 bg-white/50" /> Pilotos <span className="h-px w-8 bg-white/50" /></div>
     </section>
+
+    <BenefitsStrip />
 
     <DriversSection blurs={driverCardBlurs()} />
 

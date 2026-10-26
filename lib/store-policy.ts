@@ -16,6 +16,10 @@
 //   NEXT_PUBLIC_POLICY_DELIVERY_AREA          onde a loja entrega, como frase (ex.: "Entregamos em todo o Brasil.", /sobre)
 //   NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS    "true" SÓ quando a loja de fato envia e-mails do pedido (hoje não há serviço de e-mail:
 //                                             sem a variável, a página do pedido não promete aviso por e-mail)
+//   NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX      prazo MÁXIMO de postagem da pronta entrega, em dias úteis (faixa de benefícios da
+//                                             home: "Postagem em até N dias úteis"); sem a variável, o item não aparece
+//   NEXT_PUBLIC_LOW_STOCK_LIMIT               "Restam N unidades" na página do produto quando o estoque da variante for ≤ este
+//                                             número (padrão 5; 0 desliga). Não é promessa: é o estoque cadastrado.
 //
 // "Oficial": o site NÃO afirma ser loja oficial de equipe ou piloto (há avisos do contrário em /sobre, nos textos
 // editoriais e nas descrições); não existe configuração que mude isso.
@@ -33,6 +37,14 @@ const text = (value: string | undefined) => {
   return clean ? clean : null;
 };
 
+/** Limite do aviso "Restam N unidades": padrão 5; "0" desliga; valor inválido usa o padrão. */
+const lowStock = (value: string | undefined) => {
+  const clean = String(value ?? "").trim();
+  if (clean === "") return 5;
+  const number = Number(clean);
+  return Number.isInteger(number) && number >= 0 ? number : 5;
+};
+
 export function createStorePolicy(env: Env) {
   return {
     installments: {
@@ -47,6 +59,8 @@ export function createStorePolicy(env: Env) {
     warrantyNote: text(env.NEXT_PUBLIC_POLICY_WARRANTY_NOTE),
     deliveryArea: text(env.NEXT_PUBLIC_POLICY_DELIVERY_AREA),
     emailNotifications: env.NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS === "true",
+    dispatchDaysMax: positiveInt(env.NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX),
+    lowStockLimit: lowStock(env.NEXT_PUBLIC_LOW_STOCK_LIMIT),
   };
 }
 export type StorePolicy = ReturnType<typeof createStorePolicy>;
@@ -62,7 +76,28 @@ export const storePolicy: StorePolicy = createStorePolicy({
   NEXT_PUBLIC_POLICY_WARRANTY_NOTE: process.env.NEXT_PUBLIC_POLICY_WARRANTY_NOTE,
   NEXT_PUBLIC_POLICY_DELIVERY_AREA: process.env.NEXT_PUBLIC_POLICY_DELIVERY_AREA,
   NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS: process.env.NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS,
+  NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX: process.env.NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX,
+  NEXT_PUBLIC_LOW_STOCK_LIMIT: process.env.NEXT_PUBLIC_LOW_STOCK_LIMIT,
 });
+
+/** "Restam N unidades" (página do produto): estoque cadastrado de 1 até o limite (lib/store-policy, padrão 5). */
+export const lowStockCount = (stock: number | undefined, policy: StorePolicy = storePolicy) =>
+  stock !== undefined && stock > 0 && policy.lowStockLimit > 0 && stock <= policy.lowStockLimit ? stock : null;
+
+/** Faixa de benefícios da home (refino 3, item 1.6): só os itens configurados; nenhum configurado = lista vazia. */
+export type Benefit = { key: "frete" | "parcelas" | "local" | "prazo"; title: string; detail?: string };
+export function storeBenefits(policy: StorePolicy, local: { enabled: boolean; description: string; transitDays: { min: number; max: number } } | null, money: (cents: number) => string): Benefit[] {
+  const list: Benefit[] = [];
+  if (policy.freeShippingFromCents) list.push({ key: "frete", title: `Frete grátis acima de ${money(policy.freeShippingFromCents)}` });
+  const { max, interestFree } = policy.installments;
+  if (max && max >= 2 && interestFree) list.push({ key: "parcelas", title: `Até ${max}x sem juros`, detail: "no cartão de crédito" });
+  if (local?.enabled) {
+    const { min, max: maxDays } = local.transitDays;
+    list.push({ key: "local", title: "Entrega local", detail: `${local.description}, ${min === maxDays ? `${min}` : `${min} a ${maxDays}`} ${maxDays === 1 ? "dia útil" : "dias úteis"}` });
+  }
+  if (policy.dispatchDaysMax) list.push({ key: "prazo", title: `Postagem em até ${policy.dispatchDaysMax} ${policy.dispatchDaysMax === 1 ? "dia útil" : "dias úteis"}`, detail: "nos produtos de pronta entrega" });
+  return list;
+}
 
 /**
  * Parcelamento anunciado para um preço: "ou {count}x de {amountCents} sem juros". null quando não há configuração, quando

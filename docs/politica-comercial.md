@@ -14,11 +14,16 @@ garantia, área de entrega e avisos por e-mail vêm de `lib/store-policy.ts`, qu
 | Garantia (frase) | `NEXT_PUBLIC_POLICY_WARRANTY_NOTE` | acordeão "Garantia" da página do produto |
 | Área de entrega (frase) | `NEXT_PUBLIC_POLICY_DELIVERY_AREA` | /sobre ("Entrega") |
 | Avisos por e-mail do pedido | `NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS=true` | textos da página do pedido (ligue só quando existir serviço de e-mail) |
+| Prazo de postagem | `NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX` (dias úteis) | faixa de benefícios da home ("Postagem em até N dias úteis · nos produtos de pronta entrega") |
+| "Restam N unidades" | `NEXT_PUBLIC_LOW_STOCK_LIMIT` (padrão 5; 0 desliga) | página do produto, pelo estoque cadastrado da variante (não é promessa) |
 
 As variáveis `NEXT_PUBLIC_*` são lidas **no build**: mudou, faça novo deploy. As frases devem dizer exatamente o que a
 loja se compromete a cumprir (são promessas ao consumidor). O parcelamento REAL do cartão é o da conta do Mercado Pago
 (o Payment Brick mostra as parcelas reais no checkout); o que se anuncia na página do produto precisa ser igual ao que a
 conta oferece. Os testes estão em `lib/store-policy.test.ts` e `lib/shipping/shipping.test.ts`.
+
+**Faixa de benefícios (home, refino 3):** abaixo do hero, só com os itens configurados acima (frete grátis, parcelas sem juros,
+entrega local de `lib/shipping/config.ts` e prazo de postagem). Nenhum configurado = a faixa não aparece.
 
 ## O que foi encontrado escrito à mão (feat/carros, 22/10/2026) e o que mudou
 

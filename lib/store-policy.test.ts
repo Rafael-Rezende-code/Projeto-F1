@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createStorePolicy, installmentOffer } from "./store-policy";
+import { createStorePolicy, installmentOffer, lowStockCount, storeBenefits } from "./store-policy";
 
 // Regra da política comercial: SEM configuração, nenhuma promessa existe.
 describe("política comercial (lib/store-policy.ts)", () => {
@@ -13,6 +13,8 @@ describe("política comercial (lib/store-policy.ts)", () => {
       warrantyNote: null,
       deliveryArea: null,
       emailNotifications: false,
+      dispatchDaysMax: null,
+      lowStockLimit: 5,
     });
     expect(installmentOffer(64990, policy)).toBeNull();
   });
@@ -48,5 +50,34 @@ describe("política comercial (lib/store-policy.ts)", () => {
     expect(createStorePolicy({ NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS: "true" }).emailNotifications).toBe(true);
     expect(createStorePolicy({ NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS: "1" }).emailNotifications).toBe(false);
     expect(policy).toMatchObject({ freeShippingFromCents: 29900, shippingNote: "Postamos em até 2 dias úteis.", returnsNote: "Trocas em até 7 dias.", deliveryArea: "Entregamos em todo o Brasil.", warrantyNote: null });
+  });
+});
+
+describe("faixa de benefícios e estoque baixo (refino 3)", () => {
+  const money = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
+  const local = { enabled: true, description: "São Sebastião do Paraíso e região", transitDays: { min: 1, max: 2 } };
+
+  it("sem nada configurado, nenhum benefício (a faixa não renderiza)", () => {
+    expect(storeBenefits(createStorePolicy({}), { ...local, enabled: false }, money)).toEqual([]);
+    expect(storeBenefits(createStorePolicy({}), null, money)).toEqual([]);
+  });
+
+  it("só os itens configurados, na ordem frete, parcelas, entrega local, prazo", () => {
+    const policy = createStorePolicy({
+      NEXT_PUBLIC_FREE_SHIPPING_FROM_CENTS: "29900",
+      NEXT_PUBLIC_INSTALLMENTS_MAX: "3",
+      NEXT_PUBLIC_INSTALLMENTS_INTEREST_FREE: "true",
+      NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX: "2",
+    });
+    expect(storeBenefits(policy, local, money).map((item) => item.title)).toEqual(["Frete grátis acima de R$ 299,00", "Até 3x sem juros", "Entrega local", "Postagem em até 2 dias úteis"]);
+    // parcelas COM juros não viram benefício
+    expect(storeBenefits(createStorePolicy({ NEXT_PUBLIC_INSTALLMENTS_MAX: "6" }), null, money)).toEqual([]);
+  });
+
+  it("'Restam N' só de 1 até o limite (padrão 5; 0 desliga)", () => {
+    const policy = createStorePolicy({});
+    expect([0, 1, 5, 6].map((stock) => lowStockCount(stock, policy))).toEqual([null, 1, 5, null]);
+    expect(lowStockCount(2, createStorePolicy({ NEXT_PUBLIC_LOW_STOCK_LIMIT: "0" }))).toBeNull();
+    expect(lowStockCount(8, createStorePolicy({ NEXT_PUBLIC_LOW_STOCK_LIMIT: "10" }))).toBe(8);
   });
 });
