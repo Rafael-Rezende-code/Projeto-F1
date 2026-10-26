@@ -110,7 +110,7 @@ async function main() {
     product_variants: seedData.products.reduce((sum, product) => sum + product.variants.length, 0),
     product_images: seedData.products.reduce((sum, product) => sum + product.images.length, 0),
   };
-  const tables = ["admin_emails", "categories", "teams", "drivers", "products", "product_variants", "product_images", "product_private", "customers", "orders", "order_items", "payment_events", "newsletter_subscribers", "coupons", "coupon_redemptions", "rate_limit_hits", "order_events", "email_log"];
+  const tables = ["admin_emails", "categories", "teams", "drivers", "products", "product_variants", "product_images", "product_private", "customers", "orders", "order_items", "payment_events", "newsletter_subscribers", "coupons", "coupon_redemptions", "rate_limit_hits", "order_events", "email_log", "stock_alerts"];
   // Tabelas da operação (cupons, limites, histórico, e-mails): vêm no supabase/atualizacao-2.sql num banco já ativo.
   const missingTables: string[] = [];
   for (const table of tables) {
@@ -191,7 +191,7 @@ async function publicAccess(service: SupabaseClient, anon: SupabaseClient) {
 
   // Tabelas que a chave pública não pode ler: erro de permissão OU zero linhas (RLS). Linhas = vazamento.
   // Operação (fase 5): cupons, usos, histórico, e-mails, limites e a lista da newsletter também precisam ficar fechados.
-  for (const table of ["product_private", "orders", "order_items", "customers", "payment_events", "admin_emails", "newsletter_subscribers", "coupons", "coupon_redemptions", "order_events", "email_log", "rate_limit_hits"]) {
+  for (const table of ["product_private", "orders", "order_items", "customers", "payment_events", "admin_emails", "newsletter_subscribers", "coupons", "coupon_redemptions", "order_events", "email_log", "rate_limit_hits", "stock_alerts"]) {
     const { data, error } = await anon.from(table).select("*").limit(5);
     if (error) report(`${table}: leitura pública`, "ok", `bloqueada (${error.code ?? "erro"})`);
     else if (!data?.length) report(`${table}: leitura pública`, (await service.from(table).select("*", { count: "exact", head: true })).count ? "ok" : "aviso", "0 linhas visíveis (RLS filtra)");

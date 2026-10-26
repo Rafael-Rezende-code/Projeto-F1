@@ -272,6 +272,12 @@ h1, h2, .font-display {
 .gallery-lens { opacity: 0; transition: opacity var(--motion-short) var(--ease-out); }
 @media (hover: hover) and (pointer: fine) { .group:hover > .gallery-lens { opacity: 1; } }
 
+/* Microinterações (refino 3, item 4.4; tokens em lib/motion.ts): realce que desliza até o tamanho escolhido e o número
+   da quantidade que pulsa ao mudar. Só transform/opacity. */
+.size-highlight { transition: transform var(--motion-medium) var(--ease-out), opacity var(--motion-short) var(--ease-out); }
+@keyframes qty-bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.qty-bump { animation: qty-bump var(--motion-medium) var(--ease-out); }
+
 /* Dock do celular (components/mobile-dock.tsx): espaço que ele ocupa embaixo (ícones 44 + respiro + área segura).
    Usado pelo espaçador no fim da página, pelo aviso da sacola e pela barra fixa de compra do produto. */
 :root { --dock-space: 0px; }

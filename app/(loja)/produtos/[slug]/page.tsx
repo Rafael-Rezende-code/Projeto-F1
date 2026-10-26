@@ -10,6 +10,7 @@ import { ProductGallery } from "@/components/product-gallery";
 import { ProductGrid } from "@/components/product-grid";
 import { ProductPurchase } from "@/components/product-purchase";
 import { RecentlyViewed } from "@/components/recently-viewed";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { completeTheLook } from "@/lib/catalog/look";
 import { WhatsAppTopic } from "@/components/whatsapp";
 import { TrackEvent } from "@/components/track-event";
@@ -143,7 +144,7 @@ export default async function ProductPage({ params }: Params) {
             )}
 
             <div className="mt-8">
-              <ProductPurchase product={product} />
+              <ProductPurchase product={product} alertsEnabled={isSupabaseConfigured()} />
               <WhatsAppTopic product={{ name: product.name, slug: product.slug }} />
               <TrackEvent event={{ name: "view_item", item: { id: product.slug, name: product.name, priceCents: product.priceCents, category: product.categorySlug } }} />
               {/* Frete por CEP: o pacote é o mesmo para todos os tamanhos; cota com uma variante disponível. */}
