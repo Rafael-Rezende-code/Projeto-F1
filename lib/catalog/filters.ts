@@ -1,3 +1,4 @@
+import { getCollection } from "@/lib/content/collections";
 import type { ProductFilters, ProductSort } from "./types";
 
 // Filtros do catálogo refletidos na URL (/produtos?q=...&categoria=...&equipe=...&piloto=...&preco=...&ordem=...).
@@ -27,13 +28,15 @@ export function parseCatalogParams(params: CatalogSearchParams) {
   const preco = PRICE_RANGES.find((range) => range.value === one(params.preco))?.value;
   const ordem = SORT_OPTIONS.find((option) => option.value === one(params.ordem))?.value ?? "relevancia";
   const q = one(params.q)?.trim().slice(0, 80) || undefined;
-  return { q, categoria, equipe, piloto, preco, ordem };
+  const colecao = getCollection(one(params.colecao) ?? "")?.slug;
+  return { q, colecao, categoria, equipe, piloto, preco, ordem };
 }
 
 export function toProductFilters(parsed: ReturnType<typeof parseCatalogParams>): ProductFilters {
   const range = PRICE_RANGES.find((item) => item.value === parsed.preco);
   return {
     query: parsed.q,
+    collection: parsed.colecao ? getCollection(parsed.colecao)?.filters : undefined,
     category: parsed.categoria,
     team: parsed.equipe,
     driver: parsed.piloto,

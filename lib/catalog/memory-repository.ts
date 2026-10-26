@@ -1,3 +1,4 @@
+import { matchesCollection } from "./collections";
 import { isNewProduct, pickBestsellers, todayInStore } from "./curation";
 import type { CatalogRepository } from "./repository";
 import type { Category, Driver, Product, ProductFilters, Team } from "./types";
@@ -37,6 +38,7 @@ export class MemoryCatalogRepository implements CatalogRepository {
         (filters.minPriceCents === undefined || product.priceCents >= filters.minPriceCents) &&
         (filters.maxPriceCents === undefined || product.priceCents <= filters.maxPriceCents) &&
         (!filters.isNew || product.isNew) &&
+        (!filters.collection || matchesCollection(product, filters.collection)) &&
         (!filters.query || matchesQuery(data, product, filters.query)),
     );
     list = sortProducts(list, filters.sort);

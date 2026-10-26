@@ -127,5 +127,7 @@ export type ProductFilters = {
   isNew?: boolean;
   /** Texto livre (mesma regra da busca: todos os termos em nome, equipe, piloto, categoria ou tags) */
   query?: string;
+  /** Coleção (lib/content/collections.ts): categoria OU tag da coleção, e a faixa de preço dela. */
+  collection?: { categories?: string[]; tags?: string[]; minPriceCents?: number; maxPriceCents?: number };
   limit?: number;
 };

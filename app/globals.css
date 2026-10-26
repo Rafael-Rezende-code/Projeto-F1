@@ -247,6 +247,24 @@ h1, h2, .font-display {
   [data-reveal="pending"] > *, [data-reveal-text="pending"] .rw { transform: none; }
 }
 
+/* MAPA DE HOVERS por tipo de card (refino 3, item 4.1; tokens em lib/motion.ts, `hover`). Um comportamento por tipo,
+   só transform/opacity, só onde há hover de verdade (ponteiro com hover). Produto: 2ª foto em fade + zoom 1,05 e chips de
+   tamanho que sobem (classes no próprio card). Coleção/categoria: .hover-zoom (1,04) + .hover-arrow (seta na diagonal).
+   Equipe: TiltCard (desktop). Piloto: HoverTransition. Artigo: .hover-veil (véu que se abre) + .hover-underline. */
+.hover-zoom { transition: transform var(--motion-long) var(--ease-out); }
+.hover-arrow { transition: transform var(--motion-medium) var(--ease-out); }
+.hover-veil { transition: opacity var(--motion-long) var(--ease-out); }
+.hover-underline { position: relative; }
+.hover-underline::after { content: ""; position: absolute; left: 0; right: 0; bottom: -0.12em; height: 1px; background: currentColor;
+  transform: scaleX(0); transform-origin: left; transition: transform var(--motion-medium) var(--ease-out); }
+@media (hover: hover) {
+  .group:hover .hover-zoom { transform: scale(1.04); }
+  .group:hover .hover-arrow { transform: translate(4px, -4px); }
+  .group:hover .hover-veil { opacity: 0; }
+  .group:hover .hover-underline::after { transform: scaleX(1); }
+}
+.group:focus-visible .hover-underline::after { transform: scaleX(1); }
+
 /* Dock do celular (components/mobile-dock.tsx): espaço que ele ocupa embaixo (ícones 44 + respiro + área segura).
    Usado pelo espaçador no fim da página, pelo aviso da sacola e pela barra fixa de compra do produto. */
 :root { --dock-space: 0px; }

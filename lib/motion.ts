@@ -77,6 +77,23 @@ export const car = {
   tiltRamp: 0.5,
 } as const;
 
+/**
+ * MAPA DE HOVERS por tipo de card (refino 3, item 4.1). Um comportamento por tipo, sem duas animações brigando no mesmo
+ * card; só onde há hover de verdade (@media (hover: hover)); classes em app/globals.css. Documentado também no CLAUDE.md.
+ */
+export const hover = {
+  /** Card de produto (components/product-card.tsx): 2ª foto em fade e zoom da foto; chips de tamanho sobem (distance.lift). */
+  product: { photoZoom: 1.05, photoDuration: duration.long, chipsDuration: duration.medium },
+  /** Coleção/categoria (components/collection-card.tsx): .hover-zoom (1,04) e .hover-arrow (seta desliza 4px na diagonal). */
+  collection: { photoZoom: 1.04, photoDuration: duration.long, arrowShift: 4, arrowDuration: duration.medium },
+  /** Equipe (components/team-card.tsx): TiltCard no desktop (8°, escala 1,03); o hover escurece a cor por opacidade. */
+  team: { tilt: 8, scale: 1.03 },
+  /** Piloto (components/drivers-section.tsx): HoverTransition (efeito próprio de cada piloto, lib/drivers.ts). */
+  driver: { effect: "HoverTransition" },
+  /** Artigo do Diário (components/article-card.tsx): véu escuro que se abre (.hover-veil) e sublinhado que cresce (.hover-underline). */
+  article: { veilDuration: duration.long, underlineDuration: duration.medium },
+} as const;
+
 /** Intervalo entre itens de uma sequência (palavras, cards), em segundos. */
 export const stagger = 0.05;
 /** Índice máximo para o atraso: o 9º item em diante entra junto (texto longo não fica esperando). */

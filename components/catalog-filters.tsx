@@ -14,7 +14,7 @@ export function CatalogFilters({
   teams,
   drivers,
 }: {
-  current: { q?: string; categoria?: string; equipe?: string; piloto?: string; preco?: string; ordem: string };
+  current: { q?: string; colecao?: string; categoria?: string; equipe?: string; piloto?: string; preco?: string; ordem: string };
   categories: Option[];
   teams: Option[];
   drivers: Option[];
@@ -68,6 +68,7 @@ export function CatalogFilters({
     >
       {/* mantém a busca ao trocar os outros filtros */}
       {current.q && <input type="hidden" name="q" value={current.q} />}
+      {current.colecao && <input type="hidden" name="colecao" value={current.colecao} />}
       {select("categoria", "Categoria", current.categoria, categories, "Todas")}
       {select("equipe", "Equipe", current.equipe, teams, "Todas")}
       {select("piloto", "Piloto", current.piloto, drivers, "Todos")}

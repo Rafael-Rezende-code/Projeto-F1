@@ -132,6 +132,6 @@ describe("importador CSV: curadoria da vitrine (refino 3)", () => {
   it("valores inválidos viram erro da linha", () => {
     const { rows } = analyzeImport([head, line("talvez;sim;0;32/13/2026")].join("\n"), context);
     expect(rows[0].ok).toBe(false);
-    expect(!rows[0].ok && rows[0].errors.join(" ")).toMatch(/Destaque.*Ordem.*Data/s);
+    expect(!rows[0].ok && rows[0].errors.join(" ")).toMatch(/Destaque[\s\S]*Ordem[\s\S]*Data/);
   });
 });

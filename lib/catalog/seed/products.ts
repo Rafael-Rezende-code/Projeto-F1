@@ -10,6 +10,7 @@ import { teams } from "./teams";
 // já usava (lib/catalog/seed/images.ts), sem URLs novas.
 //
 // Ordem do array = ordem de "relevância" no catálogo.
+// Tags: além do tipo da peça, "acessorio" e "colecionavel" marcam as coleções (lib/content/collections.ts).
 // `featured`: 4 destaques (Scuderia Racing Jacket, Classic Racing Hoodie e as miniaturas de capacete de Hamilton e
 // Bortoleto); a seção VELOCIDADE mostra os 3 primeiros na ordem do catálogo.
 
@@ -103,7 +104,7 @@ const featured: Product[] = [
       { src: IMG.accessories, alt: "Ferrari Team Cap, detalhe" },
     ],
     sizes: ["Único"],
-    tags: ["bone", "ferrari"],
+    tags: ["bone", "acessorio", "ferrari"],
     isNew: false,
   }),
   product({
@@ -162,7 +163,7 @@ const featured: Product[] = [
       { src: IMG.accessories, alt: `${BRAND.name} Circuit Tote, detalhe` },
     ],
     sizes: ["Único"],
-    tags: ["bolsa"],
+    tags: ["bolsa", "acessorio"],
     isNew: false,
   }),
 ];
@@ -197,7 +198,7 @@ const teamProducts: Product[] = teams.flatMap((team, i) => [
       { src: IMG.accessories, alt: `Boné ${team.name}, detalhe` },
     ],
     sizes: ["Único"],
-    tags: ["bone", team.slug],
+    tags: ["bone", "acessorio", team.slug],
     isNew: false,
   }),
   product({
@@ -266,7 +267,7 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
         { src: driver.image, alt: driver.name },
       ],
       sizes: ["Único"],
-      tags: ["bone", driver.slug],
+      tags: ["bone", "acessorio", driver.slug],
       isNew: false,
     }),
     product({
@@ -282,7 +283,7 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
         { src: driver.image, alt: driver.name },
       ],
       sizes: ["Único"],
-      tags: ["miniatura", driver.slug],
+      tags: ["miniatura", "colecionavel", driver.slug],
       isNew: i % 2 === 0,
       // Destaques: as miniaturas de capacete de Hamilton e Bortoleto (seção VELOCIDADE e topo do piloto).
       featured: driver.slug === "hamilton" || driver.slug === "bortoleto",
@@ -300,7 +301,7 @@ const driverProducts: Product[] = drivers.flatMap((driver, i) => {
         { src: IMG.collectibles, alt: `Pôster ${driver.name}, ambiente` },
       ],
       sizes: ["Único"],
-      tags: ["poster", driver.slug],
+      tags: ["poster", "colecionavel", driver.slug],
       isNew: false,
     }),
   ];

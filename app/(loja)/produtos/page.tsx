@@ -7,6 +7,7 @@ import { PageIntro } from "@/components/page-intro";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
 import { catalogHref, parseCatalogParams, PRICE_RANGES, toProductFilters, type CatalogSearchParams } from "@/lib/catalog/filters";
+import { getCollection } from "@/lib/content/collections";
 
 export const metadata: Metadata = {
   title: "Produtos",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/produtos" },
 };
 
-type ChipKey = "q" | "categoria" | "equipe" | "piloto" | "preco";
+type ChipKey = "q" | "colecao" | "categoria" | "equipe" | "piloto" | "preco";
 
 export default async function ProdutosPage({ searchParams }: { searchParams: Promise<CatalogSearchParams> }) {
   const current = parseCatalogParams(await searchParams);
@@ -28,6 +29,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
   // Filtros ativos viram "chips" removíveis.
   const chips: { key: ChipKey; label: string }[] = [];
   if (current.q) chips.push({ key: "q", label: `Busca: “${current.q}”` });
+  if (current.colecao) chips.push({ key: "colecao", label: `Coleção: ${getCollection(current.colecao)?.title ?? current.colecao}` });
   if (current.categoria) chips.push({ key: "categoria", label: categories.find((c) => c.slug === current.categoria)?.name ?? current.categoria });
   if (current.equipe) chips.push({ key: "equipe", label: teams.find((t) => t.slug === current.equipe)?.name ?? current.equipe });
   if (current.piloto) chips.push({ key: "piloto", label: drivers.find((d) => d.slug === current.piloto)?.name ?? current.piloto });
@@ -64,7 +66,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
             ))}
             {chips.length > 0 && (
               <Link
-                href={catalogHref({ ordem: current.ordem, q: undefined, categoria: undefined, equipe: undefined, piloto: undefined, preco: undefined })}
+                href={catalogHref({ ordem: current.ordem, q: undefined, colecao: undefined, categoria: undefined, equipe: undefined, piloto: undefined, preco: undefined })}
                 className="text-xs text-black/60 underline underline-offset-4 hover:text-black"
               >
                 Limpar filtros
