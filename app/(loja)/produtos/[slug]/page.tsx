@@ -12,6 +12,10 @@ import { ProductPurchase } from "@/components/product-purchase";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { completeTheLook } from "@/lib/catalog/look";
+import { ProductReviews } from "@/components/product-reviews";
+import { Stars } from "@/components/stars";
+import { aggregateRating, summarizeReviews } from "@/lib/reviews";
+import { getApprovedReviews } from "@/lib/reviews-store";
 import { WhatsAppTopic } from "@/components/whatsapp";
 import { TrackEvent } from "@/components/track-event";
 import { ShippingEstimator } from "@/components/shipping-estimator";
@@ -47,12 +51,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function ProductPage({ params }: Params) {
   const product = await catalog.getProductBySlug((await params).slug);
   if (!product) notFound();
-  const [category, team, driver, all] = await Promise.all([
+  const [category, team, driver, all, reviews] = await Promise.all([
     catalog.getCategoryBySlug(product.categorySlug),
     product.teamSlug ? catalog.getTeamBySlug(product.teamSlug) : null,
     product.driverSlug ? catalog.getDriverBySlug(product.driverSlug) : null,
     catalog.getProducts(),
+    // Avaliações (refino 3): só aprovadas, só com NEXT_PUBLIC_REVIEWS_ENABLED e Supabase; senão, lista vazia.
+    getApprovedReviews(product.slug),
   ]);
+  const reviewSummary = summarizeReviews(reviews);
   // "Complete o look" (lib/catalog/look.ts): 3 a 4 peças de OUTRAS categorias, preferindo o mesmo piloto e a mesma equipe.
   const look = completeTheLook(product, all);
   const discount = discountPercent(product.priceCents, product.compareAtPriceCents);
@@ -79,6 +86,8 @@ export default async function ProductPage({ params }: Params) {
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
     },
+    // Só com pelo menos 1 avaliação aprovada.
+    ...(reviewSummary ? { aggregateRating: aggregateRating(reviewSummary) } : {}),
   };
 
   return (
@@ -115,6 +124,12 @@ export default async function ProductPage({ params }: Params) {
               {!team && !driver && category && <span className="text-[#b94f01]">{category.name}</span>}
             </div>
             <h1 className="mt-3 text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl">{product.name}</h1>
+            {reviewSummary && (
+              <a href="#avaliacoes" className="mt-3 inline-flex items-center gap-2 text-sm text-black/70 underline-offset-4 hover:underline">
+                <Stars rating={reviewSummary.average} />
+                {reviewSummary.average.toFixed(1).replace(".", ",")} · {reviewSummary.count === 1 ? "1 avaliação" : `${reviewSummary.count} avaliações`}
+              </a>
+            )}
 
             <p className="mt-5 flex flex-wrap items-baseline gap-3">
               {product.compareAtPriceCents && (
@@ -209,6 +224,8 @@ export default async function ProductPage({ params }: Params) {
             </div>
           </div>
         </div>
+
+        <ProductReviews reviews={reviews} summary={reviewSummary} />
 
         {look.length > 0 && (
           <section aria-labelledby="complete-o-look" className="mt-24">

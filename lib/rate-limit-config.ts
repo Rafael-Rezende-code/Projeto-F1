@@ -6,6 +6,8 @@ export const RATE_LIMITS = {
   newsletter: { limit: 5, windowSeconds: 60 * 60 },
   // "Avise-me quando chegar" (refino 3): o gatilho da tabela também limita (10 por IP por hora).
   "avise-me": { limit: 10, windowSeconds: 60 * 60 },
+  // Avaliação pela consulta de pedido (refino 3; só com NEXT_PUBLIC_REVIEWS_ENABLED).
+  avaliacao: { limit: 10, windowSeconds: 60 * 60 },
   // Login do painel: por IP, por e-mail e o contador de falhas (só serve ao atraso crescente; o limite alto nunca bloqueia).
   "admin-login-ip": { limit: 10, windowSeconds: 15 * 60 },
   "admin-login-email": { limit: 6, windowSeconds: 15 * 60 },

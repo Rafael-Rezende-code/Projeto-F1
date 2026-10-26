@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { lookupOrder, type LookupState } from "@/app/(loja)/pedido/consultar/actions";
 import { ORDER_ITEM_STATUS_LABELS, ORDER_STATUS_LABELS, PAYMENT_LABELS } from "@/lib/checkout/order";
 import { formatPrice } from "@/lib/format";
+import { ReviewForm } from "@/components/review-form";
 import type { OrderLookup as Lookup } from "@/lib/orders/lookup";
 
 const INPUT = "w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-base outline-none focus-visible:border-black sm:text-sm";
@@ -36,12 +37,12 @@ export function OrderLookup({ defaultOrder }: { defaultOrder?: string }) {
         </p>
         <p className="text-xs leading-5 text-black/60">O número do pedido está no e-mail de confirmação e na página que abriu depois da compra.</p>
       </form>
-      {state.status === "found" && state.order && <LookupResult order={state.order} />}
+      {state.status === "found" && state.order && <LookupResult order={state.order} reviews={state.reviews} values={state.values} />}
     </div>
   );
 }
 
-function LookupResult({ order }: { order: Lookup }) {
+function LookupResult({ order, reviews, values }: { order: Lookup; reviews?: LookupState["reviews"]; values?: LookupState["values"] }) {
   return (
     <section aria-labelledby="consulta-resultado" className="rounded-2xl bg-[#f5f5f3] p-6 sm:p-8">
       <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Pedido {order.id}</p>
@@ -75,11 +76,13 @@ function LookupResult({ order }: { order: Lookup }) {
             <div className="relative aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-xl bg-[#e9e8e4]">
               {item.image && <Image src={item.image} alt="" fill sizes="56px" quality={75} className="object-cover" />}
             </div>
-            <div className="min-w-0 text-sm">
+            <div className="min-w-0 flex-1 text-sm">
               <Link href={`/produtos/${item.slug}`} className="font-medium hover:underline">{item.name}</Link>
               <p className="text-xs text-black/60">Tam. {item.size} · Qtd. {item.quantity}</p>
               {item.status && <p className="text-xs font-medium">{ORDER_ITEM_STATUS_LABELS[item.status]}</p>}
               {item.tracking && item.tracking !== order.tracking?.code && <p className="font-mono text-xs">Rastreio: {item.tracking}</p>}
+              {/* Avaliação (refino 3): pedido entregue, avaliações ligadas, uma por produto. */}
+              {reviews?.enabled && values && order.items.findIndex((other) => other.slug === item.slug) === order.items.indexOf(item) && (reviews.reviewed.includes(item.slug) ? <p className="mt-1 text-xs text-black/60">Avaliação enviada.</p> : <ReviewForm orderId={order.id} email={values.email} slug={item.slug} name={item.name} />)}
             </div>
           </li>
         ))}
