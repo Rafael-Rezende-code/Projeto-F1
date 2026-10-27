@@ -208,8 +208,11 @@ h1, h2, .font-display {
 .apex-wipe-in::after { content: ""; position: absolute; inset: 0; z-index: 1; background: #fff; transform-origin: right; pointer-events: none;
   animation: apex-wipe-in var(--motion-long) var(--ease-in-out) 0.1s both; }
 /* Esqueleto de carregamento (loading.tsx) */
-@keyframes apex-pulse { 50% { opacity: 0.5; } }
-.apex-skeleton { background: #ececea; animation: apex-pulse 1.4s ease-in-out infinite; }
+/* Esqueletos com brilho que atravessa (shimmer; refino 3, 4.4): só transform num pseudo-elemento. */
+.apex-skeleton { position: relative; overflow: hidden; background: #ececea; }
+.apex-skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent); animation: apex-shimmer 1.4s var(--ease-in-out) infinite; }
+@keyframes apex-shimmer { to { transform: translateX(100%); } }
 
 /* MOVIMENTO — espelho em CSS dos tokens de lib/motion.ts (manter os dois iguais). */
 :root {
@@ -219,6 +222,7 @@ h1, h2, .font-display {
   --motion-reveal: 1s;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
   --motion-rise: 16px;
   --motion-stagger: 50ms;
 }
@@ -288,6 +292,31 @@ h1, h2, .font-display {
 @keyframes chip-out { to { opacity: 0; transform: scale(0.9); } }
 .chip-in { animation: chip-in var(--motion-short) var(--ease-out) both; }
 .chip-out { animation: chip-out var(--motion-short) var(--ease-out) both; }
+
+/* Gaveta da sacola com spring suave e o estouro do favorito (refino 3, 4.4). */
+.cart-panel { transition: transform var(--motion-long) var(--ease-spring); }
+@keyframes fav-pop { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.fav-pop { animation: fav-pop var(--motion-medium) var(--ease-spring); }
+@keyframes fav-ring { from { opacity: 0.8; transform: scale(0.5); } to { opacity: 0; transform: scale(1.4); } }
+.fav-ring { animation: fav-ring var(--motion-medium) var(--ease-out) both; }
+
+/* ORQUESTRAÇÃO das páginas novas (refino 3, 4.5): título → grade, uma vez, ao abrir a página. Só CSS (roda antes do JS:
+   nada fica escondido esperando o JavaScript): o título sobe um pouco (só transform, sem esconder) e os cards entram com
+   opacidade + subida, com o intervalo padrão (--motion-stagger, teto de 8) depois do título. */
+@keyframes enter-rise { from { transform: translate3d(0, var(--motion-rise), 0); } to { transform: none; } }
+@keyframes enter-fade { from { opacity: 0; transform: translate3d(0, var(--motion-rise), 0); } to { opacity: 1; transform: none; } }
+.enter-title { animation: enter-rise var(--motion-medium) var(--ease-out) backwards; }
+.enter-grid ul > li, .enter-block { animation: enter-fade var(--motion-medium) var(--ease-out) backwards;
+  animation-delay: calc(var(--motion-short) + var(--i, 0) * var(--motion-stagger)); }
+.enter-grid ul > li:nth-child(1) { --i: 0; }
+.enter-grid ul > li:nth-child(2) { --i: 1; }
+.enter-grid ul > li:nth-child(3) { --i: 2; }
+.enter-grid ul > li:nth-child(4) { --i: 3; }
+.enter-grid ul > li:nth-child(5) { --i: 4; }
+.enter-grid ul > li:nth-child(6) { --i: 5; }
+.enter-grid ul > li:nth-child(7) { --i: 6; }
+.enter-grid ul > li:nth-child(8) { --i: 7; }
+.enter-grid ul > li:nth-child(n + 9) { --i: 8; }
 
 /* Dock do celular (components/mobile-dock.tsx): espaço que ele ocupa embaixo (ícones 44 + respiro + área segura).
    Usado pelo espaçador no fim da página, pelo aviso da sacola e pela barra fixa de compra do produto. */

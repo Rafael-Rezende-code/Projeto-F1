@@ -107,7 +107,7 @@ export default async function ProductPage({ params }: Params) {
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-16">
           <ProductGallery images={product.images} name={product.name} transitionName={productTransitionName(product.slug)} />
 
-          <div className="lg:sticky lg:top-24 lg:self-start">
+          <div className="enter-title lg:sticky lg:top-24 lg:self-start">
             <div className="flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]">
               {team && (
                 <Link href={`/equipes/${team.slug}`} className="text-[#b94f01] hover:underline">

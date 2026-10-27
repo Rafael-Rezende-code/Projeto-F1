@@ -26,7 +26,7 @@ export default async function GiftsPage({ searchParams }: { searchParams: Promis
     <div className="px-5 pb-24 pt-8 sm:px-10 sm:pt-10">
       <div className="mx-auto max-w-[1400px]">
         <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Presentes" }]} />
-        <div className="mt-8">
+        <div className="enter-title mt-8">
           <EditorialHeader
             eyebrow="Guia de presentes"
             title="Presentes"
@@ -65,7 +65,7 @@ export default async function GiftsPage({ searchParams }: { searchParams: Promis
           </p>
         </nav>
 
-        <div className="mt-10">
+        <div className="enter-grid mt-10">
           <ProductGrid products={products} priorityCount={4} />
         </div>
       </div>

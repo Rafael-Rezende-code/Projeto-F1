@@ -79,7 +79,9 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
       <div className="mx-auto max-w-[1400px]">
         <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Produtos" }]} />
         <div className="mt-8">
+          <div className="enter-title">
           <PageIntro eyebrow="A coleção" title="Todos os produtos" body="Roupas, acessórios e colecionáveis inspirados nas equipes e nos pilotos do grid." />
+          </div>
         </div>
 
         <div className="mt-10">
@@ -99,7 +101,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
               </div>
             )}
 
-            <div className="mt-10">
+            <div className="enter-grid mt-10">
               {products.length > 0 ? (
                 <>
                   <ProductGrid products={visible} priorityCount={4} layout="catalogo" />

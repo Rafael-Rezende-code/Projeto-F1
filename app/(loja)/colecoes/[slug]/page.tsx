@@ -48,7 +48,7 @@ export default async function CollectionPage({ params }: Params) {
     <div className="px-5 pb-24 pt-8 sm:px-10 sm:pt-10">
       <div className="mx-auto max-w-[1400px]">
         <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Coleções", href: "/colecoes" }, { label: collection.title }]} />
-        <div className="mt-8">
+        <div className="enter-title mt-8">
           <EditorialHeader eyebrow="Coleção" title={collection.title} phrase={collection.phrase} intro={collection.intro} image={collection.cover}>
             {products.length > 0 && (
               <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-black/60">
@@ -63,7 +63,7 @@ export default async function CollectionPage({ params }: Params) {
 
         {highlight ? (
           <>
-            <div className="mt-14">
+            <div className="enter-block mt-14">
               <CollectionHighlight product={highlight} categoryName={nameOf(highlight.categorySlug)} />
             </div>
             {rest.length > 0 && (

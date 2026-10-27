@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { Heart } from "lucide-react";
 
 // Favoritos: lista de slugs no localStorage (com try/catch; sem armazenamento, fica só na memória da página).
@@ -58,15 +58,23 @@ export function useFavorites() {
 export function FavoriteButton({ slug, name, className = "" }: { slug: string; name: string; className?: string }) {
   const { has, toggle } = useFavorites();
   const active = has(slug);
+  // Estouro curto ao ATIVAR (refino 3, 4.4): o coração pulsa e um anel se abre (só transform/opacity; .fav-pop no CSS).
+  const [pop, setPop] = useState(0);
   return (
     <button
       type="button"
-      onClick={() => toggle(slug)}
+      onClick={() => {
+        if (!active) setPop((value) => value + 1);
+        toggle(slug);
+      }}
       aria-pressed={active}
       aria-label={active ? `Remover ${name} dos favoritos` : `Adicionar ${name} aos favoritos`}
       className={className}
     >
-      <Heart size={16} strokeWidth={1.5} className={`transition ${active ? "fill-[#b94f01] text-[#b94f01]" : ""}`} />
+      <span key={pop} className={`relative inline-flex ${pop ? "fav-pop" : ""}`}>
+        <Heart size={16} strokeWidth={1.5} className={`transition ${active ? "fill-[#b94f01] text-[#b94f01]" : ""}`} />
+        {pop > 0 && <span aria-hidden="true" className="fav-ring pointer-events-none absolute inset-[-6px] rounded-full border border-[#b94f01]" />}
+      </span>
     </button>
   );
 }

@@ -18,6 +18,7 @@ export function RevealGroup<T extends ElementType = "ul">({ as, maxIndex = STAGG
     if (!el) return;
     const rect = el.getBoundingClientRect();
     if (rect.top < window.innerHeight && rect.bottom > 0) return; // já na tela
+    if (el.closest(".enter-grid")) return; // a entrada da página (CSS .enter-grid) já anima esta grade
     [...el.children].forEach((child, index) => (child as HTMLElement).style.setProperty("--i", String(Math.min(index, maxIndex))));
     el.dataset.reveal = "pending";
     const observer = new IntersectionObserver(

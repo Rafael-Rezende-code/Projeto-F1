@@ -34,6 +34,8 @@ export const flyToCart = {
 export const ease = {
   out: [0.16, 1, 0.3, 1] as [number, number, number, number],
   inOut: [0.65, 0, 0.35, 1] as [number, number, number, number],
+  /** "Spring" suave (passa um pouco do ponto e assenta): gaveta da sacola e estouro do favorito (refino 3, 4.4). */
+  spring: [0.34, 1.32, 0.64, 1] as [number, number, number, number],
 };
 
 /**

@@ -59,7 +59,7 @@ export function CartDrawer() {
         aria-modal="true"
         aria-labelledby="sacola-titulo"
         inert={!isOpen}
-        className={`absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white px-5 pb-5 pt-5 text-black shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] sm:px-7 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white px-5 pb-5 pt-5 text-black shadow-2xl cart-panel sm:px-7 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex items-center justify-between border-b border-black/10 pb-4">
           <h2 id="sacola-titulo" className="font-ui text-xl font-medium tracking-[-0.04em]">
