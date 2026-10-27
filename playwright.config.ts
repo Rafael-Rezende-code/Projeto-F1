@@ -12,6 +12,8 @@ export default defineConfig({
   timeout: 90_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
+  // Um arquivo por vez: com vários navegadores ao mesmo tempo o servidor local (next start) fica lento e cliques expiram.
+  workers: 1,
   reporter: [["list"]],
   use: { baseURL, trace: "retain-on-failure", locale: "pt-BR", colorScheme: "light" },
   projects: [

@@ -114,6 +114,7 @@ export function ProductPurchase({ product, alertsEnabled = false }: { product: P
                 <label
                   key={item.sku}
                   data-sku={item.sku}
+                  data-out={out || undefined}
                   className={`relative flex h-12 min-w-14 cursor-pointer items-center justify-center rounded-xl border px-4 text-sm transition-colors xl:h-14 xl:min-w-16 xl:text-base has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-black ${
                     out
                       ? `flex-col gap-0.5 bg-black/[0.02] text-black/50 ${selected ? "border-black" : "border-black/10 hover:border-black/40"}`

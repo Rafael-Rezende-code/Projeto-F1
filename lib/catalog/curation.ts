@@ -11,8 +11,8 @@ export const isNewProduct = (product: Pick<Product, "isNew" | "newUntil">, today
   product.isNew || Boolean(product.newUntil && product.newUntil >= today);
 
 export const BESTSELLER_LIMIT = 8;
-/** A seção nunca fica vazia nem com uma fileira pela metade no desktop: completa até este mínimo. */
-export const BESTSELLER_MINIMUM = 4;
+/** A seção nunca fica vazia nem com fileira pela metade (grade de 4): completa até este mínimo com o catálogo. */
+export const BESTSELLER_MINIMUM = 8;
 
 /**
  * "Mais vendidos", nesta ordem: (1) os marcados pela loja (`bestsellerManual`), por `bestsellerRank` (sem número vão

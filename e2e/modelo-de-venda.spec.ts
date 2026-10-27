@@ -12,18 +12,18 @@ test("sob encomenda: aviso no produto e prazo do item mais lento na sacola", asy
   const main = page.locator("#conteudo");
   await expect(main.getByText("Produto sob encomenda · Importado")).toBeVisible();
   await expect(main.getByText("Envio estimado em 15 a 30 dias úteis.")).toBeVisible();
-  const sizes = page.locator("label:has(input[name=tamanho]:not([disabled]))");
+  const sizes = page.locator("label[data-sku]:not([data-out])");
   if (await sizes.count()) await sizes.first().click();
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("foi adicionado à sacola");
+  await expect(page.getByRole("status").filter({ hasText: "foi adicionado à sacola" })).toBeVisible();
 
   // Peça de estoque próprio: sem aviso.
   await page.goto("/produtos/camiseta-hamilton");
   await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(main.getByText(/Produto sob encomenda/)).toHaveCount(0);
-  await page.locator("label:has(input[name=tamanho]:not([disabled]))").first().click();
+  await page.locator("label[data-sku]:not([data-out])").first().click();
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("foi adicionado à sacola");
+  await expect(page.getByRole("status").filter({ hasText: "foi adicionado à sacola" })).toBeVisible();
 
   await page.goto("/carrinho");
   await expect(page.getByText("Sob encomenda · envio em 15 a 30 dias úteis")).toBeVisible();
@@ -49,9 +49,9 @@ test("frete: entrega local em São Sebastião do Paraíso e prazo total (envio +
   await page.goto("/produtos/camiseta-hamilton");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.locator("label:has(input[name=tamanho]:not([disabled]))").first().click();
+  await page.locator("label[data-sku]:not([data-out])").first().click();
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("foi adicionado à sacola");
+  await expect(page.getByRole("status").filter({ hasText: "foi adicionado à sacola" })).toBeVisible();
   await page.goto("/checkout");
   await page.getByLabel("Nome completo").fill("Teste da Silva");
   await page.getByLabel("E-mail").fill("teste@exemplo.com");
@@ -87,7 +87,7 @@ test("calcular frete na página de produto; o checkout reaproveita o CEP", async
   await expect(page.getByText(/Chega em/).first()).toBeVisible();
 
   // Checkout: o CEP calculado entra sozinho na etapa de endereço.
-  await page.locator("label:has(input[name=tamanho]:not([disabled]))").first().click();
+  await page.locator("label[data-sku]:not([data-out])").first().click();
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
   await page.goto("/checkout");
   await page.getByLabel("Nome completo").fill("Teste da Silva");

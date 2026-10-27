@@ -5,8 +5,8 @@ import { duration, viewport } from "@/lib/motion";
 
 // Contador que sobe de 0 ao valor ao entrar na tela (refino 3, item 4.3; números dos pilotos). O HTML do servidor já traz o
 // valor final (nada fica escondido antes do JavaScript); só anima o que estava FORA da tela ao montar, uma vez. O número
-// animado é decorativo (aria-hidden); o leitor de tela lê o valor final (sr-only). Escreve o texto direto no elemento
-// (sem re-render por quadro), com a curva `out` aproximada (ease-out cúbica) e a duração `reveal` de lib/motion.ts.
+// animado dura ~1 s e termina no valor final. Escreve o texto direto no elemento
+// (sem re-render por quadro; um só texto, então leitor de tela e testes veem o número), com a curva `out` aproximada (ease-out cúbica) e a duração `reveal` de lib/motion.ts.
 export function CountUp({ value, className }: { value: string; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const numeric = /^\d{1,6}$/.test(value);
@@ -42,11 +42,9 @@ export function CountUp({ value, className }: { value: string; className?: strin
     };
   }, [value, numeric]);
 
-  if (!numeric) return <span className={className}>{value}</span>;
   return (
-    <span className={className}>
-      <span ref={ref} aria-hidden="true" className="tabular-nums">{value}</span>
-      <span className="sr-only">{value}</span>
+    <span ref={ref} className={`${numeric ? "tabular-nums" : ""} ${className ?? ""}`.trim() || undefined}>
+      {value}
     </span>
   );
 }

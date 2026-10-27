@@ -22,9 +22,9 @@ test("compra de ponta a ponta (pedido simulado)", async ({ page, isMobile }) => 
   // Sem tamanho: aviso. Depois escolhe o primeiro tamanho disponível e adiciona.
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
   await expect(page.getByText("Escolha um tamanho.")).toBeVisible();
-  await page.locator("label:has(input[name=tamanho]:not([disabled]))").first().click();
+  await page.locator("label[data-sku]:not([data-out])").first().click();
   await page.getByRole("button", { name: "Adicionar à sacola", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("foi adicionado à sacola");
+  await expect(page.getByRole("status").filter({ hasText: "foi adicionado à sacola" })).toBeVisible();
 
   // Sacola (gaveta) → página do carrinho. No celular a sacola fica só no dock (o cabeçalho tem só a marca).
   if (isMobile) await page.getByRole("navigation", { name: "Atalhos" }).getByRole("button", { name: /^Sacola/ }).click();

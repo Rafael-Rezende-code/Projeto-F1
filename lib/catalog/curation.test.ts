@@ -31,7 +31,9 @@ describe("curadoria: Mais vendidos", () => {
   const slugs = (list: Product[]) => list.map((product) => product.slug);
 
   it("manuais primeiro (por ordem; sem ordem depois), depois vendas reais, depois destaques, até 8", () => {
-    expect(slugs(pickBestsellers(catalog, ["h", "e", "i", "zz"]))).toEqual(["e", "d", "c", "h", "i", "b", "g"]);
+    expect(slugs(pickBestsellers(catalog, ["h", "e", "i", "zz"], 8, 4))).toEqual(["e", "d", "c", "h", "i", "b", "g"]);
+    // com o mínimo padrão (8), completa a segunda fileira com o catálogo
+    expect(slugs(pickBestsellers(catalog, ["h", "e", "i", "zz"]))).toEqual(["e", "d", "c", "h", "i", "b", "g", "a"]);
   });
 
   it("não repete produto e respeita o limite", () => {
@@ -40,7 +42,8 @@ describe("curadoria: Mais vendidos", () => {
 
   it("sem curadoria nem vendas: destaques e, abaixo do mínimo, o catálogo na ordem de relevância", () => {
     const plain = [make("a"), make("b", { featured: true }), make("c"), make("d"), make("e")];
-    expect(slugs(pickBestsellers(plain))).toEqual(["b", "a", "c", "d"]);
+    expect(slugs(pickBestsellers(plain))).toEqual(["b", "a", "c", "d", "e"]);
+    expect(slugs(pickBestsellers(plain, [], 8, 4))).toEqual(["b", "a", "c", "d"]);
   });
 
   it("nunca fica vazia com produtos ativos; catálogo vazio dá lista vazia", () => {
