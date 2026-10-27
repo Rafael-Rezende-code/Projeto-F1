@@ -28,7 +28,7 @@ só no PGlite.
 | 4.4 e 4.5 Microinterações e entrada orquestrada | `1049045` |
 | QA: e2e novos e ajustes | `ec704bd` |
 | 4.2 View Transitions estabilizadas | `af20856` |
-| 4.6 Medição e ajuste de LCP do catálogo | ver `git log` (último commit da rodada) |
+| 4.6 Medição e ajuste de LCP do catálogo | `c148155` |
 
 ## Home: antes × depois
 
