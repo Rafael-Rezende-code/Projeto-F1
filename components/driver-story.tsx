@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { CountUp } from "@/components/motion/count-up";
 import { BlurReveal } from "@/components/ui/blur-reveal";
 import type { DriverContent } from "@/lib/content/drivers";
 
@@ -22,7 +23,7 @@ export function DriverCareer({ content, color, name, numbersFirst = false }: { c
         {content.facts.map((fact) => (
           <div key={fact.label} className="flex flex-col border-t-2 pt-5" style={{ borderColor: "var(--team)" }}>
             <dt className="order-2 mt-3 text-sm font-semibold text-black">{fact.label}</dt>
-            <dd className="order-1 font-display text-5xl leading-none tracking-[-0.05em] text-black sm:text-6xl lg:text-7xl">{fact.value}</dd>
+            <dd className="order-1 font-display text-5xl leading-none tracking-[-0.05em] text-black sm:text-6xl lg:text-7xl"><CountUp value={fact.value} /></dd>
             {fact.detail && <dd className="order-3 mt-1 text-sm leading-6 text-black/60">{fact.detail}</dd>}
           </div>
         ))}
