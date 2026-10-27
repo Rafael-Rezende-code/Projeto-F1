@@ -14,6 +14,7 @@ import {
   firstPages,
   mostRestrictiveFacet,
   pageOf,
+  baseCollection,
   parseCatalogParams,
   PRICE_RANGES,
   sizeOptions,
@@ -40,7 +41,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
   const [products, base, categories, teams, drivers] = await Promise.all([
     catalog.getProducts(toProductFilters(current)),
     // Base das contagens: só a busca e a coleção (os outros filtros o visitante liga e desliga).
-    catalog.getProducts({ query: current.q, collection: current.colecao ? getCollection(current.colecao)?.filters : undefined }),
+    catalog.getProducts({ query: current.q, collection: baseCollection(current) }),
     catalog.getCategories(),
     catalog.getTeams(),
     catalog.getDrivers(),
@@ -68,6 +69,7 @@ export default async function ProdutosPage({ searchParams }: { searchParams: Pro
   };
   const chips = [
     ...(current.q ? [{ key: "q", label: `Busca: “${current.q}”`, href: catalogHref(current, { q: undefined }) }] : []),
+    ...(current.tag && !current.colecao ? [{ key: "tag", label: `Seleção: ${current.tag.split(",").join(", ")}`, href: catalogHref(current, { tag: undefined }) }] : []),
     ...(current.colecao ? [{ key: "colecao", label: `Coleção: ${getCollection(current.colecao)?.title ?? current.colecao}`, href: catalogHref(current, { colecao: undefined }) }] : []),
     ...activeFacets(current).map((key) => ({ key, label: valueLabel(key), href: catalogHref(current, { [key]: undefined }) })),
   ];

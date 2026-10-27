@@ -14,6 +14,7 @@ import { driverTransitionName, SharedTransition } from "@/components/motion/view
 import { ArtDirectedImage } from "@/components/ui/art-directed-image";
 import { ProductGrid } from "@/components/product-grid";
 import { KitSection } from "@/components/kit-section";
+import { NextRaceSlot } from "@/components/next-race-slot";
 import { catalog } from "@/lib/catalog";
 import { getDriverContent } from "@/lib/content/drivers";
 import { readableTextOn } from "@/lib/contrast";
@@ -45,6 +46,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     openGraph: { title: driver.name, description, images: [{ url: driver.image, alt: driver.name }] },
   };
 }
+
+// Próxima corrida (loja extra, item 5): a página estática é refeita de hora em hora.
+export const revalidate = 3600;
 
 export default async function DriverPage({ params }: Params) {
   const driver = await catalog.getDriverBySlug((await params).slug);
@@ -185,6 +189,7 @@ export default async function DriverPage({ params }: Params) {
 
       <div className="px-5 pt-16 sm:px-10 sm:pt-20">
         <KitSection driverSlug={driver.slug} className="mx-auto max-w-[1400px]" />
+        <NextRaceSlot className="mx-auto mt-6 max-w-[1400px]" />
       </div>
 
       {story && (

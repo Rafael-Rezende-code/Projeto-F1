@@ -36,6 +36,8 @@ const one = (value: string | string[] | undefined) => (Array.isArray(value) ? va
 export type CatalogParams = {
   q?: string;
   colecao?: string;
+  /** Tags separadas por vírgula (loja extra: coleção do fim de semana de corrida e drops). Produto com qualquer uma. */
+  tag?: string;
   categoria?: string;
   equipe?: string;
   piloto?: string;
@@ -57,6 +59,7 @@ export function parseCatalogParams(params: CatalogSearchParams): CatalogParams {
   return {
     q: one(params.q)?.trim().slice(0, 80) || undefined,
     colecao: getCollection(one(params.colecao) ?? "")?.slug,
+    tag: cleanTags(one(params.tag)),
     categoria: one(params.categoria)?.slice(0, 60),
     equipe: one(params.equipe)?.slice(0, 60),
     piloto: one(params.piloto)?.slice(0, 60),
@@ -71,11 +74,23 @@ export function parseCatalogParams(params: CatalogSearchParams): CatalogParams {
 
 export const pageOf = (params: CatalogParams) => Number(params.pagina ?? 1);
 
+/** "a,b" → tags válidas (minúsculas, números e hífen), até 6. */
+export function cleanTags(value: string | undefined) {
+  const tags = [...new Set(String(value ?? "").toLowerCase().split(",").map((tag) => tag.trim()).filter((tag) => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(tag) && tag.length <= 40))].slice(0, 6);
+  return tags.length ? tags.join(",") : undefined;
+}
+
+/** Recorte de fora dos filtros (coleção OU tags): base das contagens e do resultado. */
+export function baseCollection(parsed: Pick<CatalogParams, "colecao" | "tag">): ProductFilters["collection"] {
+  if (parsed.colecao) return getCollection(parsed.colecao)?.filters;
+  return parsed.tag ? { tags: parsed.tag.split(",") } : undefined;
+}
+
 export function toProductFilters(parsed: CatalogParams): ProductFilters {
   const range = PRICE_RANGES.find((item) => item.value === parsed.preco);
   return {
     query: parsed.q,
-    collection: parsed.colecao ? getCollection(parsed.colecao)?.filters : undefined,
+    collection: baseCollection(parsed),
     category: parsed.categoria,
     team: parsed.equipe,
     driver: parsed.piloto,

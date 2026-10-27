@@ -81,6 +81,7 @@ export function CatalogSidebar({ current, items, options }: { current: CatalogPa
     <form method="get" action="/produtos" aria-label="Filtros" aria-busy={pending} onSubmit={(event) => event.preventDefault()} className={`transition-opacity ${pending ? "opacity-60" : ""}`}>
       {current.q && <input type="hidden" name="q" value={current.q} />}
       {current.colecao && <input type="hidden" name="colecao" value={current.colecao} />}
+      {current.tag && <input type="hidden" name="tag" value={current.tag} />}
       <Fields draft={pick(current)} items={items} options={options} onChange={apply} idPrefix="lateral" />
       <noscript>
         <button type="submit" className="mt-2 rounded-xl bg-black px-5 py-3 text-xs font-medium text-white">Aplicar filtros</button>

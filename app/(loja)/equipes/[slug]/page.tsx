@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductGrid } from "@/components/product-grid";
 import { KitSection } from "@/components/kit-section";
+import { NextRaceSlot } from "@/components/next-race-slot";
 import { TeamRow } from "@/components/team-row";
 import { TeamStory } from "@/components/team-story";
 import { getTeamContent } from "@/lib/content/teams";
@@ -24,6 +25,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const description = `Produtos da ${team.name}: roupas, bonés, jaquetas e colecionáveis. ${team.tagline}`;
   return { title: team.name, description, alternates: { canonical: `/equipes/${team.slug}` }, openGraph: { title: team.name, description } };
 }
+
+// Próxima corrida (loja extra, item 5): a página estática é refeita de hora em hora.
+export const revalidate = 3600;
 
 export default async function TeamPage({ params }: Params) {
   const team = await catalog.getTeamBySlug((await params).slug);
@@ -71,6 +75,7 @@ export default async function TeamPage({ params }: Params) {
         </section>
 
         <KitSection teamSlug={team.slug} className="mt-16" />
+        <NextRaceSlot className="mt-6" />
 
         {/* Ordem (refino 2): cabeçalho → produtos → kit → história → outras equipes. */}
         {story && <TeamStory content={story} color={team.color} name={team.name} />}

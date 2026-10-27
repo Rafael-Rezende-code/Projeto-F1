@@ -1,3 +1,6 @@
+import { NextRace } from '@/components/next-race'
+import { isRaceWeek, nextRace } from '@/lib/calendar'
+import { getRaceWeekends } from '@/lib/calendar-store'
 import { ArrowRight, ArrowUpRight, Gift } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -45,8 +48,16 @@ function ShelfHeader({ id, eyebrow, title, body, href, linkLabel }: { id: string
 // "Mais vendidos" usa as vendas reais (Supabase): a home é regenerada a cada hora (ISR); com o seed nada muda.
 export const revalidate = 3600
 
+// Hora da renderização (a página revalida de hora em hora): escolhe a próxima corrida e a semana de corrida.
+const renderTime = () => Date.now()
+
 export default async function Page() {
-  const [allProducts, bestsellers] = await Promise.all([catalog.getProducts(), catalog.getBestsellers(8)])
+  const [allProducts, bestsellers, races] = await Promise.all([catalog.getProducts(), catalog.getBestsellers(8), getRaceWeekends()])
+  // Semana de corrida (loja extra, item 5): sem corrida futura, nada; de sexta a segunda, o bloco sobe para logo depois do hero.
+  const now = renderTime()
+  const race = nextRace(races, now)
+  const raceBlock = race ? <div className="px-5 pt-10 sm:px-10 sm:pt-14"><NextRace race={race} now={now} className="mx-auto max-w-[1400px]" /></div> : null
+  const raceWeek = isRaceWeek(race, now)
   // Ordem da home (refino 3, docs/refino-3/home.md): cada produto aparece em UMA vitrine só. Mais vendidos (curadoria +
   // vendas reais; lib/catalog/curation.ts) → Novidades (selo NOVO, sem os que já estão em Mais vendidos) → VELOCIDADE
   // (destaques que ainda não apareceram; se faltar, os destaques de sempre).
@@ -69,6 +80,8 @@ export default async function Page() {
 
     <BenefitsStrip />
 
+    {raceWeek && raceBlock}
+
     <DriversSection blurs={driverCardBlurs()} />
 
     <TeamMarquee />
@@ -78,6 +91,8 @@ export default async function Page() {
     <section id="collection" className="px-5 pb-20 pt-16 sm:px-10 sm:pb-28 sm:pt-20"><SectionIntro eyebrow="Explore a coleção" title="Feita em torno da corrida." highlight="corrida" body="Dos essenciais do dia de prova às peças colecionáveis, descubra produtos de Fórmula 1 para quem vive pela próxima volta." /><RevealGroup className="mx-auto mt-14 grid max-w-[1400px] grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">{homeCollections.map(({ collection }, index) => <li key={collection.slug}><CollectionCard href={`/colecoes/${collection.slug}`} eyebrow={String(index + 1).padStart(2, "0")} title={collection.title} subtitle={collection.phrase} image={collection.cover} /></li>)}</RevealGroup><p className="mx-auto mt-8 max-w-[1400px] text-center"><Link href="/colecoes" className="group inline-flex min-h-11 items-center gap-2 text-sm text-black/60 underline-offset-4 transition hover:text-black hover:underline">Ver todas as coleções <ArrowRight size={16} aria-hidden="true" className="transition-transform group-hover:translate-x-1" /></Link></p></section>
 
     {newest.length > 0 && <section id="novidades" aria-labelledby="novidades-titulo" className="scroll-mt-20 px-5 py-20 sm:px-10 sm:py-28"><div className="mx-auto max-w-[1400px]"><ShelfHeader id="novidades-titulo" eyebrow="Acabou de chegar" title="Novidades" body="Os lançamentos mais recentes do grid." href="/produtos?ordem=novidades" linkLabel="Ver novidades" /><ProductGrid products={newest} /></div></section>}
+
+    {!raceWeek && raceBlock}
 
     <section id="story" className="relative flex min-h-[650px] items-center overflow-hidden bg-[#090909] px-5 py-24 text-white sm:px-10"><ImageReveal blur={localImage(editorial.story.mobile.src)?.blur} className="absolute inset-0 opacity-65"><ArtDirectedImage alt={editorial.story.alt} mobile={editorial.story.mobile} desktop={editorial.story.desktop} quality={editorialQuality} className="object-cover" /></ImageReveal><div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/10" /><div className="relative z-10 mx-auto w-full max-w-[1400px]"><p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#e8702a]">A cultura da velocidade</p><RevealLines className="max-w-3xl text-5xl font-medium leading-[0.92] tracking-[-0.07em] sm:text-6xl md:text-8xl" lines={[{ text: "Mais que uma corrida.", className: "block" }, { text: "Um jeito de viver.", className: "font-playfair block italic" }]} /><RevealText className="mt-8 max-w-md text-sm leading-7 text-white/65" text={"As máquinas, as equipes, os circuitos e os momentos que transformam cada fim de semana de corrida em algo inesquecível."} /><a href="#journal" className="mt-9 inline-flex items-center gap-3 rounded-xl border border-white/40 px-5 py-3 text-xs font-medium transition hover:border-white hover:bg-white hover:text-black">Explore o mundo da F1 <ArrowUpRight size={16} /></a></div></section>
 
