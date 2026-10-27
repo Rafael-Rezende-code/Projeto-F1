@@ -106,7 +106,7 @@ export function ProductCard({
           )}
           {product.compareAtPriceCents && <span className="sr-only">por </span>}
           <span className="whitespace-nowrap">{formatPrice(product.priceCents)}</span>
-          {storePolicy.pixDiscountPercent > 0 && <span className="ml-2 whitespace-nowrap text-[11px] text-black/60 sm:ml-0 sm:block">{storePolicy.pixDiscountPercent}% off no Pix</span>}
+          {storePolicy.pixDiscountPercent > 0 && <span className="block whitespace-nowrap text-[11px] text-black/60">{storePolicy.pixDiscountPercent}% off no Pix</span>}
         </p>
       </div>
     </article>
