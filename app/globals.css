@@ -328,6 +328,12 @@ h1, h2, .font-display {
 @media (min-width: 768px) { .whatsapp-fab { bottom: 24px; } }
 body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px); }
 @media (min-width: 768px) { body:has([data-buy-bar]) .whatsapp-fab { bottom: 24px; } }
+/* Checkout (loja extra, item 1b): a barra de finalizar fica até 1024px e não há dock; folga de rolagem embaixo para o
+   campo focado (teclado ou erro) não ficar atrás dela. */
+@media (max-width: 1023px) {
+  html:has([data-checkout]) { scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  body:has([data-checkout]) .whatsapp-fab { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
 
 /* Seção VELOCIDADE (components/velocidade-portal.tsx): esconde o seletor de letra que o GlyphPortal mostra em telas de
    toque. !important: a regra interna do componente vem num <style> próprio, com o mesmo peso. */

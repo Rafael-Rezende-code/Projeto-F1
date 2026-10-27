@@ -11,7 +11,8 @@ const anon = createClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, opts);
 let ok = 0;
 let fail = 0;
 const check = (name, pass, detail = "") => {
-  pass ? ok++ : fail++;
+  if (pass) ok++;
+  else fail++;
   console.log(`${pass ? "✔" : "✖"} ${name}${detail ? ` — ${detail}` : ""}`);
 };
 const stamp = Date.now();

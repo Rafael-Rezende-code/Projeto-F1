@@ -36,29 +36,26 @@ test("compra de ponta a ponta (pedido simulado)", async ({ page, isMobile }) => 
   await page.getByRole("link", { name: "Finalizar compra" }).click();
   await expect(page).toHaveURL(/\/checkout$/);
 
-  // Contato (sem CPF: ele só é pedido no boleto)
+  // Checkout em uma página. Contato (sem CPF: ele só é pedido no boleto)
   await page.getByLabel("Nome completo").fill("Teste da Silva");
   await page.getByLabel("E-mail").fill("teste@exemplo.com");
   await page.getByLabel("Telefone").fill("11912345678");
   await expect(page.getByLabel("CPF")).toHaveCount(0);
-  await page.getByRole("button", { name: "Continuar" }).click();
 
   // Endereço (ViaCEP preenche rua, bairro, cidade e UF)
   await page.getByLabel("CEP").fill("01310100");
   await expect(page.getByLabel("Rua")).toHaveValue("Avenida Paulista");
   await page.getByLabel("Número").fill("1000");
-  await page.getByRole("button", { name: "Continuar" }).click();
 
-  // Entrega
+  // Envio (cotado sozinho quando o CEP fica completo)
   await page.getByText("Expressa").click();
-  await page.getByRole("button", { name: "Continuar" }).click();
 
   // Pagamento: aceite obrigatório; Pix e cartão sem CPF
   await page.getByText("Cartão de crédito").click();
   await expect(page.getByLabel("CPF")).toHaveCount(0);
   await page.getByRole("button", { name: /Confirmar pedido/ }).click();
   await expect(page.getByText("É preciso aceitar os Termos de Uso e a Política de Privacidade.")).toBeVisible();
-  await page.getByRole("checkbox").check();
+  await page.getByRole("checkbox", { name: /Li e aceito/ }).check();
 
   // Boleto: CPF obrigatório, com validação dos dígitos
   await page.getByText("Boleto", { exact: true }).click();
