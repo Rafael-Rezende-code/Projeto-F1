@@ -110,7 +110,7 @@ async function main() {
     product_variants: seedData.products.reduce((sum, product) => sum + product.variants.length, 0),
     product_images: seedData.products.reduce((sum, product) => sum + product.images.length, 0),
   };
-  const tables = ["admin_emails", "categories", "teams", "drivers", "products", "product_variants", "product_images", "product_private", "customers", "orders", "order_items", "payment_events", "newsletter_subscribers", "coupons", "coupon_redemptions", "rate_limit_hits", "order_events", "email_log", "stock_alerts"];
+  const tables = ["admin_emails", "categories", "teams", "drivers", "products", "product_variants", "product_images", "product_private", "customers", "orders", "order_items", "payment_events", "newsletter_subscribers", "coupons", "coupon_redemptions", "rate_limit_hits", "order_events", "email_log", "stock_alerts", "kits", "wishlists", "race_weekends", "drops", "drop_waitlist", "drop_notifications"];
   // Tabelas da operação (cupons, limites, histórico, e-mails): vêm no supabase/atualizacao-2.sql num banco já ativo.
   const missingTables: string[] = [];
   for (const table of tables) {
@@ -191,11 +191,33 @@ async function publicAccess(service: SupabaseClient, anon: SupabaseClient) {
 
   // Tabelas que a chave pública não pode ler: erro de permissão OU zero linhas (RLS). Linhas = vazamento.
   // Operação (fase 5): cupons, usos, histórico, e-mails, limites e a lista da newsletter também precisam ficar fechados.
-  for (const table of ["product_private", "orders", "order_items", "customers", "payment_events", "admin_emails", "newsletter_subscribers", "coupons", "coupon_redemptions", "order_events", "email_log", "rate_limit_hits", "stock_alerts"]) {
+  for (const table of ["product_private", "orders", "order_items", "customers", "payment_events", "admin_emails", "newsletter_subscribers", "coupons", "coupon_redemptions", "order_events", "email_log", "rate_limit_hits", "stock_alerts", "wishlists", "drop_waitlist", "drop_notifications"]) {
     const { data, error } = await anon.from(table).select("*").limit(5);
     if (error) report(`${table}: leitura pública`, "ok", `bloqueada (${error.code ?? "erro"})`);
     else if (!data?.length) report(`${table}: leitura pública`, (await service.from(table).select("*", { count: "exact", head: true })).count ? "ok" : "aviso", "0 linhas visíveis (RLS filtra)");
     else report(`${table}: leitura pública`, "falhou", `VAZAMENTO: ${data.length} linha(s) legíveis sem login`);
+  }
+  // Loja extra: kits, corridas e drops são públicos SÓ quando ativos; a chave pública não grava em nenhuma tabela nova.
+  {
+    const hidden = { kits: { slug: `zz-anon-${stamp}`, title: "ZZ teste", product_slugs: ["a", "b"], discount_percent: 5, active: false }, race_weekends: { gp_name: `ZZ teste ${stamp}`, weekend_start: "2099-01-02", race_start: "2099-01-04T15:00:00Z", active: false }, drops: { slug: `zz-anon-${stamp}`, title: "ZZ teste", launch_at: "2099-01-01T00:00:00Z", active: false } } as const;
+    for (const [table, row] of Object.entries(hidden) as [string, Record<string, unknown>][]) {
+      const created = await service.from(table).insert(row).select("id").single();
+      if (created.error) {
+        report(`${table}: linha inativa de teste`, "falhou", errorText(created.error));
+        continue;
+      }
+      const seen = await anon.from(table).select("id").eq("id", created.data.id);
+      report(`${table}: inativo fica escondido do público`, seen.data?.length ? "falhou" : "ok", seen.data?.length ? "VAZAMENTO: o público vê um registro inativo" : "");
+      const write = await anon.from(table).insert({ ...row, ...("slug" in row ? { slug: `${String(row.slug)}-x` } : {}) });
+      report(`${table}: gravação pela chave pública`, write.error ? "ok" : "falhou", write.error ? "bloqueada" : "A CHAVE PÚBLICA CONSEGUIU INSERIR");
+      await service.from(table).delete().eq("id", created.data.id);
+    }
+    for (const table of ["wishlists", "drop_notifications"]) {
+      const write = await anon.from(table).insert(table === "wishlists" ? { token: "zzzzzzzzzz", secret_hash: "x" } : { drop_id: "00000000-0000-0000-0000-000000000000", email: "x@example.invalid" });
+      report(`${table}: gravação pela chave pública`, write.error ? "ok" : "falhou", write.error ? "bloqueada" : "A CHAVE PÚBLICA CONSEGUIU INSERIR");
+    }
+    const kitRpc = await anon.rpc("kit_discounts", { p_lines: [] });
+    report("função kit_discounts com a chave pública", kitRpc.error ? "ok" : "falhou", kitRpc.error ? "bloqueada" : "liberada");
   }
   const privateCheck = await anon.from("product_private").select("cost_cents, supplier_url, supplier_shipping_cents, notes").limit(1);
   report("custo e fornecedor (product_private) NÃO legíveis", !privateCheck.error && privateCheck.data?.length ? "falhou" : "ok", privateCheck.error ? `bloqueado: ${privateCheck.error.code ?? ""}` : "");
