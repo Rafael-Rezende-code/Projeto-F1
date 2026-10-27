@@ -24,6 +24,9 @@ export type OrderLine = {
   dispatchDays?: DispatchDays;
   status?: OrderItemStatus;
   tracking?: string;
+  /** Nome e número nas costas (loja extra, item 3) e o adicional por unidade. */
+  personalization?: { name?: string; number?: string };
+  feeCents?: number;
 };
 
 /** Rótulos para o CLIENTE (sem falar em fornecedor). */

@@ -11,7 +11,7 @@ import type { CartItem } from "@/lib/cart/reducer";
 let pending: Promise<Kit[]> | null = null;
 
 export const cartPriceLines = (items: CartItem[]): PriceLine[] =>
-  items.map((item) => ({ key: item.sku, sku: item.sku, slug: item.slug, unitPriceCents: item.priceCents, feeCents: 0, quantity: item.quantity, personalized: false }));
+  items.map((item) => ({ key: item.key, sku: item.sku, slug: item.slug, unitPriceCents: item.priceCents, feeCents: item.feeCents ?? 0, quantity: item.quantity, personalized: Boolean(item.personalization) }));
 
 export function useCartKits(items: CartItem[]) {
   const [kits, setKits] = useState<Kit[]>([]);

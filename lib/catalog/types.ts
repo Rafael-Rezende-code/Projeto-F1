@@ -1,3 +1,4 @@
+import type { PersonalizationConfig } from "@/lib/personalization";
 // Modelo de dados do catálogo. Preços sempre em centavos (inteiro, BRL).
 // Estes tipos são o contrato entre as páginas e a camada de dados (lib/catalog/repository.ts):
 // trocar o seed por Supabase não deve mudar nada aqui.
@@ -69,6 +70,8 @@ export type Product = {
   bestsellerRank?: number;
   /** Selo "NOVO" até esta data (AAAA-MM-DD, inclusive), além de isNew. Ver lib/catalog/curation.ts. */
   newUntil?: string;
+  /** Camisa personalizável (loja extra, item 3): nome e número nas costas, com adicional. Ausente = não personaliza. */
+  personalization?: PersonalizationConfig;
 };
 
 export type Category = {

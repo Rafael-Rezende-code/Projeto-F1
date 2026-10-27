@@ -18,6 +18,9 @@ export type OrderItemRow = {
   item_status?: OrderItemStatus;
   tracking_code?: string | null;
   supplier_tracking_code?: string | null;
+  // Migração 20261104000000_personalizacao.sql.
+  personalization?: { name?: string | null; number?: string | null } | null;
+  personalization_fee_cents?: number;
 };
 export type OrderRow = {
   id: string;
@@ -78,6 +81,8 @@ export function orderFromRow(row: OrderRow): Order {
       status: item.item_status,
       // supplier_tracking_code NÃO vai para o cliente (só painel admin).
       tracking: item.tracking_code ?? undefined,
+      personalization: item.personalization ? { name: item.personalization.name ?? undefined, number: item.personalization.number ?? undefined } : undefined,
+      feeCents: item.personalization_fee_cents || undefined,
     })),
     subtotalCents: row.subtotal_cents,
     coupon: row.coupon_code ? { code: row.coupon_code, discountCents: row.discount_cents ?? 0, shippingDiscountCents: row.shipping_discount_cents ?? 0 } : undefined,

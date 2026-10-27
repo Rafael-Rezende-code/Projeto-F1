@@ -51,6 +51,27 @@ end $$;
 `;
 }
 
+// Personalização (migração 20261104000000_personalizacao.sql): só os produtos personalizáveis, num bloco que só roda se
+// as colunas existirem.
+function personalizationSql() {
+  const list = products.filter(({ personalization }) => personalization.personalizable);
+  if (!list.length) return "";
+  const values = list
+    .map(({ row, personalization: p }) => `(${q(row.code)}, ${p.personalization_fee_cents}, ${p.personalization_max_name}, ${p.personalization_number_min}, ${p.personalization_number_max})`)
+    .join(",\n      ");
+  return `do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'personalizable') then
+    update public.products p set personalizable = true, personalization_fee_cents = v.fee, personalization_max_name = v.max_name,
+      personalization_number_min = v.num_min, personalization_number_max = v.num_max
+    from (values
+      ${values}
+    ) as v(code, fee, max_name, num_min, num_max)
+    where p.code = v.code;
+  end if;
+end $$;
+`;
+}
+
 // Kits (migração 20261103000000_kits.sql): os locais de lib/kits.ts, num bloco que só roda se a tabela existir.
 function kitsSql() {
   const values = LOCAL_KITS.map((kit) => `(${q(kit.slug)}, ${q(kit.title)}, ${q(kit.teamSlug ?? null)}, ${q(kit.driverSlug ?? null)}, array[${kit.productSlugs.map(q).join(", ")}]::text[], ${kit.percent}, ${kit.active !== false})`).join(",\n      ");
@@ -75,6 +96,7 @@ function toSql() {
     upsert("drivers", drivers, "slug"),
     upsert("products", products.map((p) => p.row), "code"),
     curationSql(),
+    personalizationSql(),
     kitsSql(),
   ];
   for (const { row, variants, images } of products) {
@@ -102,7 +124,7 @@ async function push() {
   check(await db.from("categories").upsert(categories, { onConflict: "slug" }), "categorias");
   check(await db.from("teams").upsert(teams, { onConflict: "slug" }), "equipes");
   check(await db.from("drivers").upsert(drivers, { onConflict: "slug" }), "pilotos");
-  const saved = check<{ id: string; code: string }[]>(await db.from("products").upsert(products.map((p) => ({ ...p.row, ...p.curation })), { onConflict: "code" }).select("id, code"), "produtos");
+  const saved = check<{ id: string; code: string }[]>(await db.from("products").upsert(products.map((p) => ({ ...p.row, ...p.curation, ...p.personalization })), { onConflict: "code" }).select("id, code"), "produtos");
   const idOf = new Map(saved.map((row) => [row.code, row.id]));
   const variants = products.flatMap(({ row, variants }) => variants.map((variant) => ({ ...variant, product_id: idOf.get(row.code!)! })));
   check(await db.from("product_variants").upsert(variants, { onConflict: "sku" }), "variantes");

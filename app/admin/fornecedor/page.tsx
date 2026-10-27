@@ -1,3 +1,4 @@
+import { personalizationLabel } from "@/lib/personalization";
 import Link from "next/link";
 import { SupplierItem } from "@/components/admin/supplier-item";
 import { adminDisabled, requireAdmin } from "@/lib/admin/auth";
@@ -6,6 +7,7 @@ import { daysLabel } from "@/lib/catalog/fulfillment";
 import { ORDER_ITEM_STATUS_ADMIN_LABELS, type Order } from "@/lib/checkout/order";
 
 type QueueRow = {
+  personalization: { name?: string; number?: string } | null;
   id: string;
   product_id: string | null;
   name: string;
@@ -28,7 +30,7 @@ export default async function FilaFornecedor() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("order_items")
-    .select("id, product_id, name, size, sku, quantity, item_status, supplier_tracking_code, dispatch_min_days, dispatch_max_days, purchased_at, orders!inner(id, created_at, status, customer_name, customer_email, customer_phone, address)")
+    .select("id, product_id, name, size, sku, quantity, personalization, item_status, supplier_tracking_code, dispatch_min_days, dispatch_max_days, purchased_at, orders!inner(id, created_at, status, customer_name, customer_email, customer_phone, address)")
     .eq("fulfillment", "sob_encomenda")
     .in("item_status", ["aguardando-compra", "comprado"])
     .eq("orders.status", "pago")
@@ -49,6 +51,7 @@ export default async function FilaFornecedor() {
             <div>
               <p className="font-medium">{row.name}</p>
               <p className="text-xs text-black/60">SKU {row.sku} · Tam. {row.size} · Qtd. {row.quantity} · envio prometido em {daysLabel({ min: row.dispatch_min_days, max: row.dispatch_max_days })}</p>
+              {row.personalization && <span className="mt-1 inline-block rounded-md bg-[#b94f01] px-2 py-0.5 text-xs font-semibold tracking-[0.04em] text-white" data-personalization>{personalizationLabel(row.personalization)}</span>}
             </div>
             <div className="text-right text-xs text-black/60">
               <Link href={`/admin/pedidos/${encodeURIComponent(row.orders.id)}`} className="font-medium text-black underline underline-offset-4">{row.orders.id}</Link>

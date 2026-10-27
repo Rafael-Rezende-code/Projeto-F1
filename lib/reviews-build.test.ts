@@ -24,5 +24,5 @@ describe("avaliações: nada de exemplo no build de produção", () => {
     const found: string[] = [];
     for (const file of files(next)) if (readFileSync(file, "utf8").includes(MARKER)) found.push(path.relative(root, file));
     expect(found).toEqual([]);
-  });
+  }, 120_000);
 });

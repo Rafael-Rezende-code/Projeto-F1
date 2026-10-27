@@ -1,5 +1,6 @@
 "use client";
 
+import { personalizationLabel } from "@/lib/personalization";
 import { useActionState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -72,13 +73,14 @@ function LookupResult({ order, reviews, values }: { order: Lookup; reviews?: Loo
 
       <ul role="list" className="mt-6 flex flex-col gap-4 border-t border-black/10 pt-6">
         {order.items.map((item) => (
-          <li key={`${item.slug}-${item.size}`} className="flex gap-3">
+          <li key={`${item.slug}-${item.size}-${personalizationLabel(item.personalization)}`} className="flex gap-3">
             <div className="relative aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-xl bg-[#e9e8e4]">
               {item.image && <Image src={item.image} alt="" fill sizes="56px" quality={75} className="object-cover" />}
             </div>
             <div className="min-w-0 flex-1 text-sm">
               <Link href={`/produtos/${item.slug}`} className="font-medium hover:underline">{item.name}</Link>
               <p className="text-xs text-black/60">Tam. {item.size} · Qtd. {item.quantity}</p>
+              {item.personalization && <p className="text-xs font-medium text-black" data-personalization>{personalizationLabel(item.personalization)}</p>}
               {item.status && <p className="text-xs font-medium">{ORDER_ITEM_STATUS_LABELS[item.status]}</p>}
               {item.tracking && item.tracking !== order.tracking?.code && <p className="font-mono text-xs">Rastreio: {item.tracking}</p>}
               {/* Avaliação (refino 3): pedido entregue, avaliações ligadas, uma por produto. */}

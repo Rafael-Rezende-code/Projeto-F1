@@ -48,7 +48,13 @@ export const paymentSchema = z
     }
   });
 
-export const orderItemSchema = z.object({ sku: z.string().min(1), quantity: z.number().int().min(1).max(99) });
+// personalization (loja extra, item 3): texto bruto; o servidor normaliza e valida pela configuração do produto
+// (lib/personalization.ts) e o banco confere de novo.
+export const orderItemSchema = z.object({
+  sku: z.string().min(1),
+  quantity: z.number().int().min(1).max(99),
+  personalization: z.object({ name: z.string().max(40).optional(), number: z.string().max(4).optional() }).optional(),
+});
 
 export const checkoutSchema = z.object({
   contact: contactSchema,

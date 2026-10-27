@@ -1,3 +1,4 @@
+import { personalizationLabel } from "@/lib/personalization";
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Clock3, Truck, XCircle } from "lucide-react";
@@ -163,6 +164,7 @@ export function OrderView({ order }: { order: Order }) {
                 <div className="min-w-0">
                   <p className="truncate font-medium">{line.name}</p>
                   <p className="text-xs text-black/60">Tam. {line.size} · Qtd. {line.quantity}</p>
+                  {line.personalization && <p className="text-xs font-medium text-black" data-personalization>{personalizationLabel(line.personalization)}{line.feeCents ? ` (+${formatPrice(line.feeCents)} cada)` : ""}</p>}
                   {line.status && hasItemStatus && (
                     <p className="text-xs text-black/60">
                       {line.fulfillment === "sob_encomenda" ? "Sob encomenda · " : ""}

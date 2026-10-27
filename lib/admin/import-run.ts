@@ -112,6 +112,12 @@ export async function executeImport(supabase: SupabaseClient, text: string): Pro
             bestseller_manual: product.curation.bestsellerManual,
             bestseller_rank: product.curation.bestsellerRank,
             new_until: product.curation.newUntil,
+            // Personalização (loja extra, item 3): idem.
+            personalizable: product.personalization.personalizable,
+            personalization_fee_cents: product.personalization.feeCents,
+            personalization_max_name: product.personalization.maxName,
+            personalization_number_min: product.personalization.numberMin,
+            personalization_number_max: product.personalization.numberMax,
           }).filter(([, value]) => value !== undefined),
         ),
         // Sem coluna de imagens (ou todas falharam): mantém as fotos atuais do produto.

@@ -1,10 +1,10 @@
-﻿nome;slug;descricao;categoria;equipe;piloto;preco;preco_de;tamanhos_estoque;fulfillment;prazo_min;prazo_max;origem;peso_g;comprimento_cm;largura_cm;altura_cm;custo;frete_fornecedor;link_fornecedor;notas;imagens;tags;status;destaque;mais_vendido;ordem_mais_vendido;novo_ate
+﻿nome;slug;descricao;categoria;equipe;piloto;preco;preco_de;tamanhos_estoque;fulfillment;prazo_min;prazo_max;origem;peso_g;comprimento_cm;largura_cm;altura_cm;custo;frete_fornecedor;link_fornecedor;notas;imagens;tags;status;destaque;mais_vendido;ordem_mais_vendido;novo_ate;personalizavel;personalizacao_adicional;personalizacao_max_nome;personalizacao_numero_min;personalizacao_numero_max
 TESTE Camiseta Importador Apex;teste-importador-camiseta;"Camiseta de teste (estoque próprio) criada pelo importador.
 
-Segundo parágrafo: este produto é apagado depois do teste.";teamwear;ferrari;;"R$ 129,90";;P:5 | M:5 | G:3;estoque_proprio;1;2;nacional;250;30;25;3;"R$ 47,13";;;NOTA-PRIVADA-TESTE-7f3a (nunca pode aparecer no site);;"teste, camiseta";publicado;sim;não;;31/12/2026
+Segundo parágrafo: este produto é apagado depois do teste.";teamwear;ferrari;;"R$ 129,90";;P:5 | M:5 | G:3;estoque_proprio;1;2;nacional;250;30;25;3;"R$ 47,13";;;NOTA-PRIVADA-TESTE-7f3a (nunca pode aparecer no site);;"teste, camiseta";publicado;sim;não;;31/12/2026;sim;"R$ 30,00";12;0;99
 TESTE Miniatura Importador Apex;teste-importador-miniatura;"Miniatura de teste (sob encomenda, importada) criada pelo importador.
 
-Segundo parágrafo: este produto é apagado depois do teste.";colecionaveis;;hamilton;"R$ 899,90";;Único:2;sob_encomenda;15;25;importado;900;20;20;20;"R$ 412,00";"R$ 38,50";https://fornecedor-teste.example.com/produto/PRIVADO-7f3a;NOTA-PRIVADA-TESTE-7f3a (nunca pode aparecer no site);;"teste, miniatura";publicado;;;;
+Segundo parágrafo: este produto é apagado depois do teste.";colecionaveis;;hamilton;"R$ 899,90";;Único:2;sob_encomenda;15;25;importado;900;20;20;20;"R$ 412,00";"R$ 38,50";https://fornecedor-teste.example.com/produto/PRIVADO-7f3a;NOTA-PRIVADA-TESTE-7f3a (nunca pode aparecer no site);;"teste, miniatura";publicado;;;;;;;;;
 TESTE Boné Importador Apex;teste-importador-bone;"Boné de teste com foto vinda de uma URL do Unsplash (a mesma usada no catálogo de demonstração).
 
-Segundo parágrafo: este produto é apagado depois do teste.";acessorios;;;"R$ 99,90";;Único:6;estoque_proprio;1;3;nacional;180;25;20;10;"R$ 29,00";;;NOTA-PRIVADA-TESTE-7f3a (nunca pode aparecer no site);https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85;"teste, bone";publicado;não;não;;
+Segundo parágrafo: este produto é apagado depois do teste.";acessorios;;;"R$ 99,90";;Único:6;estoque_proprio;1;3;nacional;180;25;20;10;"R$ 29,00";;;NOTA-PRIVADA-TESTE-7f3a (nunca pode aparecer no site);https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85;"teste, bone";publicado;não;não;;;;;;;

@@ -15,7 +15,7 @@ export type NewOrder = {
   address: Order["address"];
   shipping: Order["shipping"];
   paymentMethod: Order["payment"]["method"];
-  items: { sku: string; quantity: number }[];
+  items: { sku: string; quantity: number; personalization?: { name?: string; number?: string } }[];
   /** Código do cupom (validado e contado pelo banco, dentro da create_order). */
   coupon?: string;
   /** Desconto no Pix da política da loja (lib/store-policy.ts); o banco só aplica se o meio for Pix. */
@@ -56,6 +56,7 @@ export async function createStoredOrder(input: NewOrder): Promise<CreateOrderRes
         return { ok: false, stockIssues: [] };
       }
     }
+    if (error.message.includes("PERSONALIZACAO_INVALIDA")) return { ok: false, error: "PERSONALIZACAO_INVALIDA" };
     if (error.message.includes("CUPOM_INVALIDO")) return { ok: false, couponReason: error.details ?? "inexistente" };
     return { ok: false, error: error.message };
   }

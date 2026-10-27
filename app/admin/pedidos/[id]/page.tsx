@@ -1,3 +1,4 @@
+import { personalizationLabel } from "@/lib/personalization";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CancelOrderDialog, RefundDialog } from "@/components/admin/order-dialogs";
@@ -58,6 +59,7 @@ export default async function AdminPedido({ params }: { params: Promise<{ id: st
                 <span>
                   {line.name}
                   <span className="block text-xs text-black/60">SKU {line.sku} · Tam. {line.size} · Qtd. {line.quantity}</span>
+                  {line.personalization && <span className="mt-1 inline-block rounded-md bg-[#b94f01] px-2 py-0.5 text-xs font-semibold tracking-[0.04em] text-white" data-personalization>{personalizationLabel(line.personalization)}</span>}
                   {line.status && (
                     <span className="block text-xs text-black/60">
                       {line.fulfillment === "sob_encomenda" ? "Sob encomenda" : "Estoque próprio"} · <span className="font-medium text-black">{ORDER_ITEM_STATUS_ADMIN_LABELS[line.status]}</span>

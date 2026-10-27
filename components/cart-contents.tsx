@@ -15,6 +15,7 @@ import { useState } from 'react'
 import { daysLabel } from '@/lib/catalog/fulfillment'
 import { pixPrice, storePolicy } from '@/lib/store-policy'
 import { useCartKits } from '@/components/use-kits'
+import { personalizationLabel } from '@/lib/personalization'
 
 // Conteúdo da sacola, usado na gaveta (variant="drawer") e na página /carrinho (variant="page").
 // `empty`: conteúdo extra abaixo da sacola vazia (na página: "Mais desejados", components/most-wanted.tsx).
@@ -50,11 +51,11 @@ export function CartContents({ variant, onNavigate, empty, couponsEnabled = fals
   // Kits completos na sacola (loja extra, item 2): itens agrupados como "Kit X" com a economia. Prévia; o servidor recalcula.
   const kitOf = new Map(applied.flatMap((kit) => kit.lineKeys.map((key) => [key, kit] as const)))
   const groups = [
-    ...applied.map((kit) => ({ kit, items: items.filter((item) => kitOf.get(item.sku) === kit) })),
-    { kit: null, items: items.filter((item) => !kitOf.has(item.sku)) },
+    ...applied.map((kit) => ({ kit, items: items.filter((item) => kitOf.get(item.key) === kit) })),
+    { kit: null, items: items.filter((item) => !kitOf.has(item.key)) },
   ]
   const renderItem = (item: (typeof items)[number]) => (
-    <li key={item.sku} className="flex gap-4 py-5">
+    <li key={item.key} className="flex gap-4 py-5">
       <Link href={`/produtos/${item.slug}`} onClick={onNavigate} className="relative aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-xl bg-[#e9e8e4] sm:w-24" tabIndex={-1} aria-hidden="true">
         {item.image && <Image src={item.image} alt="" fill sizes="96px" quality={75} className="object-cover" />}
       </Link>
@@ -65,24 +66,30 @@ export function CartContents({ variant, onNavigate, empty, couponsEnabled = fals
               {item.name}
             </Link>
             <p className="mt-1 text-xs text-black/60">Tamanho: {item.size}</p>
+            {item.personalization && (
+              <p className="mt-0.5 text-xs font-medium text-black" data-personalization>
+                {personalizationLabel(item.personalization)}
+                {item.feeCents ? <span className="font-normal text-black/60"> (+{formatPrice(item.feeCents)} cada)</span> : null}
+              </p>
+            )}
             {item.fulfillment === 'sob_encomenda' && item.dispatchDays && (
               <p className="mt-0.5 text-xs text-black/60">Sob encomenda · envio em {daysLabel(item.dispatchDays)}</p>
             )}
           </div>
-          <p className="whitespace-nowrap text-sm">{formatPrice(item.priceCents * item.quantity)}</p>
+          <p className="whitespace-nowrap text-sm">{formatPrice((item.priceCents + (item.feeCents ?? 0)) * item.quantity)}</p>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center rounded-xl border border-black/15" role="group" aria-label={`Quantidade de ${item.name}`}>
-            <button type="button" onClick={() => setQuantity(item.sku, item.quantity - 1)} aria-label="Diminuir quantidade" className="flex size-9 items-center justify-center rounded-l-xl transition hover:bg-black/5">
+            <button type="button" onClick={() => setQuantity(item.key, item.quantity - 1)} aria-label="Diminuir quantidade" className="flex size-9 items-center justify-center rounded-l-xl transition hover:bg-black/5">
               <Minus size={14} />
             </button>
             <span className="w-7 text-center text-sm tabular-nums" aria-live="polite">{item.quantity}</span>
-            <button type="button" onClick={() => setQuantity(item.sku, item.quantity + 1)} disabled={item.quantity >= item.stock} aria-label="Aumentar quantidade" className="flex size-9 items-center justify-center rounded-r-xl transition hover:bg-black/5 disabled:opacity-30">
+            <button type="button" onClick={() => setQuantity(item.key, item.quantity + 1)} disabled={item.quantity >= item.stock} aria-label="Aumentar quantidade" className="flex size-9 items-center justify-center rounded-r-xl transition hover:bg-black/5 disabled:opacity-30">
               <Plus size={14} />
             </button>
           </div>
           {item.quantity >= item.stock && <span className="text-[11px] text-black/60">Máximo em estoque</span>}
-          <button type="button" onClick={() => removeItem(item.sku)} aria-label={`Remover ${item.name} (${item.size})`} className="rounded-xl p-2 text-black/60 transition hover:bg-black/5 hover:text-black">
+          <button type="button" onClick={() => removeItem(item.key)} aria-label={`Remover ${item.name} (${item.size}${item.personalization ? `, ${personalizationLabel(item.personalization)}` : ''})`} className="rounded-xl p-2 text-black/60 transition hover:bg-black/5 hover:text-black">
             <Trash2 size={16} strokeWidth={1.5} />
           </button>
         </div>
@@ -125,7 +132,7 @@ export function CartContents({ variant, onNavigate, empty, couponsEnabled = fals
           </div>
         </div>
         )}
-        {variant === 'page' && couponsEnabled && <CouponField items={items.map((item) => ({ sku: item.sku, quantity: item.quantity }))} onApplied={(applied) => setCoupon(applied)} className="mt-5" />}
+        {variant === 'page' && couponsEnabled && <CouponField items={items.map((item) => ({ sku: item.sku, quantity: item.quantity, personalization: item.personalization }))} onApplied={(applied) => setCoupon(applied)} className="mt-5" />}
         <dl className="mt-5 flex flex-col gap-1 text-sm">
           {kitDiscountCents > 0 && (
             <div className="flex items-center justify-between text-black/70"><dt>Desconto de kit</dt><dd>−{formatPrice(kitDiscountCents)}</dd></div>

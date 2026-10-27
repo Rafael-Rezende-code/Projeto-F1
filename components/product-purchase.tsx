@@ -8,6 +8,8 @@ import { StockAlertForm } from "@/components/stock-alert-form";
 import { formatPrice } from "@/lib/format";
 import { lowStockCount } from "@/lib/store-policy";
 import type { Product } from "@/lib/catalog/types";
+import { PersonalizationField, type PersonalizationState } from "@/components/personalization-field";
+import { validatePersonalization } from "@/lib/personalization";
 
 // Seletor de tamanho (rádios), quantidade e "Adicionar à sacola". A quantidade nunca passa do estoque da variante.
 // Refino 3: tamanho ESGOTADO continua escolhível (riscado + "esgotado"): escolhê-lo mostra o "Avise-me quando chegar"
@@ -15,7 +17,9 @@ import type { Product } from "@/lib/catalog/types";
 // (ou do tamanho único) é ≤ o limite da política (lib/store-policy.ts, padrão 5). Microinterações (lib/motion.ts): realce
 // que DESLIZA até o tamanho escolhido (transform) e o número da quantidade que pulsa ao mudar.
 // No celular, quando o botão principal sai da tela, aparece uma barra fixa de compra logo acima do dock.
-export function ProductPurchase({ product, alertsEnabled = false }: { product: Product; alertsEnabled?: boolean }) {
+// Camisa personalizável (loja extra, item 3): campos de nome e número com prévia; o item personalizado é um item próprio
+// na sacola (SKU + nome + número) e o adicional é somado no servidor.
+export function ProductPurchase({ product, alertsEnabled = false, teamColor = "#1a1a1a" }: { product: Product; alertsEnabled?: boolean; teamColor?: string }) {
   const { addItem } = useCart();
   const available = product.variants.filter((variant) => variant.stock > 0);
   const single = product.variants.length === 1;
@@ -23,6 +27,8 @@ export function ProductPurchase({ product, alertsEnabled = false }: { product: P
   const [quantity, setQuantity] = useState(1);
   const [bump, setBump] = useState(0);
   const [error, setError] = useState("");
+  const [personal, setPersonal] = useState<PersonalizationState>({ enabled: false, name: "", number: "", errors: {} });
+  const personalRef = useRef<HTMLDivElement>(null);
   const variant = product.variants.find((item) => item.sku === sku) ?? null;
   const variantOut = variant !== null && variant.stock === 0;
   const max = variant && variant.stock > 0 ? variant.stock : 1;
@@ -93,6 +99,17 @@ export function ProductPurchase({ product, alertsEnabled = false }: { product: P
       return;
     }
     if (variantOut) return;
+    if (personal.enabled && product.personalization) {
+      const checked = validatePersonalization({ name: personal.name, number: personal.number }, product.personalization);
+      if (!checked.ok) {
+        setPersonal((current) => ({ ...current, errors: checked.errors }));
+        personalRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        personalRef.current?.querySelector<HTMLInputElement>(checked.errors.name ? "input:not([type=checkbox])" : "input[inputmode=numeric]")?.focus({ preventScroll: true });
+        return;
+      }
+      addItem(product, variant, quantity, event?.currentTarget, checked.value);
+      return;
+    }
     addItem(product, variant, quantity, event?.currentTarget);
   };
 
@@ -155,6 +172,12 @@ export function ProductPurchase({ product, alertsEnabled = false }: { product: P
         </p>
       )}
 
+      {product.personalization && !soldOut && (
+        <div ref={personalRef}>
+          <PersonalizationField config={product.personalization} color={teamColor} value={personal} onChange={setPersonal} />
+        </div>
+      )}
+
       {variantOut && variant && <StockAlertForm key={variant.sku} sku={variant.sku} size={single ? undefined : variant.size} enabled={alertsEnabled} />}
 
       <div ref={mainRef} className="flex items-stretch gap-3">
@@ -189,7 +212,7 @@ export function ProductPurchase({ product, alertsEnabled = false }: { product: P
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{product.name}</p>
               <p className="text-xs text-black/60">
-                {formatPrice(product.priceCents)}
+                {formatPrice(product.priceCents + (personal.enabled && product.personalization ? product.personalization.feeCents : 0))}
                 {variant && !single ? ` · Tam. ${variant.size}` : ""}
               </p>
             </div>

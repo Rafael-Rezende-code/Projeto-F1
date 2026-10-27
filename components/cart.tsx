@@ -8,6 +8,7 @@ import { flyToCart } from '@/lib/fly-to-cart'
 import { CART_STORAGE_KEY } from '@/lib/cart/config'
 import { cartCount, cartReducer, cartSubtotal, initialCartState, type CartItem } from '@/lib/cart/reducer'
 import type { Product, ProductVariant } from '@/lib/catalog/types'
+import type { Personalization } from '@/lib/personalization'
 
 // Sacola: estado no cliente (context + reducer), persistido no localStorage, um item por variante (produto + tamanho).
 // Só estes pequenos componentes são client; o resto da página é server component.
@@ -18,11 +19,13 @@ type CartContextValue = {
   /** true depois de ler o localStorage (antes disso a sacola aparece vazia, igual ao HTML do servidor). */
   ready: boolean
   /** `from`: o botão clicado (origem da miniatura que voa até a sacola, lib/fly-to-cart.ts). */
-  addItem: (product: Product, variant: ProductVariant, quantity?: number, from?: Element | null) => void
+  /** `personalization`: nome e número (produto personalizável, loja extra item 3); vira um item próprio na sacola. */
+  addItem: (product: Product, variant: ProductVariant, quantity?: number, from?: Element | null, personalization?: Personalization) => void
   /** Kit (loja extra, item 2): uma unidade de cada peça escolhida. O desconto é calculado pela sacola/servidor. */
   addKit: (entries: { product: Product; variant: ProductVariant }[], title: string, from?: Element | null) => boolean
-  setQuantity: (sku: string, quantity: number) => void
-  removeItem: (sku: string) => void
+  /** `key`: identidade do item (SKU + personalização). */
+  setQuantity: (key: string, quantity: number) => void
+  removeItem: (key: string) => void
   clear: () => void
   isOpen: boolean
   open: () => void
@@ -82,8 +85,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addItem = useCallback(
-    (product: Product, variant: ProductVariant, quantity = 1, from?: Element | null) => {
-      const current = state.items.find((item) => item.sku === variant.sku)?.quantity ?? 0
+    (product: Product, variant: ProductVariant, quantity = 1, from?: Element | null, personalization?: Personalization) => {
+      // O estoque é da variante: soma todas as linhas do mesmo SKU (com e sem personalização).
+      const current = state.items.filter((item) => item.sku === variant.sku).reduce((sum, item) => sum + item.quantity, 0)
       const room = variant.stock - current
       if (room <= 0) {
         announce(`Você já tem todas as unidades disponíveis de ${product.name} (${variant.size}) na sacola`)
@@ -103,6 +107,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           stock: variant.stock,
           fulfillment: product.fulfillment,
           dispatchDays: product.dispatchDays,
+          ...(personalization && product.personalization ? { personalization, feeCents: product.personalization.feeCents } : {}),
         },
       })
       announce(quantity > room ? `Só havia ${room} unidade(s) de ${product.name}: adicionamos o que restava` : `${product.name} foi adicionado à sacola`)
@@ -153,8 +158,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       ready,
       addItem,
       addKit,
-      setQuantity: (sku, quantity) => dispatch({ type: 'setQuantity', sku, quantity }),
-      removeItem: (sku) => dispatch({ type: 'remove', sku }),
+      setQuantity: (key, quantity) => dispatch({ type: 'setQuantity', key, quantity }),
+      removeItem: (key) => dispatch({ type: 'remove', key }),
       clear: () => dispatch({ type: 'clear' }),
       isOpen,
       open: () => setIsOpen(true),

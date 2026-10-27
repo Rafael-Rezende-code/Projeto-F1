@@ -23,6 +23,7 @@ import { methodFromBrick } from "@/lib/payments/brick";
 import { pixDiscountFor } from "@/lib/pricing";
 import { storePolicy } from "@/lib/store-policy";
 import { useCartKits } from "@/components/use-kits";
+import { personalizationLabel } from "@/lib/personalization";
 import type { CardDisplay } from "@/lib/payments/types";
 import type { BrickSubmit } from "@/components/checkout/mercado-pago-brick";
 import { maskCep, maskCpf, maskPhone, onlyDigits, UFS } from "@/lib/validators/br";
@@ -266,7 +267,7 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
     shipping: { shippingId: form.shippingId },
     coupon: coupon?.code,
     payment: { acceptTerms: form.acceptTerms, ...payment },
-    items: items.map((item) => ({ sku: item.sku, quantity: item.quantity })),
+    items: items.map((item) => ({ sku: item.sku, quantity: item.quantity, ...(item.personalization ? { personalization: item.personalization } : {}) })),
   });
 
   /** Depois do placeOrder: erro → mensagem (false); ok → guarda, esvazia a sacola e vai para a página do pedido. */
@@ -623,7 +624,7 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
         <div id="resumo-conteudo" className={`${summaryOpen ? "block" : "hidden"} lg:block`}>
           <ul role="list" className="mt-5 flex flex-col gap-4">
             {items.map((item) => (
-              <li key={item.sku} className="flex gap-3">
+              <li key={item.key} className="flex gap-3">
                 <div className="relative aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-xl bg-[#e9e8e4]">
                   {item.image && <Image src={item.image} alt="" fill sizes="56px" quality={75} className="object-cover" />}
                 </div>
@@ -631,16 +632,17 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
                   <div className="min-w-0">
                     <p className="truncate font-medium">{item.name}</p>
                     <p className="text-xs text-black/60">Tam. {item.size} · Qtd. {item.quantity}</p>
+                    {item.personalization && <p className="text-xs font-medium text-black" data-personalization>{personalizationLabel(item.personalization)}{item.feeCents ? ` (+${formatPrice(item.feeCents)} cada)` : ""}</p>}
                     {item.fulfillment === "sob_encomenda" && item.dispatchDays && <p className="text-xs text-black/60">Sob encomenda · {daysLabel(item.dispatchDays)}</p>}
                   </div>
-                  <p className="whitespace-nowrap">{formatPrice(item.priceCents * item.quantity)}</p>
+                  <p className="whitespace-nowrap">{formatPrice((item.priceCents + (item.feeCents ?? 0)) * item.quantity)}</p>
                 </div>
               </li>
             ))}
           </ul>
           {couponsEnabled && (
             <CouponField
-              items={items.map((item) => ({ sku: item.sku, quantity: item.quantity }))}
+              items={items.map((item) => ({ sku: item.sku, quantity: item.quantity, personalization: item.personalization }))}
               cep={option ? cepDigits : undefined}
               shippingId={option?.id}
               onApplied={setCoupon}

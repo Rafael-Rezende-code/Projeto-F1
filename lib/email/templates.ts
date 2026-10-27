@@ -1,3 +1,4 @@
+import { personalizationLabel } from "@/lib/personalization";
 import { BRAND } from "@/lib/brand";
 import { orderUrl, PAYMENT_LABELS, type Order } from "@/lib/checkout/order";
 import { formatPrice } from "@/lib/format";
@@ -48,7 +49,10 @@ function copyFor(type: OrderEmailType, order: Order): Copy {
 export function orderEmail(type: OrderEmailType, order: Order, siteUrl: string) {
   const copy = copyFor(type, order);
   const link = new URL(orderUrl(order), siteUrl).toString();
-  const lines = order.lines.map((line) => ({ label: `${line.name} · Tam. ${line.size} · Qtd. ${line.quantity}`, price: formatPrice(line.unitPriceCents * line.quantity) }));
+  const lines = order.lines.map((line) => ({
+    label: `${line.name} · Tam. ${line.size} · Qtd. ${line.quantity}${line.personalization ? ` · ${personalizationLabel(line.personalization)}` : ""}`,
+    price: formatPrice((line.unitPriceCents + (line.feeCents ?? 0)) * line.quantity),
+  }));
   const totals = [
     ["Subtotal", formatPrice(order.subtotalCents)],
     ...(order.coupon && order.coupon.discountCents > 0 ? [[`Cupom ${order.coupon.code}`, `−${formatPrice(order.coupon.discountCents)}`]] : []),

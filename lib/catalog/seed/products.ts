@@ -184,6 +184,8 @@ const teamProducts: Product[] = teams.flatMap((team, i) => [
     sizes: APPAREL,
     tags: ["camiseta", team.slug],
     isNew: i % 4 === 0,
+    // Exemplo: camisas de equipe com nome e número nas costas (adicional de R$ 30,00 a confirmar pela loja).
+    personalization: { feeCents: 3000, maxName: 12, numberMin: 0, numberMax: 99 },
   }),
   product({
     slug: `bone-${team.slug}`,

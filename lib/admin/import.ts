@@ -36,6 +36,12 @@ export const IMPORT_COLUMNS = [
   { key: "mais_vendido", label: "mais_vendido", required: false, help: "sim/não: entra em \"Mais vendidos\" por escolha da loja" },
   { key: "ordem_mais_vendido", label: "ordem_mais_vendido", required: false, help: "Ordem entre os mais vendidos manuais (1 = primeiro)" },
   { key: "novo_ate", label: "novo_ate", required: false, help: "Selo NOVO até esta data (AAAA-MM-DD ou DD/MM/AAAA)" },
+  // Personalização (loja extra, item 3). Célula vazia = mantém o valor atual (ou o padrão, em produto novo).
+  { key: "personalizavel", label: "personalizavel", required: false, help: "sim/não: aceita nome e número nas costas" },
+  { key: "personalizacao_adicional", label: "personalizacao_adicional", required: false, help: "Adicional por peça personalizada (ex.: R$ 30,00)" },
+  { key: "personalizacao_max_nome", label: "personalizacao_max_nome", required: false, help: "Limite de letras do nome (1 a 20; padrão 12)" },
+  { key: "personalizacao_numero_min", label: "personalizacao_numero_min", required: false, help: "Menor número aceito (padrão 0)" },
+  { key: "personalizacao_numero_max", label: "personalizacao_numero_max", required: false, help: "Maior número aceito (até 999; padrão 99)" },
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number]["key"];
@@ -50,6 +56,8 @@ const ALIASES: Record<string, ImportColumn> = {
   notas_internas: "notas", fotos: "imagens", urls_das_imagens: "imagens", imagem: "imagens",
   featured: "destaque", bestseller: "mais_vendido", bestseller_manual: "mais_vendido", bestseller_rank: "ordem_mais_vendido",
   ordem: "ordem_mais_vendido", new_until: "novo_ate", novo_ate_data: "novo_ate", novo_ate_dia: "novo_ate",
+  personalizable: "personalizavel", personalizada: "personalizavel", personalizacao: "personalizavel", adicional_personalizacao: "personalizacao_adicional",
+  taxa_personalizacao: "personalizacao_adicional", max_nome: "personalizacao_max_nome", numero_min: "personalizacao_numero_min", numero_max: "personalizacao_numero_max",
 };
 
 export const normalizeKey = (text: string) =>
@@ -202,6 +210,8 @@ export type ImportProduct = {
   imageUrls: string[];
   /** Curadoria (refino 3). `undefined` = célula vazia = não altera. */
   curation: { featured?: boolean; bestsellerManual?: boolean; bestsellerRank?: number | null; newUntil?: string | null };
+  /** Personalização (loja extra, item 3): undefined = mantém o valor atual. */
+  personalization: { personalizable?: boolean; feeCents?: number; maxName?: number; numberMin?: number; numberMax?: number };
 };
 
 /** PRIVADO (product_private). `undefined` = célula vazia = não altera o que já existe. */
@@ -356,6 +366,24 @@ export function analyzeImport(text: string, context: ImportContext) {
       else newUntil = parsedDate;
     }
 
+    // Personalização: célula vazia não altera.
+    const personalizableFlag = yesNo("personalizavel", "Personalizável");
+    const feeValue = get("personalizacao_adicional") ? parseMoney(get("personalizacao_adicional")) : undefined;
+    if (Number.isNaN(feeValue)) errors.push(`Adicional de personalização "${get("personalizacao_adicional")}" inválido.`);
+    const intIn = (key: ImportColumn, label: string, min: number, max: number) => {
+      if (!get(key)) return undefined;
+      const value = Number(get(key));
+      if (!Number.isInteger(value) || value < min || value > max) {
+        errors.push(`${label} "${get(key)}" inválido (${min} a ${max}).`);
+        return undefined;
+      }
+      return value;
+    };
+    const maxName = intIn("personalizacao_max_nome", "Limite do nome", 1, 20);
+    const numberMin = intIn("personalizacao_numero_min", "Número mínimo", 0, 999);
+    const numberMax = intIn("personalizacao_numero_max", "Número máximo", 0, 999);
+    if (numberMin !== undefined && numberMax !== undefined && numberMax < numberMin) errors.push("Número máximo menor que o mínimo.");
+
     // SKUs: mantém os do produto existente (mesmo tamanho); senão, gera SLUG-TAMANHO.
     const variants = (sizes ?? []).map((item) => {
       const sku = existing?.variants.find((variant) => normalizeKey(variant.size) === normalizeKey(item.size))?.sku ?? skuFor(slug, item.size);
@@ -396,6 +424,7 @@ export function analyzeImport(text: string, context: ImportContext) {
         status: status === "active" && !existing && !imageUrls.length ? "draft" : status!,
         imageUrls,
         curation: { featured: featuredFlag, bestsellerManual: bestsellerFlag, bestsellerRank, newUntil },
+        personalization: { personalizable: personalizableFlag, feeCents: Number.isNaN(feeValue) ? undefined : (feeValue ?? undefined), maxName, numberMin, numberMax },
       },
       secret: {
         costCents: cost ?? undefined,
@@ -412,8 +441,8 @@ export function analyzeImport(text: string, context: ImportContext) {
 export function importTemplate() {
   const header = IMPORT_COLUMNS.map((column) => column.label);
   const examples = [
-    ["Camiseta Exemplo Ferrari", "", "Camiseta de algodão com estampa frontal.\n\nSegundo parágrafo da descrição.", "teamwear", "ferrari", "", "R$ 199,90", "R$ 249,90", "P:5 | M:8 | G:6 | GG:2", "estoque_proprio", "1", "2", "nacional", "250", "30", "25", "3", "R$ 62,00", "", "", "", "https://images.unsplash.com/photo-xxxxx", "camiseta, ferrari", "publicado", "sim", "sim", "1", "31/12/2026"],
-    ["Miniatura Exemplo 1:43", "miniatura-exemplo-143", "Miniatura em escala 1:43 com base expositora.", "colecionaveis", "", "hamilton", "R$ 1.299,90", "", "Único:3", "sob_encomenda", "15", "30", "importado", "900", "20", "20", "20", "R$ 640,00", "R$ 55,00", "https://fornecedor.exemplo/produto/123", "Pedir com caixa original", "", "miniatura", "rascunho", "", "", "", ""],
+    ["Camiseta Exemplo Ferrari", "", "Camiseta de algodão com estampa frontal.\n\nSegundo parágrafo da descrição.", "teamwear", "ferrari", "", "R$ 199,90", "R$ 249,90", "P:5 | M:8 | G:6 | GG:2", "estoque_proprio", "1", "2", "nacional", "250", "30", "25", "3", "R$ 62,00", "", "", "", "https://images.unsplash.com/photo-xxxxx", "camiseta, ferrari", "publicado", "sim", "sim", "1", "31/12/2026", "sim", "R$ 30,00", "12", "0", "99"],
+    ["Miniatura Exemplo 1:43", "miniatura-exemplo-143", "Miniatura em escala 1:43 com base expositora.", "colecionaveis", "", "hamilton", "R$ 1.299,90", "", "Único:3", "sob_encomenda", "15", "30", "importado", "900", "20", "20", "20", "R$ 640,00", "R$ 55,00", "https://fornecedor.exemplo/produto/123", "Pedir com caixa original", "", "miniatura", "rascunho", "", "", "", "", "", "", "", "", ""],
   ];
   const quote = (cell: string) => (/[;"\n,]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell);
   return "﻿" + [header, ...examples].map((row) => row.map(quote).join(";")).join("\r\n") + "\r\n";

@@ -305,6 +305,27 @@ do $$ begin
 end $$;
 
 do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'personalizable') then
+    update public.products p set personalizable = true, personalization_fee_cents = v.fee, personalization_max_name = v.max_name,
+      personalization_number_min = v.num_min, personalization_number_max = v.num_max
+    from (values
+      ('APX-007', 3000, 12, 0, 99),
+      ('APX-011', 3000, 12, 0, 99),
+      ('APX-015', 3000, 12, 0, 99),
+      ('APX-019', 3000, 12, 0, 99),
+      ('APX-023', 3000, 12, 0, 99),
+      ('APX-027', 3000, 12, 0, 99),
+      ('APX-031', 3000, 12, 0, 99),
+      ('APX-035', 3000, 12, 0, 99),
+      ('APX-039', 3000, 12, 0, 99),
+      ('APX-043', 3000, 12, 0, 99),
+      ('APX-047', 3000, 12, 0, 99)
+    ) as v(code, fee, max_name, num_min, num_max)
+    where p.code = v.code;
+  end if;
+end $$;
+
+do $$ begin
   if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'kits') then
     insert into public.kits (slug, title, team_slug, driver_slug, product_slugs, discount_percent, active) values
       ('kit-norris', 'Kit dia de corrida Norris', 'mclaren', 'norris', array['camiseta-norris', 'bone-norris', 'poster-norris']::text[], 10, true),

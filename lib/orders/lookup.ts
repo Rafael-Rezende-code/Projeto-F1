@@ -14,7 +14,7 @@ export type OrderLookup = {
   state: string;
   totalCents: number;
   tracking?: { code: string; shippedAt?: string };
-  items: { name: string; size: string; image: string; quantity: number; slug: string; status?: OrderItemStatus; tracking?: string }[];
+  items: { name: string; size: string; image: string; quantity: number; slug: string; status?: OrderItemStatus; tracking?: string; personalization?: { name?: string; number?: string } }[];
 };
 
 const ORDER_ID = /^[A-Z0-9][A-Z0-9-]{3,39}$/;
@@ -42,7 +42,7 @@ type Row = {
   total_cents: number;
   tracking_code: string | null;
   shipped_at: string | null;
-  items: { name: string; size: string; image: string | null; quantity: number; slug: string; item_status: OrderItemStatus | null; tracking_code: string | null }[];
+  items: { name: string; size: string; image: string | null; quantity: number; slug: string; item_status: OrderItemStatus | null; tracking_code: string | null; personalization?: { name?: string | null; number?: string | null } | null }[];
 };
 
 export function lookupFromRow(row: Row | null | undefined): OrderLookup | null {
@@ -66,6 +66,7 @@ export function lookupFromRow(row: Row | null | undefined): OrderLookup | null {
       slug: item.slug,
       ...(itemStatus && item.item_status ? { status: item.item_status } : {}),
       ...(item.tracking_code ? { tracking: item.tracking_code } : {}),
+      ...(item.personalization ? { personalization: { name: item.personalization.name ?? undefined, number: item.personalization.number ?? undefined } } : {}),
     })),
   };
 }

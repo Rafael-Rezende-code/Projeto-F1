@@ -1,3 +1,4 @@
+import { DEFAULT_PERSONALIZATION, type PersonalizationConfig } from "@/lib/personalization";
 import { drivers as driverCards } from "@/lib/drivers";
 import { DEFAULT_DISPATCH, DEFAULT_PACKAGE } from "./fulfillment";
 import type { Category, Driver, Fulfillment, Product, ProductDetail, ProductOrigin, Team } from "./types";
@@ -30,6 +31,13 @@ export type ProductRow = {
   bestseller_manual?: boolean;
   bestseller_rank?: number | null;
   new_until?: string | null;
+  // Personalização (migração 20261104000000_personalizacao.sql). Opcionais na leitura.
+  personalizable?: boolean;
+  personalization_fee_cents?: number;
+  personalization_max_name?: number;
+  personalization_number_min?: number;
+  personalization_number_max?: number;
+  personalization_back?: PersonalizationConfig["back"];
   status: Product["status"];
   illustrative: boolean;
   position: number;
@@ -114,6 +122,15 @@ export function productFromRow(row: ProductRow): Product {
     bestsellerManual: row.bestseller_manual || undefined,
     bestsellerRank: row.bestseller_rank ?? undefined,
     newUntil: row.new_until ? row.new_until.slice(0, 10) : undefined,
+    personalization: row.personalizable
+      ? {
+          feeCents: row.personalization_fee_cents ?? 0,
+          maxName: row.personalization_max_name ?? DEFAULT_PERSONALIZATION.maxName,
+          numberMin: row.personalization_number_min ?? DEFAULT_PERSONALIZATION.numberMin,
+          numberMax: row.personalization_number_max ?? DEFAULT_PERSONALIZATION.numberMax,
+          back: row.personalization_back ?? null,
+        }
+      : undefined,
     status: row.status,
     illustrative: row.illustrative || undefined,
     createdAt: row.created_at,
@@ -137,7 +154,14 @@ export function productToRows(product: Product, position: number) {
     bestseller_rank: product.bestsellerRank ?? null,
     new_until: product.newUntil ?? null,
   };
-  const row: Omit<ProductRow, "id" | "product_variants" | "product_images" | keyof typeof curation> = {
+  const personalization = {
+    personalizable: Boolean(product.personalization),
+    personalization_fee_cents: product.personalization?.feeCents ?? 0,
+    personalization_max_name: product.personalization?.maxName ?? DEFAULT_PERSONALIZATION.maxName,
+    personalization_number_min: product.personalization?.numberMin ?? DEFAULT_PERSONALIZATION.numberMin,
+    personalization_number_max: product.personalization?.numberMax ?? DEFAULT_PERSONALIZATION.numberMax,
+  };
+  const row: Omit<ProductRow, "id" | "product_variants" | "product_images" | keyof typeof curation | keyof typeof personalization> = {
     code: product.id,
     slug: product.slug,
     name: product.name,
@@ -167,5 +191,5 @@ export function productToRows(product: Product, position: number) {
   };
   const variants = product.variants.map((variant, index) => ({ sku: variant.sku, size: variant.size, color: variant.color ?? null, stock: variant.stock, position: index }));
   const images = product.images.map((image, index) => ({ src: image.src, alt: image.alt, illustrative: image.illustrative ?? false, position: index }));
-  return { row, variants, images, curation };
+  return { row, variants, images, curation, personalization };
 }

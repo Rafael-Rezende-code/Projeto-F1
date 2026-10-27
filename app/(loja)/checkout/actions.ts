@@ -21,6 +21,7 @@ import { storePolicy } from "@/lib/store-policy";
 import { applyKits, computeTotals, type PriceLine } from "@/lib/pricing";
 import { getKits } from "@/lib/kits-store";
 import type { Kit } from "@/lib/kits";
+import { validatePersonalization } from "@/lib/personalization";
 
 export type PlaceOrderResult =
   | { ok: true; order: Order }
@@ -58,7 +59,8 @@ export async function previewCoupon(input: unknown): Promise<CouponPreview> {
   const priceLines: PriceLine[] = [];
   for (const item of parsed.data.items) {
     const found = await catalog.getVariantBySku(item.sku);
-    if (found) priceLines.push({ key: item.sku, sku: item.sku, slug: found.product.slug, unitPriceCents: found.product.priceCents, feeCents: 0, quantity: item.quantity, personalized: false });
+    const personalized = Boolean(item.personalization && found?.product.personalization);
+    if (found) priceLines.push({ key: item.sku, sku: item.sku, slug: found.product.slug, unitPriceCents: found.product.priceCents, feeCents: personalized ? (found.product.personalization?.feeCents ?? 0) : 0, quantity: item.quantity, personalized });
   }
   const kitCents = applyKits(priceLines, await getKits()).reduce((sum, kit) => sum + kit.discountCents, 0);
   if (kitCents > 0 && !storePolicy.couponWithKit) return { ok: false, message: couponMessage("com_kit") };
@@ -68,7 +70,7 @@ export async function previewCoupon(input: unknown): Promise<CouponPreview> {
     subtotalCents = quote.subtotalCents;
     shippingCents = quote.options.find((option) => option.id === parsed.data.shippingId)?.priceCents ?? 0;
   } else {
-    subtotalCents = priceLines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
+    subtotalCents = priceLines.reduce((sum, line) => sum + (line.unitPriceCents + line.feeCents) * line.quantity, 0);
   }
   subtotalCents -= kitCents;
   const { data, error } = await createPublicClient().rpc("quote_coupon", { p_code: code, p_subtotal_cents: subtotalCents, p_shipping_cents: shippingCents });
@@ -104,13 +106,30 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
 
   const lines: OrderLine[] = [];
   const stockIssues: { sku: string; available: number }[] = [];
+  // Estoque é da variante: linhas do mesmo SKU (com e sem personalização) somam.
+  const wanted = new Map<string, number>();
+  for (const item of data.items) wanted.set(item.sku, (wanted.get(item.sku) ?? 0) + item.quantity);
+  const items: { sku: string; quantity: number; personalization?: { name?: string; number?: string } }[] = [];
   for (const item of data.items) {
     const found = await catalog.getVariantBySku(item.sku);
-    if (!found || found.variant.stock < item.quantity) {
-      stockIssues.push({ sku: item.sku, available: found?.variant.stock ?? 0 });
+    if (!found || found.variant.stock < (wanted.get(item.sku) ?? item.quantity)) {
+      if (!stockIssues.some((issue) => issue.sku === item.sku)) stockIssues.push({ sku: item.sku, available: found?.variant.stock ?? 0 });
       continue;
     }
+    // Personalização (loja extra, item 3): só em produto personalizável, pela regra dele e sem palavras bloqueadas.
+    let personalization: { name?: string; number?: string } | undefined;
+    if (item.personalization) {
+      const config = found.product.personalization;
+      if (!config) return { ok: false, message: `${found.product.name} não aceita personalização. Tire o nome e o número na sacola.` };
+      const checked = validatePersonalization(item.personalization, config);
+      if (!checked.ok) return { ok: false, message: `Confira a personalização de ${found.product.name}: ${Object.values(checked.errors).join(" ")}` };
+      personalization = checked.value;
+    }
+    const feeCents = personalization ? (found.product.personalization?.feeCents ?? 0) : 0;
+    items.push({ sku: item.sku, quantity: item.quantity, ...(personalization ? { personalization } : {}) });
     lines.push({
+      personalization,
+      feeCents: feeCents || undefined,
       sku: item.sku,
       slug: found.product.slug,
       name: found.product.name,
@@ -125,7 +144,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   }
   if (stockIssues.length) return { ok: false, message: STOCK_MESSAGE, stockIssues };
 
-  const subtotalCents = lines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
+  const subtotalCents = lines.reduce((sum, line) => sum + (line.unitPriceCents + (line.feeCents ?? 0)) * line.quantity, 0);
   // Frete cotado DE NOVO no servidor (lib/shipping): a opção escolhida precisa existir para este CEP e esta sacola.
   const quote = await quoteForItems(data.address.cep, data.items);
   if (!quote.ok) return { ok: false, message: quote.stockIssues ? STOCK_MESSAGE : quote.message, stockIssues: quote.stockIssues };
@@ -157,7 +176,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
         address,
         shipping,
         paymentMethod: data.payment.method,
-        items: data.items,
+        items,
         coupon: coupon ?? undefined,
         pixPercent: storePolicy.pixDiscountPercent,
         couponWithKit: storePolicy.couponWithKit,
@@ -166,12 +185,13 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   if (stored && !stored.ok) {
     if ("stockIssues" in stored) return { ok: false, message: STOCK_MESSAGE, stockIssues: stored.stockIssues };
     if ("couponReason" in stored) return { ok: false, message: couponMessage(stored.couponReason), errors: { coupon: couponMessage(stored.couponReason) } };
+    if (stored.error === "PERSONALIZACAO_INVALIDA") return { ok: false, message: "Confira o nome e o número da personalização na sacola." };
     console.error("[checkout] create_order:", stored.error);
     return { ok: false, message: "Não foi possível registrar o pedido agora. Tente de novo em instantes." };
   }
   // Simulado: mesma conta do banco (lib/pricing.ts). Gravado: o total é o do banco.
   const simulatedTotals = computeTotals({
-    lines: lines.map((line) => ({ key: line.sku, sku: line.sku, slug: line.slug, unitPriceCents: line.unitPriceCents, feeCents: 0, quantity: line.quantity, personalized: false })),
+    lines: lines.map((line, index) => ({ key: `${line.sku}#${index}`, sku: line.sku, slug: line.slug, unitPriceCents: line.unitPriceCents, feeCents: line.feeCents ?? 0, quantity: line.quantity, personalized: Boolean(line.personalization) })),
     kits: stored ? [] : await getKits(),
     shippingCents,
     method: data.payment.method,

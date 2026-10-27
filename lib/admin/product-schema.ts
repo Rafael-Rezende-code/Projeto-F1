@@ -37,6 +37,12 @@ export const productFormSchema = z
     bestsellerManual: z.boolean(),
     bestsellerRank: z.union([z.literal(""), z.string().regex(/^\d{1,4}$/, "Use um número de 1 a 9999.")]),
     newUntil: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida.")]),
+    // Personalização (loja extra, item 3): nome e número nas costas, com adicional em reais.
+    personalizable: z.boolean(),
+    personalizationFee: z.string(),
+    personalizationMaxName: z.number().int("Use um número inteiro.").min(1, "De 1 a 20.").max(20, "De 1 a 20."),
+    personalizationNumberMin: z.number().int("Use um número inteiro.").min(0, "Mínimo 0."),
+    personalizationNumberMax: z.number().int("Use um número inteiro.").max(999, "Até 999."),
     status: z.enum(["draft", "active", "archived"]),
     variants: z
       .array(
@@ -76,6 +82,8 @@ export const productFormSchema = z
       if (Number.isNaN(toCents(value[key]))) ctx.addIssue({ code: "custom", path: [key], message: "Valor inválido (ex.: 89,90)." });
     const skus = value.variants.map((variant) => variant.sku.toUpperCase());
     if (new Set(skus).size !== skus.length) ctx.addIssue({ code: "custom", path: ["variants"], message: "Há SKUs repetidos." });
+    if (Number.isNaN(toCents(value.personalizationFee))) ctx.addIssue({ code: "custom", path: ["personalizationFee"], message: "Valor inválido (ex.: 30,00)." });
+    if (value.personalizationNumberMax < value.personalizationNumberMin) ctx.addIssue({ code: "custom", path: ["personalizationNumberMax"], message: "O máximo precisa ser maior ou igual ao mínimo." });
     if (value.bestsellerRank !== "" && Number(value.bestsellerRank) < 1) ctx.addIssue({ code: "custom", path: ["bestsellerRank"], message: "Use um número de 1 a 9999." });
     if (value.status === "active" && value.images.length === 0) ctx.addIssue({ code: "custom", path: ["images"], message: "Para publicar, envie pelo menos uma foto." });
   });

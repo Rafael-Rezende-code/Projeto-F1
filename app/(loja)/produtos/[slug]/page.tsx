@@ -165,7 +165,7 @@ export default async function ProductPage({ params }: Params) {
             )}
 
             <div className="mt-8">
-              <ProductPurchase product={product} alertsEnabled={isSupabaseConfigured()} />
+              <ProductPurchase product={product} alertsEnabled={isSupabaseConfigured()} teamColor={team?.brandColor ?? team?.color} />
               <WhatsAppTopic product={{ name: product.name, slug: product.slug }} />
               <TrackEvent event={{ name: "view_item", item: { id: product.slug, name: product.name, priceCents: product.priceCents, category: product.categorySlug } }} />
               {/* Frete por CEP: o pacote é o mesmo para todos os tamanhos; cota com uma variante disponível. */}

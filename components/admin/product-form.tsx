@@ -33,6 +33,11 @@ const EMPTY: ProductForm = {
   bestsellerManual: false,
   bestsellerRank: "",
   newUntil: "",
+  personalizable: false,
+  personalizationFee: "",
+  personalizationMaxName: 12,
+  personalizationNumberMin: 0,
+  personalizationNumberMax: 99,
   status: "draft",
   variants: [{ sku: "", size: "Único", color: "", stock: 0 }],
   images: [],
@@ -346,6 +351,33 @@ export function ProductFormView({ options, initial, code }: { options: Options; 
               <input type="date" value={form.newUntil} onChange={(e) => set("newUntil", e.target.value)} aria-invalid={Boolean(errors.newUntil)} className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm" />
               {errors.newUntil && <span className="mt-1 block text-xs text-[#b42318]">{errors.newUntil}</span>}
             </label>
+          </section>
+
+          <section className="rounded-2xl bg-white p-6">
+            <h2 className="font-medium">Personalização</h2>
+            <p className="mt-1 text-xs leading-5 text-black/60">Nome e número nas costas, com prévia na página. Peça personalizada não entra em kits.</p>
+            <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.personalizable} onChange={(e) => set("personalizable", e.target.checked)} className="size-4 accent-[#b94f01]" /> Aceita nome e número</label>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <label className="col-span-2 block text-sm">
+                <span className="mb-1 block text-xs font-medium text-black/70">Adicional por peça (R$)</span>
+                <input inputMode="decimal" value={form.personalizationFee} onChange={(e) => set("personalizationFee", e.target.value)} disabled={!form.personalizable} aria-invalid={Boolean(errors.personalizationFee)} placeholder="30,00" className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm disabled:bg-black/5" />
+                {errors.personalizationFee && <span className="mt-1 block text-xs text-[#b42318]">{errors.personalizationFee}</span>}
+              </label>
+              <label className="col-span-2 block text-sm">
+                <span className="mb-1 block text-xs font-medium text-black/70">Limite de letras do nome</span>
+                <input type="number" min={1} max={20} value={form.personalizationMaxName} onChange={(e) => set("personalizationMaxName", Number(e.target.value))} disabled={!form.personalizable} className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm disabled:bg-black/5" />
+                {errors.personalizationMaxName && <span className="mt-1 block text-xs text-[#b42318]">{errors.personalizationMaxName}</span>}
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-xs font-medium text-black/70">Número mínimo</span>
+                <input type="number" min={0} value={form.personalizationNumberMin} onChange={(e) => set("personalizationNumberMin", Number(e.target.value))} disabled={!form.personalizable} className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm disabled:bg-black/5" />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-xs font-medium text-black/70">Número máximo</span>
+                <input type="number" max={999} value={form.personalizationNumberMax} onChange={(e) => set("personalizationNumberMax", Number(e.target.value))} disabled={!form.personalizable} className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm disabled:bg-black/5" />
+              </label>
+              {errors.personalizationNumberMax && <span className="col-span-2 block text-xs text-[#b42318]">{errors.personalizationNumberMax}</span>}
+            </div>
           </section>
 
           <section className="rounded-2xl bg-white p-6">
