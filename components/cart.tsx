@@ -86,16 +86,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     (product: Product, variant: ProductVariant, quantity = 1, from?: Element | null, personalization?: Personalization) => {
+      // Drop (loja extra, item 6): antes do lançamento não entra; depois, até o limite por pedido (o servidor confere).
+      if (product.drop && Date.now() < new Date(product.drop.launchAt).getTime()) {
+        announce(`${product.name} ainda não foi lançado`)
+        return
+      }
       // O estoque é da variante: soma todas as linhas do mesmo SKU (com e sem personalização).
       const current = state.items.filter((item) => item.sku === variant.sku).reduce((sum, item) => sum + item.quantity, 0)
-      const room = variant.stock - current
+      const dropRoom = product.drop?.perOrderLimit ? product.drop.perOrderLimit - state.items.filter((item) => item.dropSlug === product.drop!.slug).reduce((sum, item) => sum + item.quantity, 0) : Infinity
+      if (dropRoom <= 0) {
+        announce(`Limite de ${product.drop!.perOrderLimit} por pedido em ${product.drop!.title}`)
+        return
+      }
+      const room = Math.min(variant.stock - current, dropRoom)
       if (room <= 0) {
         announce(`Você já tem todas as unidades disponíveis de ${product.name} (${variant.size}) na sacola`)
         return
       }
       dispatch({
         type: 'add',
-        quantity,
         item: {
           sku: variant.sku,
           productId: product.id,
@@ -108,7 +117,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
           fulfillment: product.fulfillment,
           dispatchDays: product.dispatchDays,
           ...(personalization && product.personalization ? { personalization, feeCents: product.personalization.feeCents } : {}),
+          ...(product.drop ? { dropSlug: product.drop.slug } : {}),
         },
+        quantity: Math.min(quantity, room),
       })
       announce(quantity > room ? `Só havia ${room} unidade(s) de ${product.name}: adicionamos o que restava` : `${product.name} foi adicionado à sacola`)
       flyToCart(from)
@@ -119,6 +130,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addKit = useCallback(
     (entries: { product: Product; variant: ProductVariant }[], title: string, from?: Element | null) => {
+      const early = entries.find(({ product }) => product.drop && Date.now() < new Date(product.drop.launchAt).getTime())
+      if (early) {
+        announce(`${early.product.name} ainda não foi lançado`)
+        return false
+      }
       const full = entries.find(({ variant }) => variant.stock - (state.items.find((item) => item.sku === variant.sku)?.quantity ?? 0) <= 0)
       if (full) {
         announce(`Não há mais unidades de ${full.product.name} (${full.variant.size}) para o kit`)

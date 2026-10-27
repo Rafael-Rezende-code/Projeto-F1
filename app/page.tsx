@@ -1,3 +1,7 @@
+import { DropsHome } from '@/components/drops-home'
+import { visibleDrops } from '@/lib/drops'
+import { getDrops } from '@/lib/drops-store'
+import { navExtras } from '@/lib/nav-extras'
 import { NextRace } from '@/components/next-race'
 import { isRaceWeek, nextRace } from '@/lib/calendar'
 import { getRaceWeekends } from '@/lib/calendar-store'
@@ -52,12 +56,14 @@ export const revalidate = 3600
 const renderTime = () => Date.now()
 
 export default async function Page() {
-  const [allProducts, bestsellers, races] = await Promise.all([catalog.getProducts(), catalog.getBestsellers(8), getRaceWeekends()])
+  const [allProducts, bestsellers, races, drops] = await Promise.all([catalog.getProducts(), catalog.getBestsellers(8), getRaceWeekends(), getDrops()])
   // Semana de corrida (loja extra, item 5): sem corrida futura, nada; de sexta a segunda, o bloco sobe para logo depois do hero.
   const now = renderTime()
   const race = nextRace(races, now)
   const raceBlock = race ? <div className="px-5 pt-10 sm:px-10 sm:pt-14"><NextRace race={race} now={now} className="mx-auto max-w-[1400px]" /></div> : null
   const raceWeek = isRaceWeek(race, now)
+  // Drops (loja extra, item 6): bloco só com drop ativo ou futuro.
+  const homeDrops = visibleDrops(drops, now)
   // Ordem da home (refino 3, docs/refino-3/home.md): cada produto aparece em UMA vitrine só. Mais vendidos (curadoria +
   // vendas reais; lib/catalog/curation.ts) → Novidades (selo NOVO, sem os que já estão em Mais vendidos) → VELOCIDADE
   // (destaques que ainda não apareceram; se faltar, os destaques de sempre).
@@ -70,7 +76,7 @@ export default async function Page() {
   const gifts = giftBandCounts(allProducts).filter((band) => band.count > 0)
   return <main id="top" className="min-h-screen bg-white">
     <AuthErrorRedirect />
-    <SiteHeader variant="overlay" />
+    <SiteHeader variant="overlay" extraLinks={await navExtras()} />
     <section className="hero-type relative h-screen w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
       <script dangerouslySetInnerHTML={{ __html: HERO_FONT_SCRIPT }} />
       <Spotlight image={REVEAL_IMAGE} base={BASE_IMAGE} /><div className="absolute inset-0 z-20 bg-gradient-to-b from-black/30 via-transparent to-black/45" /><div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-[55%] bg-gradient-to-t from-black/70 via-black/30 to-transparent sm:h-[45%] sm:from-black/55" />
@@ -87,6 +93,8 @@ export default async function Page() {
     <TeamMarquee />
 
     <section id="mais-vendidos" aria-labelledby="mais-vendidos-titulo" className="scroll-mt-20 bg-[#f5f5f3] px-5 py-20 sm:px-10 sm:py-28"><div className="mx-auto max-w-[1400px]"><ShelfHeader id="mais-vendidos-titulo" eyebrow="O que o grid veste" title="Mais vendidos" body="As peças às quais a comunidade sempre volta." href="/produtos" linkLabel="Ver todos os produtos" /><ProductGrid products={bestsellers} /></div></section>
+
+    {homeDrops.length > 0 && <DropsHome drops={homeDrops} now={now} />}
 
     <section id="collection" className="px-5 pb-20 pt-16 sm:px-10 sm:pb-28 sm:pt-20"><SectionIntro eyebrow="Explore a coleção" title="Feita em torno da corrida." highlight="corrida" body="Dos essenciais do dia de prova às peças colecionáveis, descubra produtos de Fórmula 1 para quem vive pela próxima volta." /><RevealGroup className="mx-auto mt-14 grid max-w-[1400px] grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">{homeCollections.map(({ collection }, index) => <li key={collection.slug}><CollectionCard href={`/colecoes/${collection.slug}`} eyebrow={String(index + 1).padStart(2, "0")} title={collection.title} subtitle={collection.phrase} image={collection.cover} /></li>)}</RevealGroup><p className="mx-auto mt-8 max-w-[1400px] text-center"><Link href="/colecoes" className="group inline-flex min-h-11 items-center gap-2 text-sm text-black/60 underline-offset-4 transition hover:text-black hover:underline">Ver todas as coleções <ArrowRight size={16} aria-hidden="true" className="transition-transform group-hover:translate-x-1" /></Link></p></section>
 

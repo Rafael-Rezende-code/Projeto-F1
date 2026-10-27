@@ -9,7 +9,7 @@ import { useModal } from "@/components/use-modal";
 import { menuLinks, menuSecondaryLinks } from "@/lib/navigation";
 
 // Menu em tela cheia (celular). Diálogo modal: foco preso, Esc e o X fecham, e qualquer link fecha ao navegar.
-export function MobileMenu({ collections = [] }: { collections?: { label: string; href: string }[] }) {
+export function MobileMenu({ collections = [], extraLinks = [] }: { collections?: { label: string; href: string }[]; extraLinks?: { label: string; href: string }[] }) {
   const { panel, closePanel } = useSiteUI();
   const pathname = usePathname();
   const open = panel === "menu";
@@ -36,7 +36,7 @@ export function MobileMenu({ collections = [] }: { collections?: { label: string
         </div>
         <nav aria-label="Navegação principal" className="mt-8">
           <ul role="list" className="flex flex-col">
-            {menuLinks.map((link) => {
+            {[...menuLinks.slice(0, 4), ...extraLinks, ...menuLinks.slice(4)].map((link) => {
               const current = link.href === pathname;
               return (
                 <li key={link.href} className="border-b border-black/10">

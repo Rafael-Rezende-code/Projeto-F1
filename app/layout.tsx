@@ -1,3 +1,4 @@
+import { navExtras } from '@/lib/nav-extras'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { CartProvider } from '@/components/cart'
@@ -49,7 +50,7 @@ export default async function RootLayout({
           <CartProvider>
             {children}
             {/* Menu do celular: só as coleções com produto publicado (refino 3). */}
-            <LazyShell collections={collectionsWithProducts(await catalog.getProducts()).map(({ collection }) => ({ label: collection.title, href: `/colecoes/${collection.slug}` }))} />
+            <LazyShell extraLinks={await navExtras()} collections={collectionsWithProducts(await catalog.getProducts()).map(({ collection }) => ({ label: collection.title, href: `/colecoes/${collection.slug}` }))} />
             <SearchRoot />
             <WhatsAppButton />
             {/* Consentimento e GA4/Meta Pixel: só com NEXT_PUBLIC_GA_ID ou NEXT_PUBLIC_META_PIXEL_ID (lib/consent.ts). */}

@@ -7,6 +7,7 @@ import { QuickSizes } from "@/components/quick-sizes";
 import { productTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { discountPercent, formatPrice } from "@/lib/format";
 import { storePolicy } from "@/lib/store-policy";
+import { DropBadge } from "@/components/drop-status";
 import type { Product } from "@/lib/catalog/types";
 
 // Card de produto (home, catálogo, equipes, pilotos, categorias). O título é o link do card e se estende sobre
@@ -67,6 +68,7 @@ export function ProductCard({
         )}
         <div className="absolute left-3 top-3 flex gap-2">
           {product.isNew && <span className="rounded-md bg-[#b94f01] px-2 py-1 text-[9px] font-semibold tracking-[0.16em] text-white">NOVO</span>}
+          {product.drop && <DropBadge drop={product.drop} />}
           {discount > 0 && <span className="rounded-md bg-black px-2 py-1 text-[9px] font-semibold tracking-[0.16em] text-white">-{discount}%</span>}
         </div>
         {/* Favoritar: sempre visível no toque; no desktop aparece no hover/foco (ou quando já é favorito). */}

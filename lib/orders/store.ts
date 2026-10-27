@@ -56,6 +56,8 @@ export async function createStoredOrder(input: NewOrder): Promise<CreateOrderRes
         return { ok: false, stockIssues: [] };
       }
     }
+    if (error.message.includes("DROP_NAO_LIBERADO")) return { ok: false, error: "DROP_NAO_LIBERADO" };
+    if (error.message.includes("DROP_LIMITE")) return { ok: false, error: "DROP_LIMITE" };
     if (error.message.includes("PERSONALIZACAO_INVALIDA")) return { ok: false, error: "PERSONALIZACAO_INVALIDA" };
     if (error.message.includes("CUPOM_INVALIDO")) return { ok: false, couponReason: error.details ?? "inexistente" };
     return { ok: false, error: error.message };

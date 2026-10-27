@@ -22,6 +22,8 @@ import { applyKits, computeTotals, type PriceLine } from "@/lib/pricing";
 import { getKits } from "@/lib/kits-store";
 import type { Kit } from "@/lib/kits";
 import { validatePersonalization } from "@/lib/personalization";
+import { dropIssueMessage, dropIssues } from "@/lib/drops";
+import { getDrops } from "@/lib/drops-store";
 
 export type PlaceOrderResult =
   | { ok: true; order: Order }
@@ -143,6 +145,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     });
   }
   if (stockIssues.length) return { ok: false, message: STOCK_MESSAGE, stockIssues };
+  // Drops (loja extra, item 6): antes do lançamento ou acima do limite por pedido, nada é vendido (o banco confere de novo).
+  const dropProblems = dropIssues(lines, await getDrops(), Date.now());
+  if (dropProblems.length) return { ok: false, message: dropIssueMessage(dropProblems[0]) };
 
   const subtotalCents = lines.reduce((sum, line) => sum + (line.unitPriceCents + (line.feeCents ?? 0)) * line.quantity, 0);
   // Frete cotado DE NOVO no servidor (lib/shipping): a opção escolhida precisa existir para este CEP e esta sacola.
@@ -185,6 +190,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   if (stored && !stored.ok) {
     if ("stockIssues" in stored) return { ok: false, message: STOCK_MESSAGE, stockIssues: stored.stockIssues };
     if ("couponReason" in stored) return { ok: false, message: couponMessage(stored.couponReason), errors: { coupon: couponMessage(stored.couponReason) } };
+    if (stored.error === "DROP_NAO_LIBERADO" || stored.error === "DROP_LIMITE") return { ok: false, message: stored.error === "DROP_LIMITE" ? "Uma peça de drop passou do limite por pedido. Ajuste a sacola." : "Uma peça da sacola ainda não foi lançada." };
     if (stored.error === "PERSONALIZACAO_INVALIDA") return { ok: false, message: "Confira o nome e o número da personalização na sacola." };
     console.error("[checkout] create_order:", stored.error);
     return { ok: false, message: "Não foi possível registrar o pedido agora. Tente de novo em instantes." };

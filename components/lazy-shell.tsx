@@ -11,7 +11,7 @@ const MobileDock = dynamic(() => import("@/components/mobile-dock").then((m) => 
 const loadMenu = () => import("@/components/mobile-menu");
 const MobileMenu = dynamic(() => loadMenu().then((m) => m.MobileMenu), { ssr: false });
 
-export function LazyShell({ collections }: { collections: { label: string; href: string }[] }) {
+export function LazyShell({ collections, extraLinks = [] }: { collections: { label: string; href: string }[]; extraLinks?: { label: string; href: string }[] }) {
   const { panel } = useSiteUI();
   const [menuLoaded, setMenuLoaded] = useState(false);
   if (panel === "menu" && !menuLoaded) setMenuLoaded(true);
@@ -24,7 +24,7 @@ export function LazyShell({ collections }: { collections: { label: string; href:
   return (
     <>
       <MobileDock />
-      {menuLoaded && <MobileMenu collections={collections} />}
+      {menuLoaded && <MobileMenu collections={collections} extraLinks={extraLinks} />}
     </>
   );
 }

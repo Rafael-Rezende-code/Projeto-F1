@@ -1,3 +1,4 @@
+import type { ProductDrop } from "@/lib/drops";
 import type { PersonalizationConfig } from "@/lib/personalization";
 // Modelo de dados do catálogo. Preços sempre em centavos (inteiro, BRL).
 // Estes tipos são o contrato entre as páginas e a camada de dados (lib/catalog/repository.ts):
@@ -72,6 +73,8 @@ export type Product = {
   newUntil?: string;
   /** Camisa personalizável (loja extra, item 3): nome e número nas costas, com adicional. Ausente = não personaliza. */
   personalization?: PersonalizationConfig;
+  /** Drop a que pertence (loja extra, item 6): "Em breve" antes do lançamento; selo de pré-venda depois. */
+  drop?: ProductDrop;
 };
 
 export type Category = {

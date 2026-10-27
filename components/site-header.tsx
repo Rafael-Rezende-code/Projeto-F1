@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CartButton } from "@/components/cart";
 import { SearchButton } from "@/components/search-root";
-import { headerLinks } from "@/lib/navigation";
+import { headerLinks, type NavLink } from "@/lib/navigation";
 
 // Cabeçalho do site (home e páginas internas).
 // - Desktop (md+): cartão branco SÓLIDO flutuante (12px do topo, 16px das laterais, rounded-2xl, borda sutil e sombra),
@@ -17,7 +17,8 @@ import { headerLinks } from "@/lib/navigation";
 const HIDE_AFTER = 120;
 const DELTA = 6;
 
-export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid" }) {
+/** `extraLinks`: links que só existem quando há conteúdo (ex.: "Drops"; lib/nav-extras.ts, decidido no servidor). */
+export function SiteHeader({ variant = "solid", extraLinks = [] }: { variant?: "overlay" | "solid"; extraLinks?: NavLink[] }) {
   const [hidden, setHidden] = useState(false);
   const last = useRef(0);
   const ticking = useRef(false);
@@ -63,7 +64,7 @@ export function SiteHeader({ variant = "solid" }: { variant?: "overlay" | "solid
           {BRAND.name}<span className={overlay ? "text-[#e8702a] md:text-[#b94f01]" : "text-[#b94f01]"}>{BRAND.mark}</span>
         </Link>
         <nav className="hidden items-center gap-10 text-[11px] font-medium uppercase tracking-[0.18em] md:flex" aria-label="Navegação principal">
-          {headerLinks.map((link) => (
+          {[...headerLinks, ...extraLinks].map((link) => (
             <Link key={link.href} href={link.href} className="transition-opacity hover:opacity-60">
               {link.label}
             </Link>

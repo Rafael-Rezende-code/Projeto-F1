@@ -10,6 +10,8 @@ export const RATE_LIMITS = {
   avaliacao: { limit: 10, windowSeconds: 60 * 60 },
   // Lista de desejos com link curto (loja extra, item 4): só a criação conta; atualizar a própria lista não.
   lista: { limit: 10, windowSeconds: 60 * 60 },
+  // Lista de espera dos drops (loja extra, item 6): o gatilho do banco também limita (10 por IP por hora).
+  drop: { limit: 10, windowSeconds: 60 * 60 },
   // Login do painel: por IP, por e-mail e o contador de falhas (só serve ao atraso crescente; o limite alto nunca bloqueia).
   "admin-login-ip": { limit: 10, windowSeconds: 15 * 60 },
   "admin-login-email": { limit: 6, windowSeconds: 15 * 60 },

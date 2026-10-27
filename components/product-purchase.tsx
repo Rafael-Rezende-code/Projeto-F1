@@ -10,6 +10,9 @@ import { lowStockCount } from "@/lib/store-policy";
 import type { Product } from "@/lib/catalog/types";
 import { PersonalizationField, type PersonalizationState } from "@/components/personalization-field";
 import { validatePersonalization } from "@/lib/personalization";
+import { DropCountdown, useDropReleased } from "@/components/drop-status";
+import { launchLabel } from "@/lib/drops";
+import Link from "next/link";
 
 // Seletor de tamanho (rádios), quantidade e "Adicionar à sacola". A quantidade nunca passa do estoque da variante.
 // Refino 3: tamanho ESGOTADO continua escolhível (riscado + "esgotado"): escolhê-lo mostra o "Avise-me quando chegar"
@@ -32,7 +35,10 @@ export function ProductPurchase({ product, alertsEnabled = false, teamColor = "#
   const variant = product.variants.find((item) => item.sku === sku) ?? null;
   const variantOut = variant !== null && variant.stock === 0;
   const max = variant && variant.stock > 0 ? variant.stock : 1;
-  const soldOut = available.length === 0;
+  // Drop (loja extra, item 6): antes do lançamento, "Em breve" (não compra); abre sozinho na hora.
+  const released = useDropReleased(product.drop);
+  const upcoming = Boolean(product.drop && !released);
+  const soldOut = available.length === 0 || upcoming;
   const low = lowStockCount(variant?.stock);
   const mainRef = useRef<HTMLDivElement>(null);
   const sizesRef = useRef<HTMLFieldSetElement>(null);
@@ -172,6 +178,26 @@ export function ProductPurchase({ product, alertsEnabled = false, teamColor = "#
         </p>
       )}
 
+      {product.drop && (
+        <div className="rounded-2xl bg-[#f5f5f3] p-4 text-sm text-black sm:p-5" data-drop-status>
+          {upcoming ? (
+            <>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#b94f01]">Em breve · {product.drop.title}</p>
+              <p className="mt-1">Lançamento {launchLabel(product.drop.launchAt)} (horário de Brasília). Até lá, a peça não pode ser comprada.</p>
+              <div className="mt-3"><DropCountdown launchAt={product.drop.launchAt} /></div>
+              <Link href={`/drops/${product.drop.slug}#lista-de-espera`} className="mt-3 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4">Avise-me no lançamento</Link>
+            </>
+          ) : (
+            <>
+              {product.drop.mode === "pre_venda" && <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#b94f01]">Pré-venda · {product.drop.title}</p>}
+              {product.drop.mode === "pre_venda" && product.drop.shipEstimate && <p className="mt-1 font-medium">Envio previsto: {product.drop.shipEstimate}</p>}
+              {product.drop.mode !== "pre_venda" && <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#b94f01]">{product.drop.title}</p>}
+            </>
+          )}
+          {product.drop.perOrderLimit && <p className="mt-1 text-black/60">Limite de {product.drop.perOrderLimit} {product.drop.perOrderLimit === 1 ? "peça" : "peças"} deste drop por pedido.</p>}
+        </div>
+      )}
+
       {product.personalization && !soldOut && (
         <div ref={personalRef}>
           <PersonalizationField config={product.personalization} color={teamColor} value={personal} onChange={setPersonal} />
@@ -200,7 +226,7 @@ export function ProductPurchase({ product, alertsEnabled = false, teamColor = "#
           disabled={soldOut || variantOut}
           className="flex-1 whitespace-nowrap rounded-xl bg-[#b94f01] px-3 py-3 text-sm font-medium text-white transition hover:bg-[#9f4300] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-black/20 sm:px-6 xl:text-base"
         >
-          {soldOut ? "Esgotado" : variantOut ? "Esgotado neste tamanho" : "Adicionar à sacola"}
+          {upcoming ? "Em breve" : soldOut ? "Esgotado" : variantOut ? "Esgotado neste tamanho" : "Adicionar à sacola"}
         </button>
         <FavoriteButton slug={product.slug} name={product.name} className="flex w-12 shrink-0 items-center justify-center rounded-xl border border-black/20 transition hover:border-black xl:w-14" />
       </div>

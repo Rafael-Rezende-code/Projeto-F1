@@ -1,6 +1,8 @@
 import "server-only";
 import { createPublicClient } from "@/lib/supabase/server";
 import { MemoryCatalogRepository, type CatalogData } from "./memory-repository";
+import { attachDrops, dropFromRow } from "@/lib/drops";
+import { DROP_COLUMNS } from "@/lib/drops-store";
 import { categoryFromRow, driverFromRow, productFromRow, teamFromRow, type CategoryRow, type DriverRow, type ProductRow, type TeamRow } from "./supabase-mapping";
 
 // Catálogo no Supabase (fase 9). Carrega as tabelas públicas (RLS: só produtos ativos) numa consulta por tabela e
@@ -15,16 +17,18 @@ let cached: { at: number; data: Promise<CatalogData> } | null = null;
 
 async function loadFromSupabase(): Promise<CatalogData> {
   const db = createPublicClient();
-  const [products, categories, teams, drivers] = await Promise.all([
+  const [products, categories, teams, drivers, drops] = await Promise.all([
     db.from("products").select("*, product_variants(*), product_images(*)").eq("status", "active").order("position"),
     db.from("categories").select("*").order("position"),
     db.from("teams").select("*").order("position"),
     db.from("drivers").select("*").order("position"),
+    // Drops (loja extra, item 6): banco sem a tabela → sem drops.
+    db.from("drops").select(DROP_COLUMNS).eq("active", true),
   ]);
   const error = products.error ?? categories.error ?? teams.error ?? drivers.error;
   if (error) throw new Error(`Supabase (catálogo): ${error.message}`);
   return {
-    products: (products.data as ProductRow[]).map(productFromRow),
+    products: attachDrops((products.data as ProductRow[]).map(productFromRow), drops.error ? [] : (drops.data ?? []).map(dropFromRow)),
     categories: (categories.data as CategoryRow[]).map(categoryFromRow),
     teams: (teams.data as TeamRow[]).map(teamFromRow),
     drivers: (drivers.data as DriverRow[]).map(driverFromRow),

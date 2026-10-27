@@ -23,6 +23,8 @@ export type CartItem = {
   /** Nome e número nas costas (só produtos personalizáveis) e o adicional por unidade. O servidor recalcula. */
   personalization?: Personalization;
   feeCents?: number;
+  /** Drop do produto (loja extra, item 6): o limite por pedido soma as linhas do mesmo drop. */
+  dropSlug?: string;
 };
 
 /** hydrated: a sacola salva (localStorage) já foi lida. Antes disso ela aparece vazia, igual ao HTML do servidor. */
