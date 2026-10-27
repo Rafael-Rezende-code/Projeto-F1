@@ -976,6 +976,9 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 
 ## Pendências (atualizado em 22/10/2026)
 
+- **feat/vitrine (refino 3):** aplicar `supabase/atualizacao-3.sql`; relatório em `docs/refino-3/relatorio.md` (medições,
+  o que não foi testado no Supabase real). Meta de 90 no Lighthouse da home não atingida (82, igual à base: LCP do texto do hero).
+
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete
   perf/server-components feat/loja feat/polimento feat/polimento-2 feat/ajustes feat/pilotos`.
 - **Aprovação:** `feat/conteudo` (fases 1–8), `feat/backend` (fases 9–11, contém a `feat/conteudo`), `feat/refino`
