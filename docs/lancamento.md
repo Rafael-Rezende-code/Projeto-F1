@@ -62,6 +62,8 @@ fora do servidor.
 | `RATE_LIMIT_SALT` | Sal do hash do IP no limite de tentativas (texto aleatório longo) | Recomendado |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Botão e links de WhatsApp (só dígitos, com 55) | Opcional |
 | `NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_META_PIXEL_ID` | Medição/marketing com banner de consentimento (citar na Política de Privacidade) | Opcional |
+| `NEXT_PUBLIC_PIX_DISCOUNT_PERCENT` | Desconto no Pix, % inteiro de 1 a 30 (vazio = nada aparece). O servidor e o banco recalculam pelo meio | Opcional |
+| `NEXT_PUBLIC_COUPON_WITH_KIT=true` | Deixa cupom e desconto de kit valerem juntos (padrão: não) | Opcional |
 | `NEXT_PUBLIC_ALLOW_INDEXING=true` | Liberar buscadores (**só no dia**, seção 11) | No dia |
 
 Lista completa com comentários: `.env.example`. Toda mudança de variável exige **novo deploy**.
@@ -154,6 +156,25 @@ Outros conteúdos provisórios **sem colchetes**:
       (privados), ficha conferida e descrição.
 - [ ] Testar uma compra no próprio fornecedor de cada produto sob encomenda (`docs/operacao/modelo-de-venda.md`).
 
+## 7b. Loja extra (feat/loja-extra): o que conferir antes de abrir
+
+- [ ] Banco: rodar `supabase/atualizacao-4.sql` (só as migrations novas, sem seed), recarregar o cache da API e rodar
+      `pnpm supabase:ativar`. NÃO rodar o `setup-completo.sql` nem o seed no banco ativo (repõe produtos de teste e estoque).
+- [ ] **Desconto no Pix:** decidir o percentual (`NEXT_PUBLIC_PIX_DISCOUNT_PERCENT`) e conferir que o Pix do Mercado Pago sai
+      com o valor já descontado (`docs/backend/mercadopago.md`).
+- [ ] **Kits:** a atualização 4 não cria kits. Cadastrar em `/admin/kits` (peças, % e página onde aparecem).
+- [ ] **Camisa personalizada:** marcar os produtos em "Personalização" (painel ou colunas `personalizavel`… do importador) e
+      definir o adicional real (o seed usa R$ 30,00 de exemplo). Combinar com o fornecedor/estampador o prazo; a lista de
+      palavras bloqueadas fica em `lib/personalization-blocklist.ts`.
+- [ ] **Semana de corrida:** importar a temporada em `/admin/corridas/importar` (fonte Jolpica) e conferir os horários na
+      prévia antes de publicar; preencher as tags ou a coleção de cada fim de semana. Sem corridas, o bloco não aparece.
+- [ ] **Drops:** criar em `/admin/drops`; o aviso da lista de espera só envia com o Resend configurado (`RESEND_API_KEY` +
+      `EMAIL_FROM`). Conferir que a Política de Privacidade cita a lista de espera.
+- [ ] **Lendas:** produtos com a tag `lenda-{slug}` (ex.: `lenda-senna`) aparecem na página da lenda; sem produto, "Em breve".
+      Revisar os textos (`lib/content/legends/`) e as fontes (`docs/conteudo/fontes-lendas.md`); a foto do Senna é editorial e
+      precisa de licença como as demais.
+- [ ] **Lista de desejos:** com o Supabase, o link curto (`/desejos/<token>`) funciona; sem ele, só o link completo.
+
 ## 8. Fotos e licenças
 
 - [ ] **Fotos dos carros**: nenhuma ligada ao site. As recebidas estão em `assets/carros-brutos/recebidos-2026-10-22/`
@@ -237,7 +258,9 @@ recusa por saldo (detalhes em `docs/backend/mercadopago.md`).
 Até o lançamento o site fica **fora do índice** dos buscadores, mesmo publicado na Vercel. Controle por uma variável:
 `NEXT_PUBLIC_ALLOW_INDEXING` (código em `lib/indexing.ts`).
 
-| | Variável ausente ou diferente de `true` (hoje) | `NEXT_PUBLIC_ALLOW_INDEXING=true` |
+| | Variável ausente ou diferente de `true` (hoje) | `NEXT_PUBLIC_PIX_DISCOUNT_PERCENT` | Desconto no Pix, % inteiro de 1 a 30 (vazio = nada aparece). O servidor e o banco recalculam pelo meio | Opcional |
+| `NEXT_PUBLIC_COUPON_WITH_KIT=true` | Deixa cupom e desconto de kit valerem juntos (padrão: não) | Opcional |
+| `NEXT_PUBLIC_ALLOW_INDEXING=true` |
 | --- | --- | --- |
 | `/robots.txt` | `Disallow: /` (tudo bloqueado), sem sitemap | Libera o site; bloqueia só `/carrinho`, `/checkout`, `/pedido/`, `/admin`; aponta o sitemap |
 | Meta robots | `noindex, nofollow` em **todas** as páginas | `index, follow` (sacola, checkout, pedido e favoritos: `noindex, follow`; admin sempre `noindex, nofollow`) |

@@ -523,6 +523,8 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 
 ## Roteiro (próximos passos, em ordem)
 
+0. **Loja extra:** revisar `feat/loja-extra` (contém a `feat/vitrine`) e aplicar `supabase/atualizacao-4.sql` no banco
+   (sem seed), depois `pnpm supabase:ativar`; checklist em `docs/lancamento.md` (seção 7b).
 1. **Revisar e aprovar** `feat/carros` (contém conteúdo, backend, refino, lançamento, carros e a rodada de operação)
    pela prévia da Vercel. Relatório da operação: `docs/operacao/relatorio.md`.
 2. **Banco do Preview:** rodar `supabase/atualizacao-2.sql` no projeto Supabase (NÃO o setup completo), depois
@@ -973,6 +975,22 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   `scripts/qa/pagina-inteira.mjs`. e2e com `workers: 1` (em paralelo o `next start` local ficava lento e cliques
   expiravam). Modo seed com o `.env.local` presente: variáveis vazias vencem as do arquivo (`.claude/dev-seed.cjs`,
   configuração `apex-dev-seed` em :3002). No dev, uma cópia oculta do streaming (`div#S:0`) pode ficar na página: só dev.
+
+## Loja extra (feat/loja-extra, a partir da feat/vitrine)
+
+- **Banco:** migrations 20261102 (Pix) a 20261107 (drops); banco ativo: `supabase/atualizacao-4.sql` (sem seed). Cada uma
+  recria a `create_order` (Pix → kits → personalização → drops). Regras de preço puras em `lib/pricing.ts` (mesma conta do SQL).
+- **Pix:** `NEXT_PUBLIC_PIX_DISCOUNT_PERCENT` (lib/store-policy.ts); sobre itens − kit − cupom, sem frete; gravado no pedido.
+- **Checkout em uma página:** `components/checkout/checkout-form.tsx` (seções recolhíveis, envio cotado pelo CEP, Pix primeiro,
+  barra fixa no celular, "Salvar meus dados" em `apex:checkout:dados:v1`, nunca o CPF).
+- **Kits:** tabela `kits` + `lib/kits.ts` (fallback local), `/admin/kits`; cupom não cumulativo (`NEXT_PUBLIC_COUPON_WITH_KIT`).
+- **Personalização:** campos no produto, prévia SVG (`components/shirt-preview.tsx`), item da sacola = SKU + nome + número
+  (`CartItem.key`), lista de bloqueio em `lib/personalization-blocklist.ts`.
+- **Lista de desejos:** `/desejos?l=` (sem banco) e `/desejos/<token>` (tabela `wishlists`).
+- **Semana de corrida:** `race_weekends`, `/admin/corridas` (importação Jolpica com prévia), bloco "Próxima corrida"; exemplo só
+  em dev (`lib/calendar-example.ts`; e2e com `E2E_CALENDAR=1` no dev :3002).
+- **Drops:** `drops`, `drop_waitlist`, `drop_notifications`, `/drops`, `/admin/drops`; exemplo só em dev (e2e com `E2E_DROPS=1`).
+- **Lendas:** `/lendas`, conteúdo em `lib/content/legends/`, fontes em `docs/conteudo/fontes-lendas.md`, produtos pela tag `lenda-{slug}`.
 
 ## Pendências (atualizado em 22/10/2026)
 
