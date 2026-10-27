@@ -19,6 +19,8 @@ import { readSavedCep, saveCep } from "@/lib/cep-storage";
 import { formatPrice } from "@/lib/format";
 import { track } from "@/lib/analytics";
 import { methodFromBrick } from "@/lib/payments/brick";
+import { pixDiscountFor } from "@/lib/pricing";
+import { storePolicy } from "@/lib/store-policy";
 import type { CardDisplay } from "@/lib/payments/types";
 import type { BrickSubmit } from "@/components/checkout/mercado-pago-brick";
 import { maskCep, maskCpf, maskPhone, onlyDigits, UFS } from "@/lib/validators/br";
@@ -94,7 +96,11 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
   const shippingCents = option?.priceCents ?? 0;
   const discountCents = coupon?.discountCents ?? 0;
   const shippingDiscountCents = Math.min(coupon?.shippingDiscountCents ?? 0, shippingCents);
-  const totalCents = subtotalCents - discountCents + shippingCents - shippingDiscountCents;
+  // Desconto no Pix (prévia; o servidor recalcula). Com o Brick o meio é escolhido nele: mostramos o total no Pix à parte.
+  const pixPercent = storePolicy.pixDiscountPercent;
+  const pixCents = pixDiscountFor(subtotalCents - discountCents, pixPercent);
+  const pixApplied = !mpPublicKey && form.method === "pix" ? pixCents : 0;
+  const totalCents = subtotalCents - discountCents - pixApplied + shippingCents - shippingDiscountCents;
 
   const loadQuotes = async () => {
     const key = `${onlyDigits(form.cep)}|${items.map((item) => `${item.sku}:${item.quantity}`).join(",")}`;
@@ -529,7 +535,9 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
           <div className="flex justify-between"><dt className="text-black/60">{option ? `Entrega (${option.label})` : "Entrega"}</dt><dd>{option ? (shippingCents === 0 ? "Grátis" : formatPrice(shippingCents)) : <span className="text-black/60">calculada após o CEP</span>}</dd></div>
           {discountCents > 0 && <div className="flex justify-between"><dt className="text-black/60">Cupom {coupon?.code}</dt><dd>−{formatPrice(discountCents)}</dd></div>}
           {shippingDiscountCents > 0 && <div className="flex justify-between"><dt className="text-black/60">Frete grátis ({coupon?.code})</dt><dd>−{formatPrice(shippingDiscountCents)}</dd></div>}
+          {pixApplied > 0 && <div className="flex justify-between"><dt className="text-black/60">Desconto no Pix ({pixPercent}%)</dt><dd>−{formatPrice(pixApplied)}</dd></div>}
           <div className="mt-2 flex justify-between border-t border-black/10 pt-3 text-base font-medium"><dt>Total</dt><dd>{formatPrice(totalCents)}</dd></div>
+          {pixCents > 0 && !pixApplied && <div className="flex justify-between text-black" data-pix-price><dt>No Pix ({pixPercent}% off)</dt><dd className="font-medium">{formatPrice(totalCents - pixCents)}</dd></div>}
         </dl>
         <DispatchSummary items={items} className="mt-4" />
         <Link href="/carrinho" className="mt-5 inline-block text-xs text-black/60 underline underline-offset-4 hover:text-black">Editar sacola</Link>

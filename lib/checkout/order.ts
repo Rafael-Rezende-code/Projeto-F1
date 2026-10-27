@@ -72,6 +72,8 @@ export type Order = {
   subtotalCents: number;
   /** Cupom aplicado pelo banco (operação, fase 1c): desconto nos itens e no frete. */
   coupon?: { code: string; discountCents: number; shippingDiscountCents: number };
+  /** Desconto do meio de pagamento (loja extra, item 1a: Pix), recalculado no servidor. */
+  paymentDiscount?: { percent: number; cents: number };
   totalCents: number;
   tracking?: { code: string; shippedAt?: string };
   /** true no modo simulado (nada foi cobrado). */

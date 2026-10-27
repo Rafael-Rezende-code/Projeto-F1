@@ -77,6 +77,16 @@ e boleto) e o servidor cria o pagamento de verdade.
    atualiza o pedido pela `external_reference` e registra a notificação em `payment_events` (idempotência). Recusado
    ou cancelado devolve o estoque uma vez só; um pedido já pago/enviado não volta para trás.
 
+### Desconto no Pix (loja extra)
+
+Com `NEXT_PUBLIC_PIX_DISCOUNT_PERCENT` > 0, o desconto é calculado NO SERVIDOR: a `create_order` recebe o percentual da
+política (`pix_percent`, limitado a 0–30) e só o aplica quando o meio é Pix, sobre o subtotal depois de cupom e kit e sem o
+frete. O pedido grava `payment_method`, `payment_discount_percent` e `payment_discount_cents`, e o `total_cents` já sai
+com o desconto. O pagamento no Mercado Pago é criado com esse total (`transaction_amount`): **o Pix é gerado com o valor
+já descontado**, e cartão/boleto com o valor cheio. O Brick é iniciado com o valor cheio (ele escolhe o meio); o resumo do
+checkout mostra à parte "No Pix: R$ X". O meio que vale é o devolvido pelo Brick no envio (`methodFromBrick`), não o que o
+navegador diz: o servidor recalcula o desconto por ele.
+
 ## Testes
 
 `pnpm test` roda `lib/payments/mercado-pago-core.test.ts`: assinatura válida, adulterada, de outra chave e velha;

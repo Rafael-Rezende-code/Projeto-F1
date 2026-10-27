@@ -20,6 +20,9 @@
 //                                             home: "Postagem em até N dias úteis"); sem a variável, o item não aparece
 //   NEXT_PUBLIC_LOW_STOCK_LIMIT               "Restam N unidades" na página do produto quando o estoque da variante for ≤ este
 //                                             número (padrão 5; 0 desliga). Não é promessa: é o estoque cadastrado.
+//   NEXT_PUBLIC_PIX_DISCOUNT_PERCENT          desconto no Pix, em % inteiro de 1 a 30 (padrão 0 = nada aparece). Incide sobre o
+//                                             subtotal depois de cupom e kit, SEM o frete; o servidor recalcula pelo meio de pagamento.
+//   NEXT_PUBLIC_COUPON_WITH_KIT               "true" deixa cupom e desconto de kit valerem juntos (padrão: não cumulativos).
 //
 // "Oficial": o site NÃO afirma ser loja oficial de equipe ou piloto (há avisos do contrário em /sobre, nos textos
 // editoriais e nas descrições); não existe configuração que mude isso.
@@ -45,6 +48,12 @@ const lowStock = (value: string | undefined) => {
   return Number.isInteger(number) && number >= 0 ? number : 5;
 };
 
+/** Desconto no Pix: inteiro de 1 a 30; qualquer outra coisa = 0 (desligado). */
+const pixPercent = (value: string | undefined) => {
+  const number = Number(String(value ?? "").trim());
+  return Number.isInteger(number) && number > 0 && number <= 30 ? number : 0;
+};
+
 export function createStorePolicy(env: Env) {
   return {
     installments: {
@@ -61,6 +70,8 @@ export function createStorePolicy(env: Env) {
     emailNotifications: env.NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS === "true",
     dispatchDaysMax: positiveInt(env.NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX),
     lowStockLimit: lowStock(env.NEXT_PUBLIC_LOW_STOCK_LIMIT),
+    pixDiscountPercent: pixPercent(env.NEXT_PUBLIC_PIX_DISCOUNT_PERCENT),
+    couponWithKit: env.NEXT_PUBLIC_COUPON_WITH_KIT === "true",
   };
 }
 export type StorePolicy = ReturnType<typeof createStorePolicy>;
@@ -78,7 +89,13 @@ export const storePolicy: StorePolicy = createStorePolicy({
   NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS: process.env.NEXT_PUBLIC_POLICY_EMAIL_NOTIFICATIONS,
   NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX: process.env.NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX,
   NEXT_PUBLIC_LOW_STOCK_LIMIT: process.env.NEXT_PUBLIC_LOW_STOCK_LIMIT,
+  NEXT_PUBLIC_PIX_DISCOUNT_PERCENT: process.env.NEXT_PUBLIC_PIX_DISCOUNT_PERCENT,
+  NEXT_PUBLIC_COUPON_WITH_KIT: process.env.NEXT_PUBLIC_COUPON_WITH_KIT,
 });
+
+/** Preço no Pix ("R$ X no Pix"): null quando o desconto está desligado. Mesma conta de lib/pricing.ts. */
+export const pixPrice = (cents: number, policy: StorePolicy = storePolicy) =>
+  policy.pixDiscountPercent > 0 ? cents - Math.round((Math.max(0, cents) * policy.pixDiscountPercent) / 100) : null;
 
 /** "Restam N unidades" (página do produto): estoque cadastrado de 1 até o limite (lib/store-policy, padrão 5). */
 export const lowStockCount = (stock: number | undefined, policy: StorePolicy = storePolicy) =>

@@ -17,6 +17,8 @@ import { isOrderStoreConfigured } from "@/lib/supabase/config";
 import { couponMessage, normalizeCouponCode } from "@/lib/coupons";
 import { createPublicClient } from "@/lib/supabase/server";
 import { onlyDigits } from "@/lib/validators/br";
+import { storePolicy } from "@/lib/store-policy";
+import { computeTotals } from "@/lib/pricing";
 
 export type PlaceOrderResult =
   | { ok: true; order: Order }
@@ -149,6 +151,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
         paymentMethod: data.payment.method,
         items: data.items,
         coupon: coupon ?? undefined,
+        pixPercent: storePolicy.pixDiscountPercent,
       })
     : null;
   if (stored && !stored.ok) {
@@ -157,7 +160,14 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     console.error("[checkout] create_order:", stored.error);
     return { ok: false, message: "Não foi possível registrar o pedido agora. Tente de novo em instantes." };
   }
-  const totalCents = stored?.ok ? stored.order.totalCents : subtotalCents + shippingCents;
+  // Simulado: mesma conta do banco (lib/pricing.ts). Gravado: o total é o do banco.
+  const simulatedTotals = computeTotals({
+    lines: lines.map((line) => ({ key: line.sku, sku: line.sku, slug: line.slug, unitPriceCents: line.unitPriceCents, feeCents: 0, quantity: line.quantity, personalized: false })),
+    shippingCents,
+    method: data.payment.method,
+    pixPercent: storePolicy.pixDiscountPercent,
+  });
+  const totalCents = stored?.ok ? stored.order.totalCents : simulatedTotals.totalCents;
 
   const payment = await getPaymentProvider().createPayment({
     orderId: id,
@@ -196,6 +206,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     payment: { method: data.payment.method, provider: payment.provider, reference: payment.reference, instructions: payment.instructions, details: payment.details },
     lines,
     subtotalCents,
+    paymentDiscount: simulatedTotals.pixDiscountCents > 0 ? { percent: storePolicy.pixDiscountPercent, cents: simulatedTotals.pixDiscountCents } : undefined,
     totalCents,
     simulated: payment.provider === "simulado",
   };

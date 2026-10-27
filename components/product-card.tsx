@@ -6,6 +6,7 @@ import { FavoriteButton } from "@/components/favorites";
 import { QuickSizes } from "@/components/quick-sizes";
 import { productTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { discountPercent, formatPrice } from "@/lib/format";
+import { storePolicy } from "@/lib/store-policy";
 import type { Product } from "@/lib/catalog/types";
 
 // Card de produto (home, catálogo, equipes, pilotos, categorias). O título é o link do card e se estende sobre
@@ -103,6 +104,7 @@ export function ProductCard({
           )}
           {product.compareAtPriceCents && <span className="sr-only">por </span>}
           <span className="whitespace-nowrap">{formatPrice(product.priceCents)}</span>
+          {storePolicy.pixDiscountPercent > 0 && <span className="ml-2 whitespace-nowrap text-[11px] text-black/60 sm:ml-0 sm:block">{storePolicy.pixDiscountPercent}% off no Pix</span>}
         </p>
       </div>
     </article>

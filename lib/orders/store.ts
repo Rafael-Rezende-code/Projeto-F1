@@ -18,6 +18,8 @@ export type NewOrder = {
   items: { sku: string; quantity: number }[];
   /** Código do cupom (validado e contado pelo banco, dentro da create_order). */
   coupon?: string;
+  /** Desconto no Pix da política da loja (lib/store-policy.ts); o banco só aplica se o meio for Pix. */
+  pixPercent?: number;
 };
 
 export type CreateOrderResult =
@@ -40,6 +42,7 @@ export async function createStoredOrder(input: NewOrder): Promise<CreateOrderRes
       payment_method: input.paymentMethod,
       items: input.items,
       coupon: input.coupon ?? null,
+      pix_percent: input.pixPercent ?? 0,
     },
   });
   if (error) {

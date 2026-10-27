@@ -38,6 +38,8 @@ export type OrderRow = {
   coupon_code?: string | null;
   discount_cents?: number;
   shipping_discount_cents?: number;
+  payment_discount_cents?: number;
+  payment_discount_percent?: number;
   total_cents: number;
   tracking_code: string | null;
   shipped_at: string | null;
@@ -77,6 +79,7 @@ export function orderFromRow(row: OrderRow): Order {
     })),
     subtotalCents: row.subtotal_cents,
     coupon: row.coupon_code ? { code: row.coupon_code, discountCents: row.discount_cents ?? 0, shippingDiscountCents: row.shipping_discount_cents ?? 0 } : undefined,
+    paymentDiscount: row.payment_discount_cents ? { percent: row.payment_discount_percent ?? 0, cents: row.payment_discount_cents } : undefined,
     totalCents: row.total_cents,
     tracking: row.tracking_code ? { code: row.tracking_code, shippedAt: row.shipped_at ?? undefined } : undefined,
     simulated: false,

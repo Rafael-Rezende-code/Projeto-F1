@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createStorePolicy, installmentOffer, lowStockCount, storeBenefits } from "./store-policy";
+import { createStorePolicy, installmentOffer, lowStockCount, pixPrice, storeBenefits } from "./store-policy";
 
 // Regra da política comercial: SEM configuração, nenhuma promessa existe.
 describe("política comercial (lib/store-policy.ts)", () => {
@@ -15,6 +15,8 @@ describe("política comercial (lib/store-policy.ts)", () => {
       emailNotifications: false,
       dispatchDaysMax: null,
       lowStockLimit: 5,
+      pixDiscountPercent: 0,
+      couponWithKit: false,
     });
     expect(installmentOffer(64990, policy)).toBeNull();
   });
@@ -79,5 +81,13 @@ describe("faixa de benefícios e estoque baixo (refino 3)", () => {
     expect([0, 1, 5, 6].map((stock) => lowStockCount(stock, policy))).toEqual([null, 1, 5, null]);
     expect(lowStockCount(2, createStorePolicy({ NEXT_PUBLIC_LOW_STOCK_LIMIT: "0" }))).toBeNull();
     expect(lowStockCount(8, createStorePolicy({ NEXT_PUBLIC_LOW_STOCK_LIMIT: "10" }))).toBe(8);
+  });
+
+  it("desconto no Pix: 1 a 30%, padrão 0 (nada aparece)", () => {
+    expect(createStorePolicy({}).pixDiscountPercent).toBe(0);
+    expect(["5", "0", "31", "2.5", "abc"].map((value) => createStorePolicy({ NEXT_PUBLIC_PIX_DISCOUNT_PERCENT: value }).pixDiscountPercent)).toEqual([5, 0, 0, 0, 0]);
+    expect(pixPrice(19990, createStorePolicy({ NEXT_PUBLIC_PIX_DISCOUNT_PERCENT: "5" }))).toBe(19990 - 1000);
+    expect(pixPrice(19990, createStorePolicy({}))).toBeNull();
+    expect(createStorePolicy({}).couponWithKit).toBe(false);
   });
 });

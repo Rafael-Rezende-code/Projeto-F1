@@ -47,7 +47,8 @@ export const SEED_WARNING = "Contém o seed de demonstração: reaplicar repõe 
 // vitrine (refino 3). Ao criar uma rodada nova de migrations, feche a última (`until`) e acrescente a próxima.
 const UPDATES = [
   { number: 2, after: "20261025000000", until: "20261029000000" },
-  { number: 3, after: "20261029000000" },
+  { number: 3, after: "20261029000000", until: "20261101000000" },
+  { number: 4, after: "20261101000000" },
 ];
 const LATEST = UPDATES[UPDATES.length - 1].number;
 

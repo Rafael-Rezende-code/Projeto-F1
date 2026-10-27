@@ -13,6 +13,7 @@ import { ShippingEstimator } from '@/components/shipping-estimator'
 import { CouponField } from '@/components/coupon-field'
 import { useState } from 'react'
 import { daysLabel } from '@/lib/catalog/fulfillment'
+import { pixPrice, storePolicy } from '@/lib/store-policy'
 
 // Conteúdo da sacola, usado na gaveta (variant="drawer") e na página /carrinho (variant="page").
 // `empty`: conteúdo extra abaixo da sacola vazia (na página: "Mais desejados", components/most-wanted.tsx).
@@ -110,6 +111,11 @@ export function CartContents({ variant, onNavigate, empty, couponsEnabled = fals
             <dd className="text-lg font-medium tracking-[-0.03em]">{formatPrice(subtotalCents - (coupon?.discountCents ?? 0))}</dd>
           </div>
         </dl>
+        {storePolicy.pixDiscountPercent > 0 && (
+          <p className="mt-1 text-right text-sm text-black" data-pix-price>
+            <span className="font-medium">{formatPrice(pixPrice(subtotalCents - (coupon?.discountCents ?? 0)) ?? 0)}</span> no Pix <span className="text-black/60">({storePolicy.pixDiscountPercent}% off)</span>
+          </p>
+        )}
         <p className="mt-1 text-xs text-black/60">Frete calculado no checkout.</p>
         <DispatchSummary items={items} className="mt-3" />
         {variant === 'page' && <ShippingEstimator items={items.map((item) => ({ sku: item.sku, quantity: item.quantity }))} className="mt-5 border-t border-black/10 pt-5" />}

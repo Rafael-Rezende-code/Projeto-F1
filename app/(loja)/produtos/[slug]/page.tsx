@@ -24,7 +24,7 @@ import { catalog } from "@/lib/catalog";
 import { dispatchNotice, ORIGIN_LABELS } from "@/lib/catalog/fulfillment";
 import { discountPercent, formatPrice } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
-import { installmentOffer, storePolicy } from "@/lib/store-policy";
+import { installmentOffer, pixPrice, storePolicy } from "@/lib/store-policy";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -66,6 +66,7 @@ export default async function ProductPage({ params }: Params) {
   const discount = discountPercent(product.priceCents, product.compareAtPriceCents);
   // Parcelamento anunciado: só se a loja configurou parcelas SEM JUROS (lib/store-policy.ts); senão, nada aparece.
   const offer = installmentOffer(product.priceCents);
+  const pix = pixPrice(product.priceCents);
   const notice = dispatchNotice(product);
   const shippingSku = (product.variants.find((variant) => variant.stock > 0) ?? product.variants[0])?.sku;
   const inStock = product.variants.some((variant) => variant.stock > 0);
@@ -148,6 +149,7 @@ export default async function ProductPage({ params }: Params) {
               </span>
               {discount > 0 && <span className="rounded-md bg-black px-2 py-1 text-[10px] font-semibold tracking-[0.12em] text-white">-{discount}%</span>}
             </p>
+            {pix !== null && <p className="mt-1 text-sm text-black xl:mt-2 xl:text-base" data-pix-price><span className="font-medium">{formatPrice(pix)}</span> no Pix <span className="text-black/60">({storePolicy.pixDiscountPercent}% off)</span></p>}
             {offer && <p className="mt-1 text-xs text-black/60 xl:mt-2 xl:text-sm">ou {offer.count}x de {formatPrice(offer.amountCents)} sem juros</p>}
 
             {/* Modelo de venda (refino 2, item 5): sob encomenda e/ou prazo de envio acima do padrão. */}
