@@ -301,12 +301,12 @@ h1, h2, .font-display {
 .fav-ring { animation: fav-ring var(--motion-medium) var(--ease-out) both; }
 
 /* ORQUESTRAÇÃO das páginas novas (refino 3, 4.5): título → grade, uma vez, ao abrir a página. Só CSS (roda antes do JS:
-   nada fica escondido esperando o JavaScript): o título sobe um pouco (só transform, sem esconder) e os cards entram com
-   opacidade + subida, com o intervalo padrão (--motion-stagger, teto de 8) depois do título. */
+   nada fica escondido esperando o JavaScript): o título sobe um pouco e os cards sobem em seguida, com o intervalo padrão
+   (--motion-stagger, teto de 8). SÓ TRANSFORM, sem opacidade: as fotos dos cards são a LCP do catálogo e começar em
+   opacidade 0 atrasava a LCP em ~0,9 s no Lighthouse. */
 @keyframes enter-rise { from { transform: translate3d(0, var(--motion-rise), 0); } to { transform: none; } }
-@keyframes enter-fade { from { opacity: 0; transform: translate3d(0, var(--motion-rise), 0); } to { opacity: 1; transform: none; } }
 .enter-title { animation: enter-rise var(--motion-medium) var(--ease-out) backwards; }
-.enter-grid ul > li, .enter-block { animation: enter-fade var(--motion-medium) var(--ease-out) backwards;
+.enter-grid ul > li, .enter-block { animation: enter-rise var(--motion-medium) var(--ease-out) backwards;
   animation-delay: calc(var(--motion-short) + var(--i, 0) * var(--motion-stagger)); }
 .enter-grid ul > li:nth-child(1) { --i: 0; }
 .enter-grid ul > li:nth-child(2) { --i: 1; }

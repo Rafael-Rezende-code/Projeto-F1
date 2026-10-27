@@ -11,7 +11,7 @@
 import { chromium } from "@playwright/test";
 
 const [BASE = "http://localhost:3001", WIDTHS = "1440,1280,820,390,360", ROUTES] = process.argv.slice(2);
-const routes = (ROUTES || "/,/equipes,/equipes/williams,/pilotos/hamilton,/pilotos/bortoleto,/pilotos/norris,/produtos/scuderia-racing-jacket,/produtos/miniatura-capacete-hamilton,/produtos,/favoritos,/carrinho,/checkout,/diario,/diario/senna-e-a-mclaren,/diario/o-brasil-de-volta-ao-grid,/sobre,/contato,/admin,/nao-existe").split(",");
+const routes = (ROUTES || "/,/equipes,/equipes/williams,/pilotos/hamilton,/pilotos/bortoleto,/pilotos/norris,/produtos/scuderia-racing-jacket,/produtos/miniatura-capacete-hamilton,/produtos,/produtos?entrega=encomenda&tamanho=M,/colecoes,/colecoes/miniaturas,/colecoes/canecas,/presentes,/categorias/teamwear,/favoritos,/carrinho,/checkout,/diario,/diario/senna-e-a-mclaren,/diario/o-brasil-de-volta-ao-grid,/sobre,/contato,/admin,/nao-existe").split(",");
 
 const check = () => {
   const cw = document.documentElement.clientWidth;

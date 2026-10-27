@@ -148,7 +148,8 @@ export function CatalogSheet({ current, items, options }: { current: CatalogPara
             </button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-            <Fields draft={draft} items={items} options={options} onChange={(key, value) => setDraft((previous) => ({ ...previous, [key]: value }))} idPrefix="gaveta" />
+            {/* Os campos só existem com a gaveta aberta (fechada, não pesa na hidratação nem duplica as contagens). */}
+            {open && <Fields draft={draft} items={items} options={options} onChange={(key, value) => setDraft((previous) => ({ ...previous, [key]: value }))} idPrefix="gaveta" />}
           </div>
           <div className="flex gap-3 border-t border-black/10 px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <button type="button" onClick={() => setDraft({})} className="min-h-12 rounded-xl border border-black/15 px-5 text-sm text-black transition hover:border-black">

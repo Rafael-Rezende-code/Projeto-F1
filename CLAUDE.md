@@ -923,6 +923,57 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   ligada. `addItem(produto, variante, qtd, origem)` recebe o botão clicado. Sem foto visível (barra fixa), só o pulso.
   Esqueletos: `FormPageSkeleton` (/pedido/consultar) e `AdminSkeleton` (`app/admin/loading.tsx`).
 
+## Vitrine (refino 3, branch feat/vitrine, a partir da feat/carros)
+
+- **Banco:** migrations novas `20261030000000_curadoria.sql` (bestseller_manual, bestseller_rank, new_until; função
+  `bestseller_slugs`, só slugs, sem quantidades; `import_products` recriada com a curadoria), `20261031000000_avise_me.sql`
+  (`stock_alerts`) e `20261101000000_avaliacoes.sql` (`reviews`, `submit_review`, `reviewed_products`). Banco ativo:
+  **`supabase/atualizacao-3.sql`** (só essas 3, sem seed). O gerador (`scripts/supabase/setup-completo.mjs`) agora tem
+  `UPDATES` numeradas: a 2 ficou congelada; ao abrir uma rodada nova de migrations, feche a última (`until`) e crie a
+  próxima. O seed grava a curadoria num bloco `do $` que só roda se as colunas existirem. Testes no PGlite
+  (`supabase/tests/curadoria|avise-me|avaliacoes.test.ts`); **não testado no Supabase real**.
+- **Curadoria** (`lib/catalog/curation.ts`): "NOVO" = `isNew` OU `newUntil` no prazo (dia de São Paulo; o repositório já
+  entrega `isNew` calculado). **Mais vendidos** = manuais por ordem → vendas reais dos últimos 90 dias (pedidos pagos,
+  enviados ou entregues, sem testes) → destaques → completa até 8 com o catálogo; nunca vazia, sem contagens.
+  `catalog.getBestsellers(limite)`. Painel: quadro "Vitrine" no formulário, filtro e coluna na lista; CSV com
+  `destaque`, `mais_vendido`, `ordem_mais_vendido`, `novo_ate` (vazio mantém; `-` limpa). A home tem `revalidate = 3600`.
+- **Home** (ordem e porquê em `docs/refino-3/home.md`): hero → faixa de benefícios (só o que está configurado) → pilotos →
+  equipes (faixa) → **Mais vendidos** → coleções → novidades → manifesto → equipes → "Cada detalhe importa" → presentes
+  → VELOCIDADE → Diário → newsletter (`#newsletter`). Cada produto em UMA vitrine. Saíram "Essenciais do dia de prova" e o
+  carrossel "O que o grid veste" (o rótulo virou o da seção Mais vendidos); HighlightedText ficou em 2 lugares.
+- **Coleções** (`lib/content/collections.ts` + regras em `lib/catalog/collections.ts`): categoria OU tag + faixa de
+  preço; `/colecoes` e `/colecoes/[slug]` (capa, destaque, grade, link `/produtos?colecao=`). Vazia = "Em breve" com link
+  para a newsletter, `noindex` e fora do sitemap; home, menu e rodapé só listam as com produto. Tags do seed: `acessorio` e
+  `colecionavel` (pistas 3D e canecas ainda sem produto).
+- **/presentes** (`lib/catalog/gifts.ts`): faixas até 100/200/300 e acima de 300 pelos preços reais, `?faixa=`.
+- **Política** (`lib/store-policy.ts`): `NEXT_PUBLIC_POLICY_DISPATCH_DAYS_MAX` (prazo na faixa de benefícios),
+  `NEXT_PUBLIC_LOW_STOCK_LIMIT` ("Restam N", padrão 5), `storeBenefits`, `lowStockCount`.
+- **Produto:** galeria com lupa (desktop com mouse), tela cheia com pinça/arrastar/deslizar/duplo toque e + −, miniaturas
+  por setas; **guia de tamanhos removido do site**; "Complete o look" só com outras categorias (`lib/catalog/look.ts`);
+  "Vistos recentemente" (`apex:vistos:v1`); tamanho esgotado ESCOLHÍVEL (`data-out`) com "Avise-me quando chegar"
+  (`stock_alerts`, honeypot, limite por IP, "Em breve" sem Supabase; lista e CSV em `/admin/avise-me`); botão compartilhar.
+  O `loading.tsx` do produto foi removido (fazia a View Transition do card não formar par; a página é estática).
+- **Avaliações** (desligadas: `NEXT_PUBLIC_REVIEWS_ENABLED`): envio pela consulta de pedido ENTREGUE (uma por produto),
+  moderação em `/admin/avaliacoes`, só aprovadas na página com resumo e `aggregateRating`. **Nenhum dado de exemplo** em
+  seed/build/Preview/produção: o bloco "EXEMPLO DE LAYOUT" (`components/reviews-example.tsx`) só existe com
+  `NODE_ENV === "development"`; `lib/reviews-build.test.ts` procura o marcador no `.next` (rodar depois do build).
+- **Catálogo** (`lib/catalog/filters.ts`, mesma regra no servidor e no navegador): categoria, equipe, piloto, tamanho,
+  preço, entrega (pronta/encomenda), "só com estoque"; barra lateral recolhível (lg+), gaveta com "Ver N produtos"
+  (celular), chips com saída animada e "Limpar tudo", `?pagina=N` (N primeiras páginas no servidor) + "Carregar mais"
+  (anexa, `replaceState`, foco no 1º card novo), vazio sugere tirar o filtro mais restritivo. Categoria e coleção com
+  `EditorialHeader`. A busca (overlay) não mudou.
+- **Movimento:** mapa de hovers em `lib/motion.ts` (`hover`) e no CSS: produto = 2ª foto em fade + zoom 1,05 + chips que
+  sobem; coleção/categoria = `.hover-zoom` 1,04 + `.hover-arrow`; equipe = TiltCard; piloto = HoverTransition; artigo =
+  `.hover-veil` + `.hover-underline`. Contadores dos números do piloto (`CountUp`, valor final já no HTML). Favorito com
+  estouro, sacola com `ease.spring`, shimmer nos esqueletos, realce deslizante do tamanho, pulso da quantidade, chips que
+  entram/saem. Entrada título → grade só em CSS (`.enter-title`, `.enter-grid`, `.enter-block`) em catálogo, coleção,
+  presentes e produto; o `RevealGroup` não age dentro de `.enter-grid`.
+- **QA da rodada:** `scripts/qa/lighthouse.mjs` (npx lighthouse 12.8.2 com o Edge pela variável CHROME_PATH),
+  `scripts/qa/trace.mjs` (quadros por rAF rolando 30 px/quadro, CPU 1× e 4×, traces em `docs/refino-3/traces/`),
+  `scripts/qa/pagina-inteira.mjs`. e2e com `workers: 1` (em paralelo o `next start` local ficava lento e cliques
+  expiravam). Modo seed com o `.env.local` presente: variáveis vazias vencem as do arquivo (`.claude/dev-seed.cjs`,
+  configuração `apex-dev-seed` em :3002). No dev, uma cópia oculta do streaming (`div#S:0`) pode ficar na página: só dev.
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **Branches antigas no GitHub:** apagar à mão (bloqueado na sessão em nuvem): `git push origin --delete
