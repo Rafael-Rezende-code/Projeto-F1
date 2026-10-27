@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { PageIntro } from "@/components/page-intro";
+import { EditorialHeader } from "@/components/editorial-header";
 import { ProductGrid } from "@/components/product-grid";
 import { catalog } from "@/lib/catalog";
 
@@ -30,8 +30,11 @@ export default async function CategoryPage({ params }: Params) {
     <div className="px-5 pb-24 pt-8 sm:px-10 sm:pt-10">
       <div className="mx-auto max-w-[1400px]">
         <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Produtos", href: "/produtos" }, { label: category.name }]} />
-        <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <PageIntro eyebrow="Categoria" title={category.name} body={category.description} />
+        {/* Cabeçalho editorial (refino 3, item 3.4): título, frase e a foto da categoria. */}
+        <div className="mt-8">
+          <EditorialHeader eyebrow="Categoria" title={category.name} phrase={category.description} image={{ src: category.image, alt: "" }} />
+        </div>
+        <div className="mt-10">
           <nav aria-label="Outras categorias" className="flex flex-wrap gap-2">
             {categories.map((other) => (
               <Link
@@ -39,7 +42,7 @@ export default async function CategoryPage({ params }: Params) {
                 href={`/categorias/${other.slug}`}
                 aria-current={other.slug === category.slug ? "page" : undefined}
                 className={`rounded-xl border px-4 py-2 text-xs font-medium transition ${
-                  other.slug === category.slug ? "border-black bg-black text-white" : "border-black/15 hover:border-black"
+                  other.slug === category.slug ? "border-black bg-black text-white" : "border-black/15 text-black hover:border-black"
                 }`}
               >
                 {other.name}
