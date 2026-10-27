@@ -1,5 +1,5 @@
 import "server-only";
-import { createPublicClient } from "@/lib/supabase/server";
+import { createShowcaseClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { dropFromRow, type Drop } from "@/lib/drops";
 
@@ -15,7 +15,7 @@ export async function getDrops(): Promise<Drop[]> {
     return [];
   }
   if (cache && Date.now() - cache.at < TTL) return cache.drops;
-  const { data, error } = await createPublicClient().from("drops").select(DROP_COLUMNS).eq("active", true).order("launch_at");
+  const { data, error } = await createShowcaseClient().from("drops").select(DROP_COLUMNS).eq("active", true).order("launch_at");
   if (error) {
     console.error("[drops] leitura:", error.code);
     return cache?.drops ?? [];

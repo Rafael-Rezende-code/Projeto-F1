@@ -1,5 +1,5 @@
 import "server-only";
-import { createPublicClient } from "@/lib/supabase/server";
+import { createShowcaseClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { kitFromRow, LOCAL_KITS, type Kit } from "@/lib/kits";
 
@@ -11,7 +11,7 @@ const TTL = 60_000;
 export async function getKits(): Promise<Kit[]> {
   if (!isSupabaseConfigured()) return LOCAL_KITS;
   if (cache && Date.now() - cache.at < TTL) return cache.kits;
-  const { data, error } = await createPublicClient().from("kits").select("slug, title, team_slug, driver_slug, product_slugs, discount_percent, active").eq("active", true).order("slug");
+  const { data, error } = await createShowcaseClient().from("kits").select("slug, title, team_slug, driver_slug, product_slugs, discount_percent, active").eq("active", true).order("slug");
   if (error) {
     console.error("[kits] leitura:", error.code);
     return cache?.kits ?? [];

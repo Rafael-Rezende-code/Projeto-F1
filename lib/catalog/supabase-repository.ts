@@ -1,5 +1,5 @@
 import "server-only";
-import { createPublicClient } from "@/lib/supabase/server";
+import { createPublicClient, createShowcaseClient } from "@/lib/supabase/server";
 import { MemoryCatalogRepository, type CatalogData } from "./memory-repository";
 import { attachDrops, dropFromRow } from "@/lib/drops";
 import { DROP_COLUMNS } from "@/lib/drops-store";
@@ -16,7 +16,7 @@ const CACHE_MS = 60_000;
 let cached: { at: number; data: Promise<CatalogData> } | null = null;
 
 async function loadFromSupabase(): Promise<CatalogData> {
-  const db = createPublicClient();
+  const db = createShowcaseClient();
   const [products, categories, teams, drivers, drops] = await Promise.all([
     db.from("products").select("*, product_variants(*), product_images(*)").eq("status", "active").order("position"),
     db.from("categories").select("*").order("position"),

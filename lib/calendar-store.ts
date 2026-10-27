@@ -1,5 +1,5 @@
 import "server-only";
-import { createPublicClient } from "@/lib/supabase/server";
+import { createShowcaseClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { raceFromRow, type RaceWeekend } from "@/lib/calendar";
 
@@ -14,7 +14,7 @@ export async function getRaceWeekends(): Promise<RaceWeekend[]> {
     return [];
   }
   if (cache && Date.now() - cache.at < TTL) return cache.races;
-  const { data, error } = await createPublicClient()
+  const { data, error } = await createShowcaseClient()
     .from("race_weekends")
     .select("id, gp_name, circuit, country, weekend_start, race_start, collection_slug, tags, active")
     .eq("active", true)
