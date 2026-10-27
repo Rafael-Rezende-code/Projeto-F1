@@ -278,6 +278,17 @@ h1, h2, .font-display {
 @keyframes qty-bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
 .qty-bump { animation: qty-bump var(--motion-medium) var(--ease-out); }
 
+/* Catálogo (refino 3, frente 3): barra lateral recolhível (desktop), gaveta inferior (celular, sobe por transform) e
+   chips que entram e saem (opacidade + escala curta). */
+.catalog-layout { display: grid; gap: 2.5rem; }
+@media (min-width: 1024px) { .catalog-layout { grid-template-columns: 240px minmax(0, 1fr); } .catalog-layout.is-collapsed { grid-template-columns: auto minmax(0, 1fr); } }
+.sheet { transform: translateY(100%); transition: transform var(--motion-medium) var(--ease-out); }
+.sheet.sheet-open { transform: none; }
+@keyframes chip-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes chip-out { to { opacity: 0; transform: scale(0.9); } }
+.chip-in { animation: chip-in var(--motion-short) var(--ease-out) both; }
+.chip-out { animation: chip-out var(--motion-short) var(--ease-out) both; }
+
 /* Dock do celular (components/mobile-dock.tsx): espaço que ele ocupa embaixo (ícones 44 + respiro + área segura).
    Usado pelo espaçador no fim da página, pelo aviso da sacola e pela barra fixa de compra do produto. */
 :root { --dock-space: 0px; }

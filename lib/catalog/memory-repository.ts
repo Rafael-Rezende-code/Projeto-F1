@@ -37,6 +37,9 @@ export class MemoryCatalogRepository implements CatalogRepository {
         (!filters.driver || product.driverSlug === filters.driver) &&
         (filters.minPriceCents === undefined || product.priceCents >= filters.minPriceCents) &&
         (filters.maxPriceCents === undefined || product.priceCents <= filters.maxPriceCents) &&
+        (!filters.size || product.variants.some((variant) => variant.size === filters.size && (!filters.inStock || variant.stock > 0))) &&
+        (!filters.fulfillment || product.fulfillment === filters.fulfillment) &&
+        (!filters.inStock || product.variants.some((variant) => variant.stock > 0)) &&
         (!filters.isNew || product.isNew) &&
         (!filters.collection || matchesCollection(product, filters.collection)) &&
         (!filters.query || matchesQuery(data, product, filters.query)),

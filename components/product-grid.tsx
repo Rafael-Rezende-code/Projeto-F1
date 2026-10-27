@@ -11,12 +11,13 @@ const COLLECTION_SIZES =
 // `layout="colecao"` (páginas de piloto, refino 2): 2 colunas no celular, 3 a partir de 1024px e 4 a partir de 1280px.
 // O primeiro produto ocupa 2×2 só quando isso fecha as linhas sem buraco (4 + (n − 1) células múltiplo do nº de
 // colunas); com os 4 produtos de cada piloto do seed, isso não acontece e a grade fica uniforme.
-export async function ProductGrid({ products, priorityCount = 0, layout = "default" }: { products: Product[]; priorityCount?: number; layout?: "default" | "colecao" }) {
+// `layout="catalogo"` (catálogo com barra lateral, refino 3): as mesmas colunas da "colecao", sem o destaque 2×2.
+export async function ProductGrid({ products, priorityCount = 0, layout = "default" }: { products: Product[]; priorityCount?: number; layout?: "default" | "colecao" | "catalogo" }) {
   const categories = await catalog.getCategories();
   const nameOf = (slug: string) => categories.find((category) => category.slug === slug)?.name;
-  const collection = layout === "colecao";
+  const collection = layout === "colecao" || layout === "catalogo";
   const cells = products.length + 3;
-  const feature = collection ? `${cells % 3 === 0 ? "lg:col-span-2 lg:row-span-2" : ""} ${cells % 4 === 0 ? "xl:col-span-2 xl:row-span-2" : "xl:col-span-1 xl:row-span-1"}` : "";
+  const feature = layout === "colecao" ? `${cells % 3 === 0 ? "lg:col-span-2 lg:row-span-2" : ""} ${cells % 4 === 0 ? "xl:col-span-2 xl:row-span-2" : "xl:col-span-1 xl:row-span-1"}` : "";
   return (
     <RevealGroup role="list" className={`grid grid-cols-2 gap-x-3 gap-y-10 lg:gap-x-5 ${collection ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-4"}`}>
       {products.map((product, index) => (

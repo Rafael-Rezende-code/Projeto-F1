@@ -121,6 +121,11 @@ export type ProductFilters = {
   category?: string;
   team?: string;
   driver?: string;
+  /** Tamanho (rótulo da variante, ex.: "M"). Com inStock, exige estoque nesse tamanho. */
+  size?: string;
+  fulfillment?: Fulfillment;
+  /** Só produtos com alguma variante em estoque. */
+  inStock?: boolean;
   minPriceCents?: number;
   maxPriceCents?: number;
   sort?: ProductSort;
