@@ -11,6 +11,8 @@ import { queueOrderEmails } from "@/lib/email/order-emails";
 import { allowRequest } from "@/lib/rate-limit";
 import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit-config";
 import { getPaymentProvider } from "@/lib/payments";
+import { mercadoPagoConfigured } from "@/lib/payments/mercado-pago";
+import { CHECKOUT_BLOCKED_MESSAGE, checkoutModeFor } from "@/lib/checkout-mode";
 import { isOrderStoreConfigured } from "@/lib/supabase/config";
 import { couponMessage, normalizeCouponCode } from "@/lib/coupons";
 import { createPublicClient } from "@/lib/supabase/server";
@@ -82,6 +84,8 @@ export async function quoteShipping(input: unknown): Promise<QuoteResult> {
 }
 
 export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
+  // Produção sem provedor de pagamento real: nada é concluído (regra de servidor; lib/checkout-mode.ts).
+  if (checkoutModeFor(process.env, mercadoPagoConfigured()) === "bloqueado") return { ok: false, message: CHECKOUT_BLOCKED_MESSAGE };
   const parsed = checkoutSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: "Confira os dados destacados.", errors: fieldErrors(parsed.error) };
   const data = parsed.data;
