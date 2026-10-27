@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { FavoritesList } from "@/components/favorites-list";
 import { MostWanted } from "@/components/most-wanted";
 import { PageIntro } from "@/components/page-intro";
+import { isOrderStoreConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Favoritos", robots: privateRobots };
 
@@ -15,7 +16,7 @@ export default function FavoritosPage() {
         <div className="mb-10 mt-8">
           <PageIntro eyebrow="Seus favoritos" title="Favoritos" body="As peças que você marcou com o coração ficam guardadas neste navegador." />
         </div>
-        <FavoritesList empty={<MostWanted />} />
+        <FavoritesList empty={<MostWanted />} shortLinks={isOrderStoreConfigured()} />
       </div>
     </div>
   );

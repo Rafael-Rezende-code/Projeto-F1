@@ -6,12 +6,14 @@ import { getFavoriteProducts } from "@/app/actions/favorites";
 import { useFavorites } from "@/components/favorites";
 import { ProductCard } from "@/components/product-card";
 import { ProductGridSkeleton } from "@/components/skeletons";
+import { ShareWishlist } from "@/components/share-wishlist";
 
 type Item = Awaited<ReturnType<typeof getFavoriteProducts>>[number];
 
 // Lista de /favoritos: lê os slugs salvos no navegador e busca os produtos no servidor.
 // `empty`: conteúdo extra abaixo do estado vazio ("Mais desejados", components/most-wanted.tsx).
-export function FavoritesList({ empty }: { empty?: ReactNode }) {
+// `shortLinks`: link curto da lista (Supabase ligado; a página decide no servidor).
+export function FavoritesList({ empty, shortLinks = false }: { empty?: ReactNode; shortLinks?: boolean }) {
   const { favorites } = useFavorites();
   const [items, setItems] = useState<Item[] | null>(null);
   const key = favorites.join(",");
@@ -42,6 +44,8 @@ export function FavoritesList({ empty }: { empty?: ReactNode }) {
       </>
     );
   return (
+    <>
+    <ShareWishlist products={visible.map(({ product }) => ({ id: product.id, slug: product.slug }))} shortLinks={shortLinks} />
     <ul role="list" className="grid grid-cols-2 gap-x-3 gap-y-10 lg:grid-cols-4 lg:gap-x-5">
       {visible.map(({ product, categoryName }) => (
         <li key={product.id}>
@@ -49,5 +53,6 @@ export function FavoritesList({ empty }: { empty?: ReactNode }) {
         </li>
       ))}
     </ul>
+    </>
   );
 }

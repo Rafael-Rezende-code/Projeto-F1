@@ -5,7 +5,7 @@
 --
 -- Cole tudo no SQL Editor do projeto e clique em Run. Passo a passo em docs/backend/supabase.md.
 --
--- Contém, nesta ordem: 20261022000000_loja.sql, 20261023000000_modelo_de_venda.sql, 20261024000000_importador.sql, 20261025000000_newsletter.sql, 20261026000000_cupons.sql, 20261027000000_consulta_e_limites.sql, 20261028000000_eventos_e_cancelamento.sql, 20261029000000_emails.sql, 20261030000000_curadoria.sql, 20261031000000_avise_me.sql, 20261101000000_avaliacoes.sql, 20261102000000_desconto_pix.sql, 20261103000000_kits.sql, 20261104000000_personalizacao.sql e o seed do catálogo (supabase/seed.sql).
+-- Contém, nesta ordem: 20261022000000_loja.sql, 20261023000000_modelo_de_venda.sql, 20261024000000_importador.sql, 20261025000000_newsletter.sql, 20261026000000_cupons.sql, 20261027000000_consulta_e_limites.sql, 20261028000000_eventos_e_cancelamento.sql, 20261029000000_emails.sql, 20261030000000_curadoria.sql, 20261031000000_avise_me.sql, 20261101000000_avaliacoes.sql, 20261102000000_desconto_pix.sql, 20261103000000_kits.sql, 20261104000000_personalizacao.sql, 20261105000000_listas.sql e o seed do catálogo (supabase/seed.sql).
 -- Pode rodar de novo: tabelas, índices, colunas, políticas e gatilhos são recriados só se faltarem, e o seed atualiza
 -- o que já existe. ATENÇÃO: rodar de novo devolve o ESTOQUE dos produtos do seed aos valores de exemplo; depois que a
 -- loja estiver vendendo, rode só as migrations novas.
@@ -2144,6 +2144,39 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke all on function public.lookup_order(text, text) from public, anon, authenticated;
 grant execute on function public.lookup_order(text, text) to service_role;
+
+-- =====================================================================================================
+-- 20261105000000_listas.sql
+-- =====================================================================================================
+-- Loja extra, item 4: lista de desejos com link curto (/desejos/<token>). Sem acesso direto do público: o servidor do site
+-- (service role) cria, atualiza (com a chave de edição que fica só no aparelho de quem criou; aqui, só o hash) e lê pelo
+-- token. A criação é limitada por IP no servidor (lib/rate-limit.ts, balde "lista"). Admin pode ler. Idempotente.
+
+create table if not exists public.wishlists (
+  id uuid primary key default gen_random_uuid(),
+  token text not null unique,
+  name text not null default '',
+  product_slugs text[] not null default '{}',
+  secret_hash text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+do $$ begin
+  alter table public.wishlists add constraint wishlists_token_check check (token ~ '^[A-Za-z0-9]{10}$');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table public.wishlists add constraint wishlists_size_check check (length(name) <= 30 and coalesce(array_length(product_slugs, 1), 0) <= 60);
+exception when duplicate_object then null; end $$;
+drop trigger if exists wishlists_touch on public.wishlists;
+drop trigger if exists wishlists_touch on public.wishlists;
+create trigger wishlists_touch before update on public.wishlists for each row execute function public.touch_updated_at();
+
+alter table public.wishlists enable row level security;
+revoke all on table public.wishlists from anon, authenticated, public;
+grant select on table public.wishlists to authenticated;
+drop policy if exists "admin le listas" on public.wishlists;
+drop policy if exists "admin le listas" on public.wishlists;
+create policy "admin le listas" on public.wishlists for select to authenticated using (public.is_admin());
 
 -- =====================================================================================================
 -- seed.sql (catálogo de demonstração)
