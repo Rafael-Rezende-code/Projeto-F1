@@ -14,6 +14,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { completeTheLook } from "@/lib/catalog/look";
 import { ProductReviews } from "@/components/product-reviews";
 import { Stars } from "@/components/stars";
+import { ShareButton } from "@/components/share-button";
 import { aggregateRating, summarizeReviews } from "@/lib/reviews";
 import { getApprovedReviews } from "@/lib/reviews-store";
 import { WhatsAppTopic } from "@/components/whatsapp";
@@ -123,7 +124,10 @@ export default async function ProductPage({ params }: Params) {
               )}
               {!team && !driver && category && <span className="text-[#b94f01]">{category.name}</span>}
             </div>
-            <h1 className="mt-3 text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl">{product.name}</h1>
+            <div className="mt-3 flex items-start justify-between gap-4">
+              <h1 className="text-4xl font-medium tracking-[-0.06em] text-black sm:text-5xl">{product.name}</h1>
+              <ShareButton title={product.name} url={`/produtos/${product.slug}`} className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-black/15 text-black transition hover:border-black" />
+            </div>
             {reviewSummary && (
               <a href="#avaliacoes" className="mt-3 inline-flex items-center gap-2 text-sm text-black/70 underline-offset-4 hover:underline">
                 <Stars rating={reviewSummary.average} />
