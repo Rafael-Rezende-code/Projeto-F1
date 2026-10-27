@@ -180,6 +180,7 @@ export function OrderView({ order }: { order: Order }) {
         <dl className="mt-6 flex flex-col gap-2 border-t border-black/10 pt-5 text-sm">
           <div className="flex justify-between"><dt className="text-black/60">Subtotal</dt><dd>{formatPrice(order.subtotalCents)}</dd></div>
           {order.coupon && order.coupon.discountCents > 0 && <div className="flex justify-between"><dt className="text-black/60">Cupom {order.coupon.code}</dt><dd>−{formatPrice(order.coupon.discountCents)}</dd></div>}
+          {order.kitDiscount?.kits.map((kit) => <div key={kit.slug} className="flex justify-between"><dt className="text-black/60">{kit.title}{kit.sets > 1 ? ` (×${kit.sets})` : ""}</dt><dd>−{formatPrice(kit.discountCents)}</dd></div>)}
           {order.paymentDiscount && <div className="flex justify-between"><dt className="text-black/60">Desconto no Pix ({order.paymentDiscount.percent}%)</dt><dd>−{formatPrice(order.paymentDiscount.cents)}</dd></div>}
           <div className="flex justify-between"><dt className="text-black/60">Entrega</dt><dd>{order.shipping.priceCents === 0 ? "Grátis" : formatPrice(order.shipping.priceCents)}</dd></div>
           <div className="mt-2 flex justify-between border-t border-black/10 pt-3 text-base font-medium"><dt>Total</dt><dd>{formatPrice(order.totalCents)}</dd></div>

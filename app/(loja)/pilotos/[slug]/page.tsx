@@ -13,6 +13,7 @@ import { ImageReveal } from "@/components/motion/image-reveal";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { ArtDirectedImage } from "@/components/ui/art-directed-image";
 import { ProductGrid } from "@/components/product-grid";
+import { KitSection } from "@/components/kit-section";
 import { catalog } from "@/lib/catalog";
 import { getDriverContent } from "@/lib/content/drivers";
 import { readableTextOn } from "@/lib/contrast";
@@ -181,6 +182,10 @@ export default async function DriverPage({ params }: Params) {
           <ProductGrid products={products} priorityCount={4} layout="colecao" />
         </div>
       </section>
+
+      <div className="px-5 pt-16 sm:px-10 sm:pt-20">
+        <KitSection driverSlug={driver.slug} className="mx-auto max-w-[1400px]" />
+      </div>
 
       {story && (
         <div className="px-5 pt-20 sm:px-10 sm:pt-28">

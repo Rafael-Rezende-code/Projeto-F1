@@ -18,7 +18,9 @@ import { couponMessage, normalizeCouponCode } from "@/lib/coupons";
 import { createPublicClient } from "@/lib/supabase/server";
 import { onlyDigits } from "@/lib/validators/br";
 import { storePolicy } from "@/lib/store-policy";
-import { computeTotals } from "@/lib/pricing";
+import { applyKits, computeTotals, type PriceLine } from "@/lib/pricing";
+import { getKits } from "@/lib/kits-store";
+import type { Kit } from "@/lib/kits";
 
 export type PlaceOrderResult =
   | { ok: true; order: Order }
@@ -52,17 +54,23 @@ export async function previewCoupon(input: unknown): Promise<CouponPreview> {
   if (!code) return { ok: false, message: couponMessage("formato") };
   let subtotalCents = 0;
   let shippingCents = 0;
+  // Kit na sacola: o cupom só vale junto se a política permitir; o cupom incide sobre o subtotal depois do kit.
+  const priceLines: PriceLine[] = [];
+  for (const item of parsed.data.items) {
+    const found = await catalog.getVariantBySku(item.sku);
+    if (found) priceLines.push({ key: item.sku, sku: item.sku, slug: found.product.slug, unitPriceCents: found.product.priceCents, feeCents: 0, quantity: item.quantity, personalized: false });
+  }
+  const kitCents = applyKits(priceLines, await getKits()).reduce((sum, kit) => sum + kit.discountCents, 0);
+  if (kitCents > 0 && !storePolicy.couponWithKit) return { ok: false, message: couponMessage("com_kit") };
   if (parsed.data.cep && parsed.data.shippingId) {
     const quote = await quoteForItems(parsed.data.cep, parsed.data.items);
     if (!quote.ok) return { ok: false, message: quote.message };
     subtotalCents = quote.subtotalCents;
     shippingCents = quote.options.find((option) => option.id === parsed.data.shippingId)?.priceCents ?? 0;
   } else {
-    for (const item of parsed.data.items) {
-      const found = await catalog.getVariantBySku(item.sku);
-      if (found) subtotalCents += found.product.priceCents * item.quantity;
-    }
+    subtotalCents = priceLines.reduce((sum, line) => sum + line.unitPriceCents * line.quantity, 0);
   }
+  subtotalCents -= kitCents;
   const { data, error } = await createPublicClient().rpc("quote_coupon", { p_code: code, p_subtotal_cents: subtotalCents, p_shipping_cents: shippingCents });
   if (error) {
     console.error("[cupom] prévia:", error.code);
@@ -152,6 +160,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
         items: data.items,
         coupon: coupon ?? undefined,
         pixPercent: storePolicy.pixDiscountPercent,
+        couponWithKit: storePolicy.couponWithKit,
       })
     : null;
   if (stored && !stored.ok) {
@@ -163,6 +172,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // Simulado: mesma conta do banco (lib/pricing.ts). Gravado: o total é o do banco.
   const simulatedTotals = computeTotals({
     lines: lines.map((line) => ({ key: line.sku, sku: line.sku, slug: line.slug, unitPriceCents: line.unitPriceCents, feeCents: 0, quantity: line.quantity, personalized: false })),
+    kits: stored ? [] : await getKits(),
     shippingCents,
     method: data.payment.method,
     pixPercent: storePolicy.pixDiscountPercent,
@@ -206,9 +216,15 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     payment: { method: data.payment.method, provider: payment.provider, reference: payment.reference, instructions: payment.instructions, details: payment.details },
     lines,
     subtotalCents,
+    kitDiscount: simulatedTotals.kitDiscountCents > 0 ? { cents: simulatedTotals.kitDiscountCents, kits: simulatedTotals.kits.map((kit) => ({ slug: kit.slug, title: kit.title, sets: kit.sets, discountCents: kit.discountCents })) } : undefined,
     paymentDiscount: simulatedTotals.pixDiscountCents > 0 ? { percent: storePolicy.pixDiscountPercent, cents: simulatedTotals.pixDiscountCents } : undefined,
     totalCents,
     simulated: payment.provider === "simulado",
   };
   return { ok: true, order };
+}
+
+/** Kits ativos (prévia da sacola e do checkout: agrupar e mostrar a economia). O desconto que vale é o do servidor. */
+export async function activeKits(): Promise<Kit[]> {
+  return getKits();
 }

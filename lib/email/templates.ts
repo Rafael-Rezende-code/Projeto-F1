@@ -52,6 +52,7 @@ export function orderEmail(type: OrderEmailType, order: Order, siteUrl: string) 
   const totals = [
     ["Subtotal", formatPrice(order.subtotalCents)],
     ...(order.coupon && order.coupon.discountCents > 0 ? [[`Cupom ${order.coupon.code}`, `−${formatPrice(order.coupon.discountCents)}`]] : []),
+    ...(order.kitDiscount?.kits ?? []).map((kit) => [kit.title, `−${formatPrice(kit.discountCents)}`]),
     ...(order.paymentDiscount ? [[`Desconto no Pix (${order.paymentDiscount.percent}%)`, `−${formatPrice(order.paymentDiscount.cents)}`]] : []),
     ["Entrega", order.shipping.priceCents === 0 ? "Grátis" : formatPrice(order.shipping.priceCents)],
     ["Total", formatPrice(order.totalCents)],

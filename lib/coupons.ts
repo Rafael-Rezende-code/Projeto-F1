@@ -3,7 +3,7 @@
 // 20261026000000_cupons.sql). Aqui ficam o formato do código, as mensagens e o cálculo da PRÉVIA (mesma regra do SQL).
 
 export type CouponKind = "percentual" | "valor_fixo" | "frete_gratis";
-export type CouponReason = "inexistente" | "inativo" | "ainda_nao_comecou" | "expirado" | "minimo" | "esgotado" | "formato" | "desligado";
+export type CouponReason = "inexistente" | "inativo" | "ainda_nao_comecou" | "expirado" | "minimo" | "esgotado" | "formato" | "desligado" | "com_kit";
 
 export const COUPON_STORAGE_KEY = "apex:cupom:v1";
 
@@ -22,6 +22,7 @@ export const COUPON_MESSAGES: Record<CouponReason, string> = {
   esgotado: "Este cupom já foi usado o máximo de vezes.",
   formato: "Use só letras, números, - ou _ (de 3 a 40 caracteres).",
   desligado: "Cupons não estão disponíveis no momento.",
+  com_kit: "Este cupom não vale junto com o desconto de kit. Tire o cupom ou um item do kit.",
 };
 
 export const couponMessage = (reason: string | undefined) => COUPON_MESSAGES[(reason ?? "inexistente") as CouponReason] ?? COUPON_MESSAGES.inexistente;

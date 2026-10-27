@@ -24,6 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link href="/admin/pedidos" className="rounded-xl px-3 py-2 hover:bg-black/5">Pedidos</Link>
               <Link href="/admin/fornecedor" className="rounded-xl px-3 py-2 hover:bg-black/5">Fornecedor</Link>
               <Link href="/admin/cupons" className="rounded-xl px-3 py-2 hover:bg-black/5">Cupons</Link>
+              <Link href="/admin/kits" className="rounded-xl px-3 py-2 hover:bg-black/5">Kits</Link>
               <Link href="/admin/newsletter" className="rounded-xl px-3 py-2 hover:bg-black/5">Newsletter</Link>
               <Link href="/admin/avise-me" className="rounded-xl px-3 py-2 hover:bg-black/5">Avise-me</Link>
               <Link href="/admin/avaliacoes" className="rounded-xl px-3 py-2 hover:bg-black/5">Avaliações</Link>

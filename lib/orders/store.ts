@@ -20,6 +20,8 @@ export type NewOrder = {
   coupon?: string;
   /** Desconto no Pix da política da loja (lib/store-policy.ts); o banco só aplica se o meio for Pix. */
   pixPercent?: number;
+  /** Cupom e kit juntos (lib/store-policy.ts). */
+  couponWithKit?: boolean;
 };
 
 export type CreateOrderResult =
@@ -43,6 +45,7 @@ export async function createStoredOrder(input: NewOrder): Promise<CreateOrderRes
       items: input.items,
       coupon: input.coupon ?? null,
       pix_percent: input.pixPercent ?? 0,
+      coupon_with_kit: input.couponWithKit ?? false,
     },
   });
   if (error) {

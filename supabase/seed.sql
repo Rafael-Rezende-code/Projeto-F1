@@ -304,6 +304,18 @@ do $$ begin
   end if;
 end $$;
 
+do $$ begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'kits') then
+    insert into public.kits (slug, title, team_slug, driver_slug, product_slugs, discount_percent, active) values
+      ('kit-norris', 'Kit dia de corrida Norris', 'mclaren', 'norris', array['camiseta-norris', 'bone-norris', 'poster-norris']::text[], 10, true),
+      ('kit-verstappen', 'Kit dia de corrida Verstappen', 'red-bull-racing', 'verstappen', array['camiseta-verstappen', 'bone-verstappen', 'poster-verstappen']::text[], 10, true),
+      ('kit-hamilton', 'Kit dia de corrida Hamilton', 'ferrari', 'hamilton', array['camiseta-hamilton', 'bone-hamilton', 'poster-hamilton']::text[], 10, true),
+      ('kit-bortoleto', 'Kit dia de corrida Bortoleto', 'audi', 'bortoleto', array['camiseta-bortoleto', 'bone-bortoleto', 'poster-bortoleto']::text[], 10, true)
+    on conflict (slug) do update set title = excluded.title, team_slug = excluded.team_slug, driver_slug = excluded.driver_slug,
+      product_slugs = excluded.product_slugs, discount_percent = excluded.discount_percent, active = excluded.active;
+  end if;
+end $$;
+
 insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-P', (select id from public.products where code = 'APX-001'), 'P', null, 7, 0) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
 insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-M', (select id from public.products where code = 'APX-001'), 'M', null, 9, 1) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;
 insert into public.product_variants (sku, product_id, size, color, stock, position) values ('APX-001-G', (select id from public.products where code = 'APX-001'), 'G', null, 0, 2) on conflict (sku) do update set product_id = excluded.product_id, size = excluded.size, color = excluded.color, stock = excluded.stock, position = excluded.position;

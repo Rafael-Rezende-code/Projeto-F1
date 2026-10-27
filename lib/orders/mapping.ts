@@ -40,6 +40,8 @@ export type OrderRow = {
   shipping_discount_cents?: number;
   payment_discount_cents?: number;
   payment_discount_percent?: number;
+  kit_discount_cents?: number;
+  kits?: { slug: string; title: string; sets: number; discount_cents: number }[] | null;
   total_cents: number;
   tracking_code: string | null;
   shipped_at: string | null;
@@ -79,6 +81,7 @@ export function orderFromRow(row: OrderRow): Order {
     })),
     subtotalCents: row.subtotal_cents,
     coupon: row.coupon_code ? { code: row.coupon_code, discountCents: row.discount_cents ?? 0, shippingDiscountCents: row.shipping_discount_cents ?? 0 } : undefined,
+    kitDiscount: row.kit_discount_cents ? { cents: row.kit_discount_cents, kits: (row.kits ?? []).map((kit) => ({ slug: kit.slug, title: kit.title, sets: kit.sets, discountCents: kit.discount_cents })) } : undefined,
     paymentDiscount: row.payment_discount_cents ? { percent: row.payment_discount_percent ?? 0, cents: row.payment_discount_cents } : undefined,
     totalCents: row.total_cents,
     tracking: row.tracking_code ? { code: row.tracking_code, shippedAt: row.shipped_at ?? undefined } : undefined,

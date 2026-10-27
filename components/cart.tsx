@@ -19,6 +19,8 @@ type CartContextValue = {
   ready: boolean
   /** `from`: o botão clicado (origem da miniatura que voa até a sacola, lib/fly-to-cart.ts). */
   addItem: (product: Product, variant: ProductVariant, quantity?: number, from?: Element | null) => void
+  /** Kit (loja extra, item 2): uma unidade de cada peça escolhida. O desconto é calculado pela sacola/servidor. */
+  addKit: (entries: { product: Product; variant: ProductVariant }[], title: string, from?: Element | null) => boolean
   setQuantity: (sku: string, quantity: number) => void
   removeItem: (sku: string) => void
   clear: () => void
@@ -110,6 +112,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [announce, state.items],
   )
 
+  const addKit = useCallback(
+    (entries: { product: Product; variant: ProductVariant }[], title: string, from?: Element | null) => {
+      const full = entries.find(({ variant }) => variant.stock - (state.items.find((item) => item.sku === variant.sku)?.quantity ?? 0) <= 0)
+      if (full) {
+        announce(`Não há mais unidades de ${full.product.name} (${full.variant.size}) para o kit`)
+        return false
+      }
+      for (const { product, variant } of entries) {
+        dispatch({
+          type: 'add',
+          quantity: 1,
+          item: {
+            sku: variant.sku,
+            productId: product.id,
+            slug: product.slug,
+            name: product.name,
+            size: variant.size,
+            image: product.images[0]?.src ?? '',
+            priceCents: product.priceCents,
+            stock: variant.stock,
+            fulfillment: product.fulfillment,
+            dispatchDays: product.dispatchDays,
+          },
+        })
+        track({ name: 'add_to_cart', item: { id: product.slug, name: product.name, priceCents: product.priceCents, quantity: 1, category: product.categorySlug, variant: variant.size } })
+      }
+      announce(`${title} foi adicionado à sacola`)
+      flyToCart(from)
+      return true
+    },
+    [announce, state.items],
+  )
+
   const value = useMemo<CartContextValue>(
     () => ({
       items: state.items,
@@ -117,6 +152,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       subtotalCents: cartSubtotal(state),
       ready,
       addItem,
+      addKit,
       setQuantity: (sku, quantity) => dispatch({ type: 'setQuantity', sku, quantity }),
       removeItem: (sku) => dispatch({ type: 'remove', sku }),
       clear: () => dispatch({ type: 'clear' }),
@@ -124,7 +160,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       open: () => setIsOpen(true),
       close: () => setIsOpen(false),
     }),
-    [state, ready, addItem, isOpen],
+    [state, ready, addItem, addKit, isOpen],
   )
 
   return (

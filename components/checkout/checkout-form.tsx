@@ -22,6 +22,7 @@ import { track } from "@/lib/analytics";
 import { methodFromBrick } from "@/lib/payments/brick";
 import { pixDiscountFor } from "@/lib/pricing";
 import { storePolicy } from "@/lib/store-policy";
+import { useCartKits } from "@/components/use-kits";
 import type { CardDisplay } from "@/lib/payments/types";
 import type { BrickSubmit } from "@/components/checkout/mercado-pago-brick";
 import { maskCep, maskCpf, maskPhone, onlyDigits, UFS } from "@/lib/validators/br";
@@ -130,12 +131,14 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
   const option = quotes?.find((item) => item.id === form.shippingId);
   const shippingCents = option?.priceCents ?? 0;
   const discountCents = coupon?.discountCents ?? 0;
+  // Kits completos (prévia; o servidor recalcula na create_order).
+  const { applied: kits, kitDiscountCents } = useCartKits(items);
   const shippingDiscountCents = Math.min(coupon?.shippingDiscountCents ?? 0, shippingCents);
   // Desconto no Pix (prévia; o servidor recalcula). Com o Brick o meio é escolhido nele: mostramos o total no Pix à parte.
   const pixPercent = storePolicy.pixDiscountPercent;
-  const pixCents = pixDiscountFor(subtotalCents - discountCents, pixPercent);
+  const pixCents = pixDiscountFor(subtotalCents - kitDiscountCents - discountCents, pixPercent);
   const pixApplied = !mpPublicKey && form.method === "pix" ? pixCents : 0;
-  const totalCents = subtotalCents - discountCents - pixApplied + shippingCents - shippingDiscountCents;
+  const totalCents = subtotalCents - kitDiscountCents - discountCents - pixApplied + shippingCents - shippingDiscountCents;
 
   const cepDigits = onlyDigits(form.cep);
   const itemsKey = items.map((item) => `${item.sku}:${item.quantity}`).join(",");
@@ -533,7 +536,7 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
                               {PAYMENT_LABELS[method]}
                               {pix && pixPercent > 0 && <span className="rounded-md bg-[#b94f01] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white">{pixPercent}% off</span>}
                             </span>
-                            {pix && <span className="mt-0.5 block text-xs text-black/60">Aprovação na hora{pixPercent > 0 ? ` · ${formatPrice(subtotalCents - discountCents - pixCents + shippingCents - shippingDiscountCents)} no total` : ""}</span>}
+                            {pix && <span className="mt-0.5 block text-xs text-black/60">Aprovação na hora{pixPercent > 0 ? ` · ${formatPrice(subtotalCents - kitDiscountCents - discountCents - pixCents + shippingCents - shippingDiscountCents)} no total` : ""}</span>}
                           </span>
                         </label>
                       );
@@ -647,6 +650,7 @@ export function CheckoutForm({ mpPublicKey, couponsEnabled = false }: { mpPublic
           <dl className="mt-6 flex flex-col gap-2 border-t border-black/10 pt-5 text-sm">
             <div className="flex justify-between"><dt className="text-black/60">Subtotal</dt><dd>{formatPrice(subtotalCents)}</dd></div>
             <div className="flex justify-between"><dt className="text-black/60">{option ? `Envio (${option.label})` : "Envio"}</dt><dd>{option ? (shippingCents === 0 ? "Grátis" : formatPrice(shippingCents)) : <span className="text-black/60">calculado após o CEP</span>}</dd></div>
+            {kits.map((kit) => <div key={kit.slug} className="flex justify-between"><dt className="text-black/60">{kit.title}{kit.sets > 1 ? ` (×${kit.sets})` : ""}</dt><dd>−{formatPrice(kit.discountCents)}</dd></div>)}
             {discountCents > 0 && <div className="flex justify-between"><dt className="text-black/60">Cupom {coupon?.code}</dt><dd>−{formatPrice(discountCents)}</dd></div>}
             {shippingDiscountCents > 0 && <div className="flex justify-between"><dt className="text-black/60">Frete grátis ({coupon?.code})</dt><dd>−{formatPrice(shippingDiscountCents)}</dd></div>}
             {pixApplied > 0 && <div className="flex justify-between"><dt className="text-black/60">Desconto no Pix ({pixPercent}%)</dt><dd>−{formatPrice(pixApplied)}</dd></div>}

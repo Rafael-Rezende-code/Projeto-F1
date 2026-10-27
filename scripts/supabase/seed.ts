@@ -8,6 +8,7 @@
 // variantes pelo SKU) e regrava as imagens de cada produto do seed. Não apaga produtos criados no painel admin.
 // ATENÇÃO: o estoque das variantes volta ao valor do seed. Depois do lançamento, não rode de novo sem querer isso.
 import { writeFileSync } from "node:fs";
+import { LOCAL_KITS } from "../../lib/kits";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { seedData } from "@/lib/catalog/seed-repository";
@@ -50,6 +51,20 @@ end $$;
 `;
 }
 
+// Kits (migração 20261103000000_kits.sql): os locais de lib/kits.ts, num bloco que só roda se a tabela existir.
+function kitsSql() {
+  const values = LOCAL_KITS.map((kit) => `(${q(kit.slug)}, ${q(kit.title)}, ${q(kit.teamSlug ?? null)}, ${q(kit.driverSlug ?? null)}, array[${kit.productSlugs.map(q).join(", ")}]::text[], ${kit.percent}, ${kit.active !== false})`).join(",\n      ");
+  return `do $$ begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'kits') then
+    insert into public.kits (slug, title, team_slug, driver_slug, product_slugs, discount_percent, active) values
+      ${values}
+    on conflict (slug) do update set title = excluded.title, team_slug = excluded.team_slug, driver_slug = excluded.driver_slug,
+      product_slugs = excluded.product_slugs, discount_percent = excluded.discount_percent, active = excluded.active;
+  end if;
+end $$;
+`;
+}
+
 function toSql() {
   const productId = (code: string) => `(select id from public.products where code = ${q(code)})`;
   const parts = [
@@ -60,6 +75,7 @@ function toSql() {
     upsert("drivers", drivers, "slug"),
     upsert("products", products.map((p) => p.row), "code"),
     curationSql(),
+    kitsSql(),
   ];
   for (const { row, variants, images } of products) {
     for (const variant of variants)

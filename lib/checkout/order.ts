@@ -74,6 +74,8 @@ export type Order = {
   coupon?: { code: string; discountCents: number; shippingDiscountCents: number };
   /** Desconto do meio de pagamento (loja extra, item 1a: Pix), recalculado no servidor. */
   paymentDiscount?: { percent: number; cents: number };
+  /** Desconto de kits (loja extra, item 2), calculado no servidor. */
+  kitDiscount?: { cents: number; kits: { slug: string; title: string; sets: number; discountCents: number }[] };
   totalCents: number;
   tracking?: { code: string; shippedAt?: string };
   /** true no modo simulado (nada foi cobrado). */

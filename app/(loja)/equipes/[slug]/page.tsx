@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductGrid } from "@/components/product-grid";
+import { KitSection } from "@/components/kit-section";
 import { TeamRow } from "@/components/team-row";
 import { TeamStory } from "@/components/team-story";
 import { getTeamContent } from "@/lib/content/teams";
@@ -69,7 +70,9 @@ export default async function TeamPage({ params }: Params) {
           <ProductGrid products={products} priorityCount={4} />
         </section>
 
-        {/* Ordem (refino 2): cabeçalho → produtos → história → outras equipes. */}
+        <KitSection teamSlug={team.slug} className="mt-16" />
+
+        {/* Ordem (refino 2): cabeçalho → produtos → kit → história → outras equipes. */}
         {story && <TeamStory content={story} color={team.color} name={team.name} />}
 
         <nav aria-labelledby="outras-equipes" className="mt-24">
