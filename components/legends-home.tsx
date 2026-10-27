@@ -32,8 +32,8 @@ export function LegendsHome({ items }: { items: Legend[] }) {
               <Link href={`/lendas/${legend.slug}`} className="group block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">
                 <LegendArt legend={legend} sizes="(min-width: 1024px) 25vw, 50vw" className="@container flex aspect-[4/5] items-end rounded-2xl transition-transform duration-[var(--motion-medium)] ease-[var(--ease-out)] group-hover:-translate-y-1">
                   <div className="w-full p-4 sm:p-6">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80 [overflow-wrap:anywhere]">{legend.country} · {legend.years}</p>
-                    <p className="font-display mt-2 text-[min(13cqw,3rem)] leading-none">{legend.shortName}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">{legend.country} · {legend.years.split(", ").map((range, i) => <span key={range}>{i ? ", " : ""}<span className="whitespace-nowrap">{range}</span></span>)}</p>
+                    <p className="font-display mt-2 text-[min(12cqw,3rem)] leading-none">{legend.shortName}</p>
                   </div>
                 </LegendArt>
               </Link>
