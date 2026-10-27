@@ -443,6 +443,9 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
   animation: vel-drift 32s ease-in-out infinite alternate; }
 @keyframes vel-drift { from { transform: translate3d(-3%, -1.5%, 0); } to { transform: translate3d(3%, 1.5%, 0); } }
 @media (prefers-reduced-motion: reduce) { .vel-pattern { animation: none; } }
+/* Lendas (loja extra, item 7): o mesmo padrão de linhas no fundo gráfico das lendas sem foto, mais visível. Sempre ligado
+   (regra do projeto: só o que move a tela inteira respeita reduced motion). */
+.legend-pattern { position: absolute; inset: -12%; width: 124%; height: 124%; opacity: 0.16; animation: vel-drift 40s ease-in-out infinite alternate; }
 /* VELOCIDADE: vitrine de 2 produtos (refino 2). Entrada escalonada com a revelação do portal (--gp-reveal vai de 0 a 1
    no fim do scroll; cada produto começa 0,12 depois do anterior). Só opacity/transform. */
 .vel-card { --t: clamp(0, calc((var(--gp-reveal, 1) - 0.12 * var(--i, 0)) / 0.64), 1);

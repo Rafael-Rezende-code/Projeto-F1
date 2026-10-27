@@ -19,6 +19,7 @@ export const menuLinks: NavLink[] = [
   { label: "Presentes", href: "/presentes" },
   { label: "Equipes", href: "/equipes" },
   { label: "Pilotos", href: "/pilotos" },
+  { label: "Lendas", href: "/lendas" },
   { label: "Novidades", href: "/produtos?ordem=novidades" },
   { label: "Favoritos", href: "/favoritos" },
 ];
@@ -47,6 +48,7 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
     links: [
       { label: "Equipes", href: "/equipes" },
       { label: "Pilotos", href: "/pilotos" },
+      { label: "Lendas", href: "/lendas" },
       { label: "Circuitos", href: "/#collection" },
       { label: "Cultura F1", href: "/#story" },
       { label: "Diário", href: "/diario" },

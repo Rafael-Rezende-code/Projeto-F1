@@ -22,7 +22,7 @@ export default function OpengraphImage() {
           background: `radial-gradient(circle at 85% 20%, rgba(232,112,42,0.55), transparent 45%), linear-gradient(135deg, #0b0b0b 0%, #151515 60%, ${BRAND.accent} 160%)`,
         }}
       >
-        <div style={{ display: "flex", fontSize: 22, letterSpacing: 6, textTransform: "uppercase", color: BRAND.accentOnDark }}>Fórmula 1 · Coleção</div>
+        <div style={{ display: "flex", fontSize: 22, letterSpacing: 6, textTransform: "uppercase", color: BRAND.accentOnDark }}>Fórmula 1 · Coleção · Lendas</div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", fontSize: 220, fontWeight: 800, fontStyle: "italic", lineHeight: 1, letterSpacing: -10 }}>
             {BRAND.name}

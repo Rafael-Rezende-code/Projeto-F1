@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { catalog } from "@/lib/catalog";
 import { collectionsWithProducts } from "@/lib/catalog/collections";
 import { articles } from "@/lib/content/diario";
+import { legends } from "@/lib/content/legends";
 import { institutionalPages } from "@/lib/institutional";
 import { ALLOW_INDEXING } from "@/lib/indexing";
 import { SITE_URL } from "@/lib/site";
@@ -24,6 +25,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...teams.map((t) => ({ url: url(`/equipes/${t.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
     ...drivers.map((d) => ({ url: url(`/pilotos/${d.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
     { url: url("/diario"), changeFrequency: "weekly", priority: 0.7 },
+    // Lendas (loja extra, item 7) e drops (item 6: só o índice; cada drop é temporário).
+    { url: url("/lendas"), changeFrequency: "monthly", priority: 0.7 },
+    ...legends.map((legend) => ({ url: url(`/lendas/${legend.slug}`), changeFrequency: "monthly" as const, priority: 0.6 })),
+    { url: url("/drops"), changeFrequency: "weekly", priority: 0.5 },
     ...articles.map((a) => ({ url: url(`/diario/${a.slug}`), lastModified: a.date, changeFrequency: "monthly" as const, priority: 0.6 })),
     ...products.map((p) => ({ url: url(`/produtos/${p.slug}`), lastModified: p.createdAt, changeFrequency: "weekly" as const, priority: 0.7 })),
     ...Object.keys(institutionalPages).map((slug) => ({ url: url(`/${slug}`), changeFrequency: "yearly" as const, priority: 0.3 })),
