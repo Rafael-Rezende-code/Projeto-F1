@@ -9,7 +9,14 @@ import path from "node:path";
 import zlib from "node:zlib";
 
 const noTrace = process.argv.includes("--sem-trace"); // só os quadros (o trace em si pesa no navegador)
-const args = process.argv.slice(2).filter((arg) => arg !== "--sem-trace");
+// --sacola: três peças na sacola antes de abrir (o checkout com a sacola vazia é uma página curta, sem o formulário).
+const withCart = process.argv.includes("--sacola");
+const args = process.argv.slice(2).filter((arg) => arg !== "--sem-trace" && arg !== "--sacola");
+const CART = [
+  { key: "APX-059-M", sku: "APX-059-M", productId: "APX-059", slug: "camiseta-hamilton", name: "Camiseta Lewis Hamilton", size: "M", image: "", priceCents: 23990, stock: 5, quantity: 1 },
+  { key: "APX-060-UN", sku: "APX-060-UN", productId: "APX-060", slug: "bone-hamilton", name: "Boné Hamilton", size: "Único", image: "", priceCents: 19990, stock: 5, quantity: 1 },
+  { key: "APX-062-UN", sku: "APX-062-UN", productId: "APX-062", slug: "poster-hamilton", name: "Pôster Lewis Hamilton", size: "Único", image: "", priceCents: 9990, stock: 5, quantity: 1 },
+];
 const base = args[0]?.startsWith("http") ? args.shift() : "http://localhost:3001";
 const out = args[0] && !args[0].startsWith("/") ? args.shift() : "docs/refino-3/traces";
 const routes = args.length ? args : ["/", "/produtos"];
@@ -20,6 +27,7 @@ for (const route of routes) {
   for (const rate of [1, 4]) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const cdp = await page.context().newCDPSession(page);
+    if (withCart) await page.addInitScript((items) => localStorage.setItem("apex:sacola:v1", JSON.stringify(items)), CART);
     await page.goto(base + route, { waitUntil: "load" });
     await page.waitForFunction(() => document.documentElement.hasAttribute("data-hydrated"), null, { timeout: 30_000 });
     await page.waitForTimeout(2500);
