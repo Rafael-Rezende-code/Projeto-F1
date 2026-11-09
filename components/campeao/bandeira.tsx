@@ -1,4 +1,5 @@
 import { CountUp } from "@/components/motion/count-up";
+import { PlayWhenVisible } from "@/components/campeao/play-when-visible";
 import { CAMPEAO_BANDEIRA_TEXT, CAMPEAO_IMAGES, CAMPEAO_NUMBERS } from "@/lib/campeao";
 
 // Capítulo 2 da Sessão do Campeão: a bandeira. Seção escura; o palco segue a proporção da imagem (16:9 no desktop; no
@@ -10,7 +11,7 @@ export function CampeaoBandeira() {
   const vertical = CAMPEAO_IMAGES.flagVertical;
   return (
     <section id="bandeira" aria-labelledby="bandeira-titulo" className="campeao-bandeira bg-[#0b0b0c] text-white">
-      <div className="campeao-bandeira-palco">
+      <PlayWhenVisible className="campeao-bandeira-palco">
         <picture>
           <source media="(max-width: 767px)" type="image/avif" srcSet={vertical.avif} sizes="100vw" />
           <source media="(max-width: 767px)" type="image/webp" srcSet={vertical.webp} sizes="100vw" />
@@ -27,7 +28,7 @@ export function CampeaoBandeira() {
           />
         </picture>
         <span className="campeao-bandeira-luz" aria-hidden="true" />
-      </div>
+      </PlayWhenVisible>
 
       <div className="mx-auto max-w-[1400px] px-5 pb-20 pt-14 sm:px-10 sm:pb-28 sm:pt-20">
         <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-end lg:gap-16">

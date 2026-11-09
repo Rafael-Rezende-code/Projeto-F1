@@ -35,7 +35,7 @@ export function ChampionCard({ driver, blur }: { driver: Driver; blur?: string }
         </SharedTransition>
         <div className="campeao-ouro relative flex flex-col justify-between gap-4 p-5 sm:p-8 lg:p-10">
           <div className="flex items-start justify-between gap-4">
-            <p className="font-campeao-mono text-[10px] uppercase tracking-[0.24em] sm:text-[11px]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] sm:text-[11px]">
               Campeão mundial {driver.champion?.year}
             </p>
             <CampeaoSelo className="campeao-selo-card relative hidden shrink-0 sm:block" />

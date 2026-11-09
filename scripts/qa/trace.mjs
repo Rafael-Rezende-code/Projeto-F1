@@ -11,7 +11,9 @@ import zlib from "node:zlib";
 const noTrace = process.argv.includes("--sem-trace"); // só os quadros (o trace em si pesa no navegador)
 // --sacola: três peças na sacola antes de abrir (o checkout com a sacola vazia é uma página curta, sem o formulário).
 const withCart = process.argv.includes("--sacola");
-const args = process.argv.slice(2).filter((arg) => arg !== "--sem-trace" && arg !== "--sacola");
+// --css=...: CSS injetado na página (experimentos: desligar um efeito e medir de novo).
+const css = process.argv.find((arg) => arg.startsWith("--css="))?.slice(6);
+const args = process.argv.slice(2).filter((arg) => arg !== "--sem-trace" && arg !== "--sacola" && !arg.startsWith("--css="));
 const CART = [
   { key: "APX-059-M", sku: "APX-059-M", productId: "APX-059", slug: "camiseta-hamilton", name: "Camiseta Lewis Hamilton", size: "M", image: "", priceCents: 23990, stock: 5, quantity: 1 },
   { key: "APX-060-UN", sku: "APX-060-UN", productId: "APX-060", slug: "bone-hamilton", name: "Boné Hamilton", size: "Único", image: "", priceCents: 19990, stock: 5, quantity: 1 },
@@ -30,6 +32,7 @@ for (const route of routes) {
     if (withCart) await page.addInitScript((items) => localStorage.setItem("apex:sacola:v1", JSON.stringify(items)), CART);
     await page.goto(base + route, { waitUntil: "load" });
     await page.waitForFunction(() => document.documentElement.hasAttribute("data-hydrated"), null, { timeout: 30_000 });
+    if (css) await page.addStyleTag({ content: css });
     await page.waitForTimeout(2500);
     await cdp.send("Emulation.setCPUThrottlingRate", { rate });
     const events = [];

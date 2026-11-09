@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import Link from "next/link";
 import { motion, useMotionValue, useMotionValueEvent, useTransform, type MotionValue } from "motion/react";
 import { CampeaoSelo } from "@/components/campeao/selo";
+import { PlayWhenVisible } from "@/components/campeao/play-when-visible";
 import { CAMPEAO_IMAGES, COROACAO, CROWN_SIZES, STAGE_SIZES, coroacaoFrame, type CampeaoImage } from "@/lib/campeao";
 
 // A COROAÇÃO (Sessão do Campeão). Porta em React do protótipo docs/referencia/coroacao/index.html, com os MESMOS valores
@@ -278,7 +279,8 @@ function StaticStage({ headingLevel, loopShine, action, faceRef, crownRef, ready
 
 /** Capa da home: composição final, estática, brilho em loop leve e o botão para a página do campeão. */
 export function CoroacaoCapa({ href = "/campeao", label = "Coroar o Kimi" }: { href?: string; label?: string }) {
-  const { faceRef, crownRef, ready } = useDecoded();
+  // Capa estática: nada se move, então não espera a decodificação (decode() anteciparia as imagens lazy e disputaria
+  // banda com o hero). Fontes também só perto da tela (CSS .campeao-capa[data-pausado]).
   const action = (
     <Link
       href={href}
@@ -288,8 +290,8 @@ export function CoroacaoCapa({ href = "/campeao", label = "Coroar o Kimi" }: { h
     </Link>
   );
   return (
-    <section className="campeao-capa" aria-label="Kimi Antonelli, campeão mundial 2026">
-      <StaticStage headingLevel="h2" loopShine action={action} faceRef={faceRef} crownRef={crownRef} ready={ready} />
-    </section>
+    <PlayWhenVisible as="section" className="campeao-capa" aria-label="Kimi Antonelli, campeão mundial 2026">
+      <StaticStage headingLevel="h2" loopShine action={action} ready />
+    </PlayWhenVisible>
   );
 }

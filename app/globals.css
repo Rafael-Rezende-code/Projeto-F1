@@ -603,3 +603,11 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
 .campeao-selo-card .campeao-selo-miolo { font-size: 26cqw; }
 .campeao-selo-modo { width: clamp(84px, 14vw, 128px); container-type: inline-size; color: #14110a; }
 .campeao-selo-modo .campeao-selo-miolo { font-size: 26cqw; }
+/* Animações em loop da Sessão do Campeão pausadas fora da tela (components/campeao/play-when-visible.tsx). */
+[data-pausado] .campeao-selo svg, [data-pausado] .campeao-brilho i, [data-pausado] .campeao-bandeira-img,
+[data-pausado] .campeao-bandeira-luz, [data-pausado] .campeao-cursor, [data-pausado] .campeao-dica i { animation-play-state: paused; }
+/* Capa da home: as fontes da sessão (Inter do título, mono) só são pedidas quando a capa chega perto da tela; antes,
+   os fallbacks com as mesmas métricas (o hero carrega a Inter só depois do primeiro quadro: não antecipar). */
+.campeao-capa[data-pausado] .campeao-titulo b, .campeao-capa[data-pausado] .campeao-selo-texto { font-family: "fontHero Fallback", Arial, sans-serif; }
+.campeao-capa[data-pausado] .font-campeao-mono { font-family: ui-monospace, monospace; }
+.campeao-selo-card .campeao-selo-texto { font-family: var(--font-sans), Arial, sans-serif; font-weight: 600; }
