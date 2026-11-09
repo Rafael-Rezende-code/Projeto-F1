@@ -6,7 +6,7 @@ import { PageIntro } from "@/components/page-intro";
 
 export const metadata: Metadata = {
   title: "Pilotos",
-  description: "Coleções de Lando Norris, Max Verstappen, Lewis Hamilton e Gabriel Bortoleto.",
+  description: "Coleções de Kimi Antonelli (campeão mundial 2026), Lando Norris, Max Verstappen, Lewis Hamilton e Gabriel Bortoleto.",
   alternates: { canonical: "/pilotos" },
 };
 

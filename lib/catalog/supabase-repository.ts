@@ -3,6 +3,7 @@ import { createPublicClient, createShowcaseClient } from "@/lib/supabase/server"
 import { MemoryCatalogRepository, type CatalogData } from "./memory-repository";
 import { attachDrops, dropFromRow } from "@/lib/drops";
 import { DROP_COLUMNS } from "@/lib/drops-store";
+import { withCodeOnlyDrivers } from "./seed/drivers";
 import { categoryFromRow, driverFromRow, productFromRow, teamFromRow, type CategoryRow, type DriverRow, type ProductRow, type TeamRow } from "./supabase-mapping";
 
 // Catálogo no Supabase (fase 9). Carrega as tabelas públicas (RLS: só produtos ativos) numa consulta por tabela e
@@ -31,7 +32,7 @@ async function loadFromSupabase(): Promise<CatalogData> {
     products: attachDrops((products.data as ProductRow[]).map(productFromRow), drops.error ? [] : (drops.data ?? []).map(dropFromRow)),
     categories: (categories.data as CategoryRow[]).map(categoryFromRow),
     teams: (teams.data as TeamRow[]).map(teamFromRow),
-    drivers: (drivers.data as DriverRow[]).map(driverFromRow),
+    drivers: withCodeOnlyDrivers((drivers.data as DriverRow[]).map(driverFromRow)),
   };
 }
 

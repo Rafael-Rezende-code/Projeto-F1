@@ -597,3 +597,9 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
 }
 /* Botão da capa acompanha o palco nas telas grandes (2560px). */
 .campeao-acao-palco a { font-size: clamp(14px, 1.05cqw, 22px); padding: .85em 1.6em; }
+/* Card dourado do campeão (components/campeao/champion-card.tsx) */
+.campeao-ouro { background: linear-gradient(135deg, #f1dfae 0%, #dcbb6a 45%, #b48a36 100%); color: #0d0d0d; }
+.campeao-selo-card { width: 76px; container-type: inline-size; color: #0d0d0d; }
+.campeao-selo-card .campeao-selo-miolo { font-size: 26cqw; }
+.campeao-selo-modo { width: clamp(84px, 14vw, 128px); container-type: inline-size; color: #14110a; }
+.campeao-selo-modo .campeao-selo-miolo { font-size: 26cqw; }

@@ -1,7 +1,7 @@
 import { MemoryCatalogRepository, type CatalogData } from "./memory-repository";
 import { attachDrops } from "@/lib/drops";
 import { categories } from "./seed/categories";
-import { drivers } from "./seed/drivers";
+import { drivers, withCodeOnlyDrivers } from "./seed/drivers";
 import { products } from "./seed/products";
 import { teams } from "./seed/teams";
 
@@ -14,6 +14,8 @@ export const seedData: CatalogData = { products, categories, teams, drivers };
 export class SeedCatalogRepository extends MemoryCatalogRepository {
   constructor() {
     // Em desenvolvimento, os drops de exemplo (lib/drops-example.ts); fora dele, o seed puro.
-    super(async () => (process.env.NODE_ENV === "development" ? { ...seedData, products: attachDrops(seedData.products, (await import("@/lib/drops-example")).exampleDrops()) } : seedData));
+    // O campeão (piloto só no código) entra no início da lista.
+    const data: CatalogData = { ...seedData, drivers: withCodeOnlyDrivers(seedData.drivers) };
+    super(async () => (process.env.NODE_ENV === "development" ? { ...data, products: attachDrops(data.products, (await import("@/lib/drops-example")).exampleDrops()) } : data));
   }
 }

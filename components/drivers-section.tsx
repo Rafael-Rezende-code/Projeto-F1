@@ -9,6 +9,7 @@ import { RevealGroup } from "@/components/motion/reveal-group";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { SectionTitle } from "@/components/motion/section-title";
 import { HoverTransition } from "@/components/ui/hover-transition";
+import { ChampionCard } from "@/components/campeao/champion-card";
 import { driverHoverTransition, drivers, type Driver } from "@/lib/drivers";
 
 // Largura real do card em cada breakpoint (o navegador multiplica pelo DPR para escolher a imagem):
@@ -146,7 +147,11 @@ export function DriverCardList({ className = "", blurs = {} }: { className?: str
       role="list"
       className={`-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 py-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4 ${className}`}
     >
-      {drivers.map((driver) => (
+      {/* O campeão (card dourado) vem sempre primeiro. */}
+      {drivers.filter((driver) => driver.champion).map((driver) => (
+        <ChampionCard key={driver.slug} driver={driver} blur={blurs[driver.slug]} />
+      ))}
+      {drivers.filter((driver) => !driver.champion).map((driver) => (
         <DriverCard key={driver.slug} driver={driver} blur={blurs[driver.slug]} />
       ))}
     </RevealGroup>

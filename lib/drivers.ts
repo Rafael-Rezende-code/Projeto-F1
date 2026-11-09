@@ -52,6 +52,11 @@ export type Driver = {
   duration?: number;
   /** Curva própria (CSS). Sem ela, usa driverHoverTransition.easing. */
   easing?: string;
+  /**
+   * Campeão mundial (Sessão do Campeão, lib/campeao.ts): card dourado, sempre o primeiro da lista (home e /pilotos), e a
+   * página em "modo campeão". Piloto só no código (sem linha no banco): o repositório do Supabase o acrescenta.
+   */
+  champion?: { year: number };
 };
 
 // Transição compartilhada pelos cards: duração em segundos e curva ease-out expo.
@@ -60,8 +65,27 @@ export const driverHoverTransition = {
   easing: "cubic-bezier(0.22, 1, 0.36, 1)",
 };
 
-// Ordem de exibição.
+// Ordem de exibição (o campeão vem primeiro).
 export const drivers: Driver[] = [
+  {
+    // Sessão do Campeão (feat/antonelli). Fotos fornecidas pelo Rafael (docs/conteudo/imagens.md): a vertical da bandeira
+    // no card e no topo; a composição da coroação (derivado, rosto + coroa) no bloco editorial. Sem carro: o topo usa as
+    // miniaturas/coleção. Cor: verde-azulado da Mercedes (lib/teams.ts).
+    slug: "antonelli",
+    champion: { year: 2026 },
+    name: "Kimi Antonelli",
+    team: "Mercedes",
+    color: "#00A19C",
+    textColor: "#0d0d0d",
+    phrase: "O mais jovem campeão da história.",
+    image: "/images/campeao/bandeira vertical.jpeg",
+    photoMain: { src: "/images/campeao/bandeira vertical.jpeg", width: 1170, height: 1463, position: "50% 45%" },
+    photoSecondary: { src: "/images/campeao/derivados/composicao-final.jpg", width: 1672, height: 941, position: "50% 60%" },
+    imagePosition: "50% 55%",
+    href: "/pilotos/antonelli",
+    effect: "wipe",
+    direction: "bottom",
+  },
   {
     slug: "norris",
     carFacing: "right",

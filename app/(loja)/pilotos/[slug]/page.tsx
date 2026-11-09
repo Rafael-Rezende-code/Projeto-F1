@@ -20,6 +20,9 @@ import { getDriverContent } from "@/lib/content/drivers";
 import { readableTextOn } from "@/lib/contrast";
 import { blurProps, findLocalImage, localImage } from "@/lib/local-images";
 import { signaturePaths } from "@/lib/signature-paths";
+import { drivers as driverCards } from "@/lib/drivers";
+import { championProducts } from "@/lib/campeao-products";
+import { ModoCampeao } from "@/components/campeao/modo-campeao";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -53,7 +56,12 @@ export const revalidate = 3600;
 export default async function DriverPage({ params }: Params) {
   const driver = await catalog.getDriverBySlug((await params).slug);
   if (!driver) notFound();
-  const [team, products] = await Promise.all([catalog.getTeamBySlug(driver.teamSlug), catalog.getProducts({ driver: driver.slug })]);
+  // Campeão (Sessão do Campeão): "modo campeão" e, como produtos dele, os com a tag `antonelli` (entram pelo admin).
+  const champion = driverCards.find((card) => card.slug === driver.slug)?.champion;
+  const [team, products] = await Promise.all([
+    catalog.getTeamBySlug(driver.teamSlug),
+    champion ? catalog.getProducts().then(championProducts) : catalog.getProducts({ driver: driver.slug }),
+  ]);
 
   const main = driver.photoMain;
   const second = driver.photoSecondary;
@@ -173,17 +181,31 @@ export default async function DriverPage({ params }: Params) {
         {stageBlock}
       </header>
 
+      {champion && <ModoCampeao />}
+
       {/* Ordem (refino 2): topo → produtos → história e números → bloco editorial com a foto secundária. */}
       <section aria-labelledby="produtos-piloto" id="produtos-piloto-secao" className="scroll-mt-24 px-5 pt-16 sm:px-10 sm:pt-20">
         <div className="mx-auto max-w-[1400px]">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b94f01]">Coleção do piloto</p>
           <div className="mb-10 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             <SectionTitle id="produtos-piloto" text={`A coleção ${driver.name}`} className="scroll-mt-24 text-3xl font-medium tracking-[-0.06em] sm:text-4xl" />
-            <Link href={`/produtos?piloto=${driver.slug}`} className="group inline-flex min-h-11 items-center gap-2 text-sm text-black/60 underline-offset-4 transition hover:text-black hover:underline">
-              Ver todos os produtos <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
-            </Link>
+            {products.length > 0 && (
+              <Link href={champion ? `/produtos?q=${driver.slug}` : `/produtos?piloto=${driver.slug}`} className="group inline-flex min-h-11 items-center gap-2 text-sm text-black/60 underline-offset-4 transition hover:text-black hover:underline">
+                Ver todos os produtos <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
+              </Link>
+            )}
           </div>
-          <ProductGrid products={products} priorityCount={4} layout="colecao" />
+          {products.length > 0 ? (
+            <ProductGrid products={products} priorityCount={4} layout="colecao" />
+          ) : (
+            <div className="rounded-2xl bg-[#f5f5f3] px-6 py-12 text-center">
+              <p className="text-2xl font-medium tracking-[-0.05em] text-black">Em breve.</p>
+              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-black/60">As peças desta coleção estão sendo preparadas. Entre na lista e saiba quando chegarem.</p>
+              <Link href="/#newsletter" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-black px-6 py-3 text-xs font-medium text-white transition hover:bg-[#b94f01]">
+                Quero saber primeiro
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
