@@ -999,9 +999,9 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   recordes de uma fonte só. Imagens fornecidas pelo Rafael (`docs/conteudo/imagens.md`).
 - **NÃO DESENHAR NADA em código** (coroa, louros, ilustrações): só as camadas fornecidas e o protótipo.
 - **`CAMPEAO_DESTAQUE_ATE`** (`lib/campeao.ts`, padrão `2026-12-31`, dia de São Paulo): até essa data a home mostra a
-  capa do campeão (logo depois do hero) e a faixa de aviso no topo. Depois, as duas somem sozinhas (a home revalida de
-  hora em hora). O card dourado em `/pilotos` (e na lista da home), o link "Campeão 2026" no menu e no rodapé e a página
-  `/campeao` continuam.
+  faixa de aviso no topo e o cabeçalho de TODAS as páginas fica com o estilo dourado discreto (`CAMPEAO_BARRA_SCRIPT`,
+  decidido no navegador pelo relógio do visitante: volta ao normal sem deploy novo). Depois, somem sozinhos. O card
+  dourado (home e `/pilotos`), o link "Campeão 2026" no menu e no rodapé, a ficha e `/campeao` continuam.
 - **`/campeao`**: dirigida por dados (`CAMPEAO_CHAPTERS`): (1) a Coroação, porta de `docs/referencia/coroacao/index.html`
   com os MESMOS valores (seção 320svh, filho sticky 100svh, palco 16:9 em `cqw`; linha do tempo em `COROACAO` e
   `coroacaoFrame`, com testes); (2) a bandeira + até 3 números; (3) a coleção `#colecao` (produtos com a tag `antonelli`
@@ -1014,15 +1014,26 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
   0.295 0.707 0.12 0.68). **Se a camada da coroa mudar: `pnpm images:campeao`** e conferir
   `docs/antonelli/mascara-previa.png` (só o ouro marcado). Imagem de compartilhamento: `pnpm images:campeao-og` (com o
   site rodando), que achata a composição final.
-- **Home:** capa estática (`CoroacaoCapa`) com o brilho em loop leve e "Coroar o Kimi"; **a cena da rolagem não fica na
-  home.** Para não piorar o LCP, a capa só pede a Inter do hero e a mono quando chega perto da tela (CSS
-  `.campeao-capa[data-pausado]`), não decodifica imagens e pausa os loops fora da tela (`PlayWhenVisible`). Faixa de
+- **Home (feat/antonelli-2):** a capa estática saiu; o campeão aparece no **card dourado** da seção de pilotos
+  (`components/campeao/gold-champion-card.tsx`, dados em `CAMPEAO_CARD`): 2 colunas × altura de 2 linhas no desktop,
+  linha inteira de 640 a 1023 px, largura toda no celular (foto em cima, texto sobre o preto); fundo
+  `derivados/bandeira-sem-texto.jpg` (sem o logo/texto da F1) e "Reviva a coroação"; em `/pilotos`, a foto do pódio e
+  título h2. **A cena da rolagem não fica na home.** Feixe e brilho pausados fora da tela (`PlayWhenVisible`); a serifa só
+  baixa perto da tela (`.ouro-adiado`). Faixa de
   aviso (`CampeaoAviso`) dentro do cabeçalho da home (fora do fluxo), lembrada em `apex:aviso-campeao:v1`; o
   `AVISO_SCRIPT` esconde a faixa antes da primeira pintura (sem salto).
 - **Piloto só no código:** Antonelli está em `lib/drivers.ts` com `champion` e NÃO vai para o banco nem ganha produtos de
   exemplo (`lib/catalog/seed/drivers.ts`: `drivers` × `codeOnlyDrivers`; os repositórios o põem no início). **Sem
-  migrações:** produtos do campeão entram pelo admin com a tag `antonelli`. Página dele em "modo campeão"
-  (`ModoCampeao`: selo, recordes, linha do tempo, link para `/campeao`).
+  migrações:** produtos do campeão entram pelo admin com a tag `antonelli`. A página dele é a **ficha do campeão**
+  (`components/campeao/ficha-campeao.tsx`, dados em `CAMPEAO_FICHA`, `CAMPEAO_RECORDS` (no máximo 4, cada um com
+  `sources` de 2+ fontes), `CAMPEAO_TIMELINE`, `CAMPEAO_GALERIA`): topo com a bandeira em tela cheia, números, linha do
+  tempo dourada, galeria em mosaico, "Coleção do Kimi" (`#colecao-do-kimi`, "Em breve" sem produto) e "Reviva a
+  coroação". Fotos em `public/images/pilotos/antonelli/` (`_extras/` = fora de uso: marca d'água ou texto de terceiros).
+- **Sistema dourado** (`components/ui/gold.tsx`: GoldText, GoldBeamBorder, GoldRibbon, GoldSheen; tokens `--ouro-*` e
+  CSS no `globals.css`; serifa Cormorant Garamond itálica 500, `.font-ouro-serif`): **reservado ao campeão**, só nas telas
+  e cards do Kimi. GoldText só sobre fundo escuro.
+- **"Kimi" em `/campeao`:** Inter 400, 14cqw, tracking −.02em (altura, base e centro iguais à `original.png`; o desenho
+  da original é Helvetica Neue, a fonte de reserva do protótipo: ver `docs/antonelli/relatorio.md`).
 - Diário: "Vinte anos, uma coroa" (`o-mais-jovem-campeao-da-historia`). Fontes: `docs/conteudo/antonelli.md` e
   `docs/conteudo/fontes-diario.md`. Fonte mono: JetBrains Mono 500 (`fontMono`, `--font-mono-campeao`, sem preload).
 - **Licenciamento:** a arte da bandeira tem a marca F1 e é placeholder; as camadas da coroação dependem de direito de

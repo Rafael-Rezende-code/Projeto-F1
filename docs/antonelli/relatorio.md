@@ -79,3 +79,85 @@ A arte da bandeira tem a marca F1 e foto de evento; as camadas da coroação dep
 Production na Vercel (09/11/2026): só as variáveis de configuração W, H, W_2, H_2, W_3, H_3. Sem Supabase, sem pagamento
 e sem `NEXT_PUBLIC_ALLOW_INDEXING`. `/checkout` em produção mostra "Em breve você poderá concluir a compra por aqui."
 (bloqueado) e as respostas trazem `X-Robots-Tag: noindex, nofollow`.
+
+---
+
+# Passo 2: redesign do Kimi (feat/antonelli-2, 09/11/2026)
+
+## O que mudou
+
+- **Fotos novas** (`public/images/pilotos/antonelli/`): olhadas uma a uma e renomeadas pelo conteúdo: `podio`,
+  `comemoracao`, `olhar` e `retrato-garagem`. Fora de uso, em `_extras/` (nada apagado): `capacete-confete` (marca d'água
+  "BY: TLDESIGN") e `bandeira-texto-f1` (igual à `campeao/bandeira vertical.jpeg`, com o logo e o texto da F1 por cima).
+  Todas são verticais (1170 px); não veio nenhuma horizontal. Registro em `docs/conteudo/imagens.md`.
+- **Bandeira sem texto**: a `bandeira.png` traz no topo o logo da F1 e "First Italian champion in 73 years. Bellissimo."
+  (texto que não é nosso). Gerei `campeao/derivados/bandeira-sem-texto.jpg`, recortada logo abaixo do texto (y = 188 px),
+  usada no card da home e no topo da ficha. A bandeira original continua no capítulo 2 de `/campeao`.
+- **Sistema dourado** (`components/ui/gold.tsx` + bloco "Sistema dourado do campeão" no `globals.css`): `GoldText`,
+  `GoldBeamBorder` (borda de 1px com feixe girando), `GoldRibbon` (fita) e `GoldSheen` (brilho que passa a cada 7 s);
+  tokens `--ouro-sombra … --ouro-brilho`; serifa itálica Cormorant Garamond 500 (`.font-ouro-serif`, `lib/fonts.ts`).
+  **Ele não existia no repositório** (nem em outra branch): foi criado com os nomes e tokens pedidos. `GoldDust` não foi
+  criado (partículas seriam desenho; não era necessário em nenhuma das telas pedidas).
+- **Home**: a capa estática da coroação saiu (componente e CSS removidos). No lugar, o **card dourado** na seção de
+  pilotos: 2 colunas e a altura dos 2 × 2 cards ao lado (desktop), a linha inteira de 640 a 1023 px e a largura toda no
+  celular (foto em cima, texto sobre o preto: o texto sobre o rosto ficava com pouco contraste). "O CAMPEÃO" na serifa,
+  nome com GoldText, "Campeão mundial 2026 · o mais jovem da história", botão "Reviva a coroação" e link "Ver a ficha do
+  campeão". Feixe e brilho só com transform, pausados fora da tela; a serifa só baixa perto da tela.
+- **/pilotos**: o mesmo card, com a foto do pódio, título h2 e o botão para a ficha (a coroação vira o link).
+- **Ficha do campeão** (`/pilotos/antonelli`, `components/campeao/ficha-campeao.tsx`): topo com a bandeira em tela cheia
+  (LCP com `priority`), fita "Campeão Mundial 2026", nome dourado, "Mercedes · carro número 12 · O mais jovem campeão da
+  história"; **4 números** (20 anos e 68 dias, 9 vitórias em 2026, 73 anos de espera, 4 corridas por disputar), cada um
+  com 2+ fontes anotadas em `CAMPEAO_RECORDS.sources`; **linha do tempo** com fio dourado (Bologna 2006, China, Monza,
+  México); **galeria em mosaico** (12 colunas × 2 linhas no desktop, 2 colunas no celular; hover só com
+  transform/opacity); **Coleção do Kimi** (tag `antonelli`; sem produto, "Em breve." elegante com borda dourada, lista e
+  coleção Mercedes); card **"Reviva a coroação"** para `/campeao`. O "modo campeão" antigo (selo + recordes + linha do
+  tempo) foi substituído por ela; a assinatura e o carro não aparecem na página do Kimi.
+- **Barra superior**: com `CAMPEAO_DESTAQUE_ATE` valendo, o cabeçalho de todas as páginas ganha fio dourado na base,
+  borda levemente dourada e o ponto do logo em ouro. Quem decide é um script no `<head>` (`CAMPEAO_BARRA_SCRIPT`), pelo
+  relógio do visitante (dia de São Paulo): depois da data volta ao normal **sem deploy novo**, mesmo em página estática, e
+  esconde a faixa de aviso caso a home em cache ainda a traga. A faixa de aviso ganhou um fio dourado.
+- **/campeao, tipografia do "Kimi"**: Inter **400**, **14cqw**, line-height .84, tracking **−.02em** e sem a margem de
+  cima. Altura das letras, linha de base e centro agora coincidem com a `original.png` (sobreposição em
+  `prints/tipografia-original-x-site-2.png`). Veja a dúvida 1 sobre o desenho das letras.
+
+## Dúvidas
+
+1. **A `original.png` não foi feita com a Inter.** O "i" dela tem pingo quadrado e as letras são mais largas: é a fonte de
+   reserva do protótipo (`"Helvetica Neue"`), o que aparece num Mac sem a Inter carregada. Testei a Inter com o tamanho
+   óptico Display e os conjuntos ss07, ss08 e cv13: nenhum tem pingo quadrado. Por isso igualei altura, peso, base e
+   centro, mas não dá para ficar idêntico com a Inter. Se o desenho da `original.png` for o desejado, a saída é usar uma
+   Helvetica licenciada (ou uma parecida, de licença livre) só nesse título.
+2. **Tamanho e tracking**: os valores pedidos (13,4cqw, −.035em) deixavam o "Kimi" mais baixo e mais estreito que o
+   original; fiquei com 14cqw e −.02em, que batem na sobreposição.
+3. **Bandeira com texto da F1**: usei a versão recortada no card e na ficha. O capítulo 2 de `/campeao` e a capa do artigo
+   do Diário continuam com a arte inteira (com o logo/texto da F1). Sugestão: trocar também (não apliquei: fora do pedido).
+
+## Medições (build de produção, modo seed, mesma máquina)
+
+- **Lighthouse mobile da home**, intercalado 5 × 5 contra a `main` (f2c9cf7): base 78/78/79/79/79 (mediana **79**) →
+  nova 81/80/80/80/81 (mediana **80**). LCP 4,94 → 4,72 s. A capa estática saiu e o card fica abaixo da dobra, com a
+  serifa e as animações só perto da tela. Acessibilidade 100, Boas práticas 96 (404 local do `/_vercel/insights`), SEO 66
+  (o `noindex` de propósito, até o lançamento).
+- **Página do Kimi**, 3 execuções: base mediana 80 → **83** (LCP 5,09 → 4,34 s; TBT 145 → 39 ms).
+
+## QA
+
+- tsc ok; lint 0 erros (2 avisos conhecidos); build ok; `pnpm test` **351** testes passaram (novos: ficha com até 4
+  números de 2+ fontes, galeria e a barra dourada antes/depois da data).
+- e2e no build de produção: **51 passaram, 13 pulados** (os de banco real e de dados de exemplo do dev). `e2e/campeao.spec.ts`
+  refeito: card dourado na home (sem capa), barra dourada, aviso, `/pilotos` → ficha (fita, ≤ 4 números, 4 marcos,
+  galeria, "Em breve", coroação) e sem scroll horizontal.
+- `pnpm qa:varredura` (1440, 1280, 820, 390, 360; inclui `/`, `/pilotos`, `/pilotos/antonelli`, `/campeao`): sem alertas.
+- `pnpm qa:marcadores`: nenhum marcador provisório nas páginas do Kimi.
+- Prints (`docs/antonelli/prints/a2-*`, por `scripts/qa/antonelli2-prints.mjs`): home (topo e card), `/pilotos`, ficha
+  (topo e inteira, sem o rodapé) e `/campeao` em p = 0, .46 e .9, em 1440 e 390.
+- Produção (https://apex-seven-ruddy.vercel.app) conferida antes do merge: `X-Robots-Tag: noindex, nofollow`, robots
+  `Disallow: /` e checkout bloqueado ("Em breve você poderá concluir a compra por aqui").
+
+## Para depois
+
+- Licenciar as fotos novas do Kimi (origem desconhecida) e a arte da bandeira (marca F1).
+- Trocar a arte com texto da F1 no capítulo 2 de `/campeao` e na capa do artigo do Diário (dúvida 3).
+- Decidir a fonte do "Kimi" em `/campeao` (dúvida 1).
+- Não testado: iPhone real (Safari), Firefox e a coleção com produto real (o projeto Supabase continua inacessível daqui;
+  o teste está pronto em `e2e/banco-real.spec.ts`, agora apontando para `#colecao-do-kimi`).
