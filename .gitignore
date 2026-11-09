@@ -55,3 +55,6 @@ __v0_jsx-dev-runtime.ts
 
 # Supabase CLI (arquivos locais de link/estado)
 supabase/.temp/
+
+# Referência da coroação: as camadas grandes já estão (idênticas) em public/images/campeao/
+/docs/referencia/coroacao/*.png

@@ -3,7 +3,8 @@
 // Saída: lib/generated/blur-placeholders.json ({ "/images/...": { w, h, blur } }), lido por lib/local-images.ts.
 // `blur` é a foto reduzida a 16px de largura em WebP (~150–300 bytes): o navegador amplia e desfoca. `w`/`h` são as
 // dimensões reais do arquivo (servem para saber, no build, se existe uma versão opcional e qual a orientação dela).
-// Logos (public/images/logos-equipes) ficam de fora: são <img> pequenas e monocromáticas, sem placeholder.
+// Logos (public/images/logos-equipes) ficam de fora: são <img> pequenas e monocromáticas, sem placeholder. Os derivados
+// da Sessão do Campeão (images/campeao/derivados) também: o placeholder é o do original.
 import { readdir, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -11,7 +12,7 @@ import sharp from "sharp";
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const PUBLIC = path.join(ROOT, "public");
 const OUT = path.join(ROOT, "lib/generated/blur-placeholders.json");
-const SKIP = [path.join(PUBLIC, "images/logos-equipes")];
+const SKIP = [path.join(PUBLIC, "images/logos-equipes"), path.join(PUBLIC, "images/campeao/derivados")];
 
 async function walk(dir) {
   if (SKIP.some((skip) => dir.startsWith(skip))) return [];

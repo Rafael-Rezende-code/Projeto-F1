@@ -1,4 +1,29 @@
 {
+  "/images/campeao/Kimi e a coroa dourada.png": {
+    "w": 1672,
+    "h": 941,
+    "blur": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAACwAQCdASoQAAkAAsBMJYwCdACgnj2AAP74J0jYTTVC1OyI230Me3qAFR+P2vNPgdIIS/7WJ/vUoQWEFXasWUNKX0KqHHQz4O/zfPJUjVCO+Ryh6CcBAAAA"
+  },
+  "/images/campeao/bandeira vertical.jpeg": {
+    "w": 1170,
+    "h": 1463,
+    "blur": "data:image/webp;base64,UklGRuAAAABXRUJQVlA4INQAAAAwBQCdASoQABQAPtFUo0uoJKMhsAgBABoJbACdMoMYHYk+hWPRoffv2t5NbNd/mR0FgAD+9LHRmpcs8nzLCFNiL0+wYy+q5edj5xNETl+WjOqwXf7mjHcWuPCJNVIuHO/FRHcCx1qFEZqWDFgkyM/Lck/cjeg4KMfpL/71V8YSOvcSgnS12Zq4+fs+agD7+BmgLlFSTksvL0sn8KU4bV84XltPXHWajVm0Ho55neI2SDeWmMva++5j69SpbshnilsZ/x633T1bzm6ftrcT/ov90AAAAA=="
+  },
+  "/images/campeao/bandeira.png": {
+    "w": 1672,
+    "h": 941,
+    "blur": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAAAQAgCdASoQAAkAAsBMJbACdAEem1vKCEGwAP76mY20ZY7WkLdUZaJNZ9Wch9wxu/ecJ4aCw2Iu4nJ/22W8LitH+UvoWIidwhaift39gntBmRsdp9LsKU+UazFd6K7KG4NPt359cN25ZKNc+9cO+l9//3AAAA=="
+  },
+  "/images/campeao/camada_coroa.png": {
+    "w": 1774,
+    "h": 887,
+    "blur": "data:image/webp;base64,UklGRh4BAABXRUJQVlA4WAoAAAAQAAAADwAABwAAQUxQSHUAAAABcFpt27I8z/vhW7jsQSUTdQGHRCJTIVH/nzGobtUddrBfh4iIhEMAIAFAPCLiD+fLYb8S5RGACLS379e2EwSBUX2g9d6G8Tee3WG/ohuGYfy/p8ns9v0YhmEkCtp4lvGQvuxuoefSAKjgCnkAiBJQCFABVAIAVlA4IIIAAAAwAgCdASoQAAgAAsBMJbACdAYrF8AHgBycAADgA0rl759PgchO4ZM0lhi8gqL95Pjfy349dPX+Xbtx3x/pAO8teGRiwRFbd9cK06arIObypMmZsSkX9TvYyK7cU1mXsPj+cPRb7s1VOBtVF43Ftkpv1ik5fPF6O2rYEx8ATpz/IAAA"
+  },
+  "/images/campeao/fundo_rosto.png": {
+    "w": 1672,
+    "h": 941,
+    "blur": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoQAAkAAsBMJYwC7AEPAFMORgAA/vghnOvzl5UBsiz99jRJwe+QDYDxBOkg5qd+vIGQqIVxMUkM0JCb70oAAA=="
+  },
   "/images/editorial/abraco-redbull-ferrari-desktop.png": {
     "w": 1672,
     "h": 941,
@@ -33,6 +58,11 @@
     "w": 1170,
     "h": 1418,
     "blur": "data:image/webp;base64,UklGRq4AAABXRUJQVlA4IKIAAAAwBACdASoQABMAPtFUo0uoJKMhsAgBABoJQApgC4HWrJsmEc86LofbMrgA/f9p/2vK7iyZO8beDrouujSqx/ZKoB50nus+TmmaO2WzMh6eM3FY6GN+bzwuiEwP72BrMt1pUqGElxkXsih8tH+ptFSNz/T9GZMNionQQ8A3rGNtZn1746TA2+2KhETZOGm4JV+sXRj0L69zFz5Zl4OWOOU0AAA="
+  },
+  "/images/personalizacao/camisa-costas-base.png": {
+    "w": 1122,
+    "h": 1402,
+    "blur": "data:image/webp;base64,UklGRogBAABXRUJQVlA4WAoAAAAQAAAADwAAEwAAQUxQSNQAAAABgCPZtmpln3c/7hY7hKSuKSlDcFL3lJBiAowBcsjc3SGHyP3aRt77fwoRMQEAIAoAlCBUlCAAAkBJCGL9e0vLewMpCEnuPKYnPc/70oAAc3RGa62N5TwCVLx67UK/3Vc1MMFvF/nNGWRdxOVvc2o++KlDvP6gb0bl9MANrXOWd0OzdQKBrNI4Z3ibDAGCJCxS/9tQSgEQLIRtCgQQyErYbXJY6iWNc5YP+WFZ97T/3qsQ/Ct6tp9fX59fuiGs+I2e9J7tUAAgbYMTk2MTYx3pkH8JAlZQOCCOAAAA8AMAnQEqEAAUAD7RVKNLqCSjIbAIAQAaCWcAxnwgcjmJtHDZJe8E4AD+8esAMazt7tSExapik9ZJa6mh4EaCbLTALqu+RRueGC7PBiN7Q3M4KAGRO+/XoEMED2ffZOZJD/c55joSai+6hbmAGcY8XOmMWqJMMHRTJr0EPnQi4o1JYHfHmeRYX3WwbYEAAA=="
   },
   "/images/pilotos/bortoleto.png": {
     "w": 1024,

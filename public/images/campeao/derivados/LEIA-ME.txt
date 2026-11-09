@@ -1,0 +1,1 @@
+Gerado por scripts/images/campeao.mjs a partir dos originais da pasta de cima (não editar à mão).
