@@ -41,12 +41,18 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const driver = await catalog.getDriverBySlug((await params).slug);
   if (!driver) return { title: "Piloto não encontrado" };
-  const description = `Coleção ${driver.name}: camisetas, bonés, miniaturas e pôsteres. ${driver.phrase}`;
+  const champion = driverCards.find((card) => card.slug === driver.slug)?.champion;
+  const description = champion
+    ? `${driver.name}, campeão mundial de ${champion.year}: o mais jovem campeão da história da Fórmula 1. A coleção do campeão.`
+    : `Coleção ${driver.name}: camisetas, bonés, miniaturas e pôsteres. ${driver.phrase}`;
+  // Campeão: a composição final da coroação achatada (scripts/images/campeao-og.mjs), a mesma de /campeao.
+  const image = champion ? { url: "/images/campeao/derivados/og-campeao.jpg", width: 1200, height: 630, alt: `${driver.name}, campeão mundial ${champion.year}` } : { url: driver.image, alt: driver.name };
   return {
-    title: driver.name,
+    title: champion ? `${driver.name}, campeão mundial ${champion.year}` : driver.name,
     description,
     alternates: { canonical: `/pilotos/${driver.slug}` },
-    openGraph: { title: driver.name, description, images: [{ url: driver.image, alt: driver.name }] },
+    openGraph: { title: driver.name, description, images: [image] },
+    ...(champion ? { twitter: { card: "summary_large_image" as const, images: [image.url] } } : {}),
   };
 }
 
