@@ -24,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...collectionsWithProducts(products).map(({ collection }) => ({ url: url(`/colecoes/${collection.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
     ...teams.map((t) => ({ url: url(`/equipes/${t.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
     ...drivers.map((d) => ({ url: url(`/pilotos/${d.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
+    // Sessão do Campeão (feat/antonelli).
+    { url: url("/campeao"), changeFrequency: "weekly", priority: 0.8 },
     { url: url("/diario"), changeFrequency: "weekly", priority: 0.7 },
     // Lendas (loja extra, item 7) e drops (item 6: só o índice; cada drop é temporário).
     { url: url("/lendas"), changeFrequency: "monthly", priority: 0.7 },

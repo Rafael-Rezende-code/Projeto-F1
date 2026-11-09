@@ -1,6 +1,6 @@
 // Dados de TESTE no Supabase real para o e2e do build de produção (loja extra, QA): corridas e drops com "[TESTE]",
 // um moletom sob encomenda marcado como personalizável (para aparecer na fila do fornecedor) e, no "apagar", tudo o que
-// os testes criaram (pedidos e clientes qa-teste-*@example.com, listas de desejos, lista de espera, kits e cupons de teste).
+// os testes criaram (e a tag antonelli de teste na camiseta da Mercedes, para a coleção do campeão) (pedidos e clientes qa-teste-*@example.com, listas de desejos, lista de espera, kits e cupons de teste).
 // Lê o .env.local; não imprime chaves nem e-mails reais.
 // Uso: node scripts/qa/dados-de-teste.mjs criar | apagar
 import { readFileSync } from "node:fs";
@@ -9,6 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 const env = Object.fromEntries(readFileSync(".env.local", "utf8").split(/\r?\n/).map((line) => line.match(/^([A-Z0-9_]+)=(.*)$/)).filter(Boolean).map((m) => [m[1], m[2].trim()]));
 const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 const DAY = 86_400_000;
+const CAMPEAO_TESTE = "camiseta-mercedes-2026"; // recebe a tag antonelli no "criar" e a perde no "apagar"
 const check = (what, result) => {
   if (result.error) throw new Error(`${what}: ${result.error.code ?? ""} ${result.error.message}`);
   return result.data;
@@ -27,7 +28,10 @@ async function criar() {
     { slug: "teste-pre-venda", title: "[TESTE] Pré-venda", description: "Pré-venda de teste do QA (apagada em seguida).", launch_at: new Date(now - DAY).toISOString(), mode: "pre_venda", ship_estimate: "a partir de 20/12", per_order_limit: 2, product_slugs: ["poster-hamilton"], active: true },
   ]));
   check("personalização", await db.from("products").update({ personalizable: true, personalization_fee_cents: 3000 }).eq("slug", "moletom-ferrari"));
-  console.log(`criados: 1 corrida (sexta ${friday}), 2 drops, moletom-ferrari personalizável`);
+  // Sessão do Campeão: um produto de teste com a tag antonelli (como entraria pelo admin) para a coleção do campeão.
+  const tee = check("produto do campeão", await db.from("products").select("tags").eq("slug", CAMPEAO_TESTE).single());
+  if (!tee.tags.includes("antonelli")) check("tag antonelli", await db.from("products").update({ tags: [...tee.tags, "antonelli"] }).eq("slug", CAMPEAO_TESTE));
+  console.log(`criados: 1 corrida (sexta ${friday}), 2 drops, moletom-ferrari personalizável, ${CAMPEAO_TESTE} com a tag antonelli`);
 }
 
 async function apagar() {
@@ -43,6 +47,8 @@ async function apagar() {
   counts.kits = (check("kits", await db.from("kits").delete().like("slug", "teste-%").select("id")) ?? []).length;
   counts.cupons = (check("cupons", await db.from("coupons").delete().like("code", "QATESTE%").select("id")) ?? []).length;
   check("personalização", await db.from("products").update({ personalizable: false, personalization_fee_cents: 0 }).eq("slug", "moletom-ferrari"));
+  const tee = check("produto do campeão", await db.from("products").select("tags").eq("slug", CAMPEAO_TESTE).single());
+  check("tag antonelli", await db.from("products").update({ tags: tee.tags.filter((tag) => tag !== "antonelli") }).eq("slug", CAMPEAO_TESTE));
   const users = check("usuários", await db.auth.admin.listUsers({ perPage: 200 }));
   for (const user of users.users.filter((item) => item.email?.startsWith("qa-teste-"))) await db.auth.admin.deleteUser(user.id);
   await db.from("admin_emails").delete().like("email", "qa-teste-%");

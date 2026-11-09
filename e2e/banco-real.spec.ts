@@ -153,3 +153,15 @@ test("personalização do produto até a fila do fornecedor; lista de desejos co
   await expect(page.getByRole("heading", { level: 1, name: "A lista de QA Teste" })).toBeVisible();
   await expect(page.getByRole("main").getByRole("heading", { level: 3 })).toHaveText(["Camiseta Ferrari 2026", "Boné Norris"]);
 });
+
+test("Sessão do Campeão: produto com a tag antonelli aparece na coleção e na página do piloto", async ({ page }) => {
+  // Produto de teste: camiseta-mercedes-2026 recebe a tag antonelli em scripts/qa/dados-de-teste.mjs (criar).
+  await page.goto("/campeao#colecao");
+  const colecao = page.locator("#colecao");
+  await colecao.scrollIntoViewIfNeeded();
+  await expect(colecao.getByRole("heading", { level: 2, name: "A coleção do campeão" })).toBeVisible();
+  await expect(colecao.getByRole("link", { name: /Mercedes/ }).first()).toBeVisible();
+  await expect(colecao.getByText("Em breve.")).toHaveCount(0);
+  await page.goto("/pilotos/antonelli");
+  await expect(page.locator("#produtos-piloto-secao").getByRole("link", { name: /Mercedes/ }).first()).toBeVisible();
+});
