@@ -992,6 +992,43 @@ Rodada de refinamento (branch `feat/polimento-2`, criada a partir da `feat/polim
 - **Drops:** `drops`, `drop_waitlist`, `drop_notifications`, `/drops`, `/admin/drops`; exemplo só em dev (e2e com `E2E_DROPS=1`).
 - **Lendas:** `/lendas`, conteúdo em `lib/content/legends/`, fontes em `docs/conteudo/fontes-lendas.md`, produtos pela tag `lenda-{slug}`.
 
+## Sessão do Campeão (feat/antonelli, a partir da main)
+
+- **Kimi Antonelli, campeão mundial de 2026.** Dados e configuração em `lib/campeao.ts`; componentes em
+  `components/campeao/`. **Fatos só com duas fontes** (`docs/conteudo/antonelli.md`); nada de pontos totais nem
+  recordes de uma fonte só. Imagens fornecidas pelo Rafael (`docs/conteudo/imagens.md`).
+- **NÃO DESENHAR NADA em código** (coroa, louros, ilustrações): só as camadas fornecidas e o protótipo.
+- **`CAMPEAO_DESTAQUE_ATE`** (`lib/campeao.ts`, padrão `2026-12-31`, dia de São Paulo): até essa data a home mostra a
+  capa do campeão (logo depois do hero) e a faixa de aviso no topo. Depois, as duas somem sozinhas (a home revalida de
+  hora em hora). O card dourado em `/pilotos` (e na lista da home), o link "Campeão 2026" no menu e no rodapé e a página
+  `/campeao` continuam.
+- **`/campeao`**: dirigida por dados (`CAMPEAO_CHAPTERS`): (1) a Coroação, porta de `docs/referencia/coroacao/index.html`
+  com os MESMOS valores (seção 320svh, filho sticky 100svh, palco 16:9 em `cqw`; linha do tempo em `COROACAO` e
+  `coroacaoFrame`, com testes); (2) a bandeira + até 3 números; (3) a coleção `#colecao` (produtos com a tag `antonelli`
+  ou do piloto; vazia = "Em breve"). `/colecao/campeao-2026` → 308 para `/campeao#colecao` (`next.config.mjs`).
+  A rolagem só é ouvida perto da tela (IntersectionObserver) e a posição da seção é medida no resize; p alimenta motion
+  values (só transform/opacity). Encaixe (p ≥ 0,58) e selo (p ≥ 0,72) são reversíveis. A cena **respeita reduced motion**
+  (move a tela inteira com a rolagem): fica na composição final, parada. Celular: palco de 235vw ancorado embaixo,
+  **acima do dock**, e a faixa vazia de cima leva o selo, a dica e a ação.
+- **Brilho:** máscara `public/images/campeao/derivados/mascara-ouro.webp` (porta em Node do `mask_ouro.py`, região
+  0.295 0.707 0.12 0.68). **Se a camada da coroa mudar: `pnpm images:campeao`** e conferir
+  `docs/antonelli/mascara-previa.png` (só o ouro marcado). Imagem de compartilhamento: `pnpm images:campeao-og` (com o
+  site rodando), que achata a composição final.
+- **Home:** capa estática (`CoroacaoCapa`) com o brilho em loop leve e "Coroar o Kimi"; **a cena da rolagem não fica na
+  home.** Para não piorar o LCP, a capa só pede a Inter do hero e a mono quando chega perto da tela (CSS
+  `.campeao-capa[data-pausado]`), não decodifica imagens e pausa os loops fora da tela (`PlayWhenVisible`). Faixa de
+  aviso (`CampeaoAviso`) dentro do cabeçalho da home (fora do fluxo), lembrada em `apex:aviso-campeao:v1`; o
+  `AVISO_SCRIPT` esconde a faixa antes da primeira pintura (sem salto).
+- **Piloto só no código:** Antonelli está em `lib/drivers.ts` com `champion` e NÃO vai para o banco nem ganha produtos de
+  exemplo (`lib/catalog/seed/drivers.ts`: `drivers` × `codeOnlyDrivers`; os repositórios o põem no início). **Sem
+  migrações:** produtos do campeão entram pelo admin com a tag `antonelli`. Página dele em "modo campeão"
+  (`ModoCampeao`: selo, recordes, linha do tempo, link para `/campeao`).
+- Diário: "Vinte anos, uma coroa" (`o-mais-jovem-campeao-da-historia`). Fontes: `docs/conteudo/antonelli.md` e
+  `docs/conteudo/fontes-diario.md`. Fonte mono: JetBrains Mono 500 (`fontMono`, `--font-mono-campeao`, sem preload).
+- **Licenciamento:** a arte da bandeira tem a marca F1 e é placeholder; as camadas da coroação dependem de direito de
+  imagem do piloto. Ver `docs/conteudo/imagens.md`. QA, prints e GIFs: `docs/antonelli/` (`scripts/qa/campeao-prints.mjs`
+  e `campeao-gif.mjs`).
+
 ## Pendências (atualizado em 22/10/2026)
 
 - **feat/vitrine (refino 3):** aplicar `supabase/atualizacao-3.sql`; relatório em `docs/refino-3/relatorio.md` (medições,
