@@ -141,3 +141,14 @@ report.push(`composicao-final.jpg ${((await stat(path.join(OUT, "composicao-fina
 
 await writeFile(path.join(OUT, "LEIA-ME.txt"), "Gerado por scripts/images/campeao.mjs a partir dos originais da pasta de cima (não editar à mão).\n");
 console.log(report.join("\n"));
+
+// ---- Bandeira sem o texto de cima (feat/antonelli-2) ----
+// A arte traz no topo o logo da F1 e o texto "First Italian champion in 73 years. Bellissimo." (texto de terceiros, que
+// não é nosso). Para o card dourado da home e o topo de /pilotos/antonelli, uma versão recortada logo abaixo do texto
+// (y = 188 px no original de 941: o texto acaba em ~168 e a bandeira começa em ~210). JPG de alta qualidade, sem
+// redimensionar: o next/image gera AVIF/WebP nos tamanhos certos.
+await sharp(path.join(SRC, "bandeira.png"))
+  .extract({ left: 0, top: 188, width: 1672, height: 941 - 188 })
+  .jpeg({ quality: 92, mozjpeg: true })
+  .toFile(path.join(OUT, "bandeira-sem-texto.jpg"));
+console.log(`bandeira-sem-texto.jpg ${((await stat(path.join(OUT, "bandeira-sem-texto.jpg"))).size / 1024).toFixed(0)} KB`);
