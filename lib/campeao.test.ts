@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAMPEAO_CHAPTERS, CAMPEAO_NUMBERS, COROACAO, campeaoDestaqueAtivo, coroacaoFrame } from "./campeao";
+import { CAMPEAO_BARRA_SCRIPT, CAMPEAO_CHAPTERS, CAMPEAO_GALERIA, CAMPEAO_NUMBERS, CAMPEAO_RECORDS, COROACAO, campeaoDestaqueAtivo, coroacaoFrame } from "./campeao";
 import { championProducts } from "./campeao-products";
 import type { Product } from "./catalog/types";
 
@@ -52,6 +52,27 @@ describe("dados da sessão", () => {
     expect(CAMPEAO_NUMBERS.length).toBeLessThanOrEqual(3);
     expect(CAMPEAO_CHAPTERS.map((chapter) => chapter.kind)).toEqual(["coroacao", "bandeira", "colecao"]);
     expect(CAMPEAO_CHAPTERS.find((chapter) => chapter.kind === "colecao")?.id).toBe("colecao");
+  });
+  it("ficha do campeão: no máximo 4 números, cada um com 2+ fontes; galeria só com fotos em uso (fora de _extras)", () => {
+    expect(CAMPEAO_RECORDS.length).toBeLessThanOrEqual(4);
+    for (const item of CAMPEAO_RECORDS) expect(new Set(item.sources).size).toBeGreaterThanOrEqual(2);
+    expect(CAMPEAO_GALERIA.length).toBeGreaterThan(0);
+    for (const photo of CAMPEAO_GALERIA) {
+      expect(photo.src).toMatch(/^\/images\/pilotos\/antonelli\/[a-z-]+\.jpeg$/);
+      expect(photo.alt.length).toBeGreaterThan(10);
+    }
+  });
+  it("barra superior dourada: decidida no navegador pelo dia de São Paulo e por CAMPEAO_DESTAQUE_ATE", () => {
+    const run = (iso: string) => {
+      const appended: string[] = [];
+      const fakeDocument = { createElement: () => ({ textContent: "" }), head: { appendChild: (el: { textContent: string }) => appended.push(el.textContent) } };
+      const RealDate = Date;
+      const FixedDate = class extends RealDate { constructor() { super(iso); } } as DateConstructor;
+      new Function("document", "Date", CAMPEAO_BARRA_SCRIPT)(fakeDocument, FixedDate);
+      return appended[0];
+    };
+    expect(run("2026-12-31T23:00:00-03:00")).toContain("--barra-ouro:1");
+    expect(run("2027-01-01T00:30:00-03:00")).toBe("#aviso-campeao{display:none!important}");
   });
   it("produtos do campeão: tag antonelli ou piloto antonelli", () => {
     const make = (slug: string, extra: Partial<Product>) => ({ slug, tags: [], ...extra }) as unknown as Product;

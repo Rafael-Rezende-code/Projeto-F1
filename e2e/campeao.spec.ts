@@ -1,6 +1,6 @@
 import { expect, test } from "./fixtures";
 
-// Sessão do Campeão (feat/antonelli): /campeao rolada até o fim e de volta, capa e aviso da home, card dourado em
+// Sessão do Campeão (feat/antonelli, feat/antonelli-2): /campeao rolada até o fim e de volta, card dourado e aviso da home, card em
 // /pilotos, coleção vazia ("Em breve") e o redirecionamento 308. A coleção COM produto é testada contra o banco real em
 // e2e/banco-real.spec.ts (produto de teste com a tag antonelli, criado por scripts/qa/dados-de-teste.mjs).
 
@@ -50,13 +50,18 @@ test("/campeao: a coroação acompanha a rolagem até o fim e volta", async ({ p
   expect(overflow).toBe(0);
 });
 
-test("home: capa do campeão leva a /campeao; aviso dispensável sem salto de layout", async ({ page }) => {
+test("home: card dourado do campeão (sem a capa estática) leva a /campeao; aviso dispensável sem salto; barra dourada", async ({ page }) => {
   await page.goto("/");
-  const cover = page.locator(".campeao-capa");
-  await expect(cover).toBeAttached();
-  await expect(cover.locator(".campeao-titulo small")).toHaveText("THE CHAMPION");
-  // A cena da rolagem NÃO está na home.
+  // A capa estática saiu (feat/antonelli-2) e a cena da rolagem continua só em /campeao.
+  await expect(page.locator(".campeao-capa")).toHaveCount(0);
   await expect(page.locator(".campeao-cena")).toHaveCount(0);
+  const card = page.locator("article.gold-anim").filter({ hasText: "Kimi" });
+  await expect(card).toHaveCount(1);
+  await expect(card.getByRole("heading", { level: 3, name: /Kimi Antonelli/ })).toBeAttached();
+  await expect(card).toContainText("Campeão mundial 2026 · o mais jovem da história");
+  // Barra superior dourada (decidida no navegador até CAMPEAO_DESTAQUE_ATE).
+  const gold = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--barra-ouro").trim());
+  expect(gold).toBe("1");
 
   const notice = page.locator("#aviso-campeao");
   await expect(notice).toBeVisible();
@@ -65,24 +70,40 @@ test("home: capa do campeão leva a /campeao; aviso dispensável sem salto de la
   await expect(notice).toHaveCount(0);
   const heroAfter = await page.locator("section.hero-type").boundingBox();
   expect(heroAfter?.y).toBe(heroBefore?.y);
-  // Lembra a escolha: depois de recarregar, a faixa não aparece.
   await page.reload();
   await expect(page.locator("#aviso-campeao")).toBeHidden();
 
-  await cover.scrollIntoViewIfNeeded();
-  await cover.getByRole("link", { name: /Coroar o Kimi/ }).first().click();
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.getByRole("link", { name: "Ver a ficha do campeão" })).toHaveAttribute("href", "/pilotos/antonelli");
+  await card.getByRole("link", { name: /Reviva a coroação/ }).click();
   await expect(page).toHaveURL(/\/campeao$/);
 });
 
-test("/pilotos: card dourado do campeão vem primeiro e abre o modo campeão", async ({ page }) => {
+test("/pilotos: card dourado do campeão vem primeiro e abre a ficha do campeão", async ({ page }) => {
   await page.goto("/pilotos");
-  const first = page.getByRole("list").filter({ has: page.locator(".campeao-ouro") }).getByRole("listitem").first();
-  await expect(first.locator(".campeao-ouro")).toBeVisible();
-  await expect(first).toContainText("Antonelli");
-  await first.getByRole("link").click();
+  const card = page.locator("article.gold-anim").first();
+  await expect(card.getByRole("heading", { level: 2, name: /Kimi Antonelli/ })).toBeVisible();
+  // O card do campeão vem antes da lista dos outros pilotos.
+  const order = await page.evaluate(() => {
+    const champion = document.querySelector("article.gold-anim");
+    const list = document.querySelector('[role="list"][aria-label="Pilotos"]');
+    return champion && list ? champion.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING : 0;
+  });
+  expect(order).toBeTruthy();
+  await card.getByRole("link", { name: /Ver a ficha do campeão/ }).click();
   await expect(page).toHaveURL(/\/pilotos\/antonelli$/);
-  await expect(page.getByRole("heading", { level: 2, name: "Campeão mundial 2026" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Ver a coroação/ })).toHaveAttribute("href", "/campeao");
+
+  // Ficha: nome, fita, até 4 números, linha do tempo, galeria, coleção vazia e o card da coroação.
+  await expect(page.getByRole("heading", { level: 1, name: /Kimi Antonelli/ })).toBeVisible();
+  await expect(page.getByText("Campeão Mundial 2026", { exact: true })).toBeVisible();
+  expect(await page.locator('section[aria-labelledby="ficha-numeros"] dd').count()).toBeLessThanOrEqual(4);
+  await expect(page.locator('section[aria-labelledby="ficha-trajetoria"] li')).toHaveCount(4);
+  expect(await page.locator('section[aria-labelledby="ficha-galeria"] img').count()).toBeGreaterThanOrEqual(4);
+  await page.locator("#colecao-do-kimi").scrollIntoViewIfNeeded();
+  await expect(page.locator("#colecao-do-kimi").getByRole("heading", { level: 2, name: "Em breve." })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Reviva a coroação/ })).toHaveAttribute("href", "/campeao");
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBe(0);
 });
 
 test("/colecao/campeao-2026 redireciona (308) para a coleção do campeão", async ({ request }) => {

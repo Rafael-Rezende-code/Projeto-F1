@@ -163,5 +163,5 @@ test("Sessão do Campeão: produto com a tag antonelli aparece na coleção e na
   await expect(colecao.getByRole("link", { name: /Mercedes/ }).first()).toBeVisible();
   await expect(colecao.getByText("Em breve.")).toHaveCount(0);
   await page.goto("/pilotos/antonelli");
-  await expect(page.locator("#produtos-piloto-secao").getByRole("link", { name: /Mercedes/ }).first()).toBeVisible();
+  await expect(page.locator("#colecao-do-kimi").getByRole("link", { name: /Mercedes/ }).first()).toBeVisible();
 });
