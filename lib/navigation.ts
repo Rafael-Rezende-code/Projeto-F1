@@ -14,6 +14,7 @@ export const headerLinks: NavLink[] = [
 // Menu (celular): navegação principal em destaque + as coleções com produto (vindas do servidor) + atalhos de ajuda.
 export const menuLinks: NavLink[] = [
   { label: "Início", href: "/" },
+  { label: "Campeão 2026", href: "/campeao" },
   { label: "Produtos", href: "/produtos" },
   { label: "Coleções", href: "/colecoes" },
   { label: "Presentes", href: "/presentes" },
@@ -48,6 +49,7 @@ export const footerColumns: { heading: string; links: NavLink[] }[] = [
     links: [
       { label: "Equipes", href: "/equipes" },
       { label: "Pilotos", href: "/pilotos" },
+      { label: "Campeão 2026", href: "/campeao" },
       { label: "Lendas", href: "/lendas" },
       { label: "Circuitos", href: "/#collection" },
       { label: "Cultura F1", href: "/#story" },

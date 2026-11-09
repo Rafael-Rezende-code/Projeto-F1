@@ -1,7 +1,7 @@
 "use client";
 
 import { BRAND } from "@/lib/brand";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { CartButton } from "@/components/cart";
 import { SearchButton } from "@/components/search-root";
@@ -17,8 +17,9 @@ import { headerLinks, type NavLink } from "@/lib/navigation";
 const HIDE_AFTER = 120;
 const DELTA = 6;
 
-/** `extraLinks`: links que só existem quando há conteúdo (ex.: "Drops"; lib/nav-extras.ts, decidido no servidor). */
-export function SiteHeader({ variant = "solid", extraLinks = [] }: { variant?: "overlay" | "solid"; extraLinks?: NavLink[] }) {
+/** `extraLinks`: links que só existem quando há conteúdo (ex.: "Drops"; lib/nav-extras.ts, decidido no servidor).
+ * `notice`: faixa fina acima do cartão (aviso do campeão na home; components/campeao/aviso.tsx). */
+export function SiteHeader({ variant = "solid", extraLinks = [], notice }: { variant?: "overlay" | "solid"; extraLinks?: NavLink[]; notice?: ReactNode }) {
   const [hidden, setHidden] = useState(false);
   const last = useRef(0);
   const ticking = useRef(false);
@@ -55,6 +56,7 @@ export function SiteHeader({ variant = "solid", extraLinks = [] }: { variant?: "
         hidden ? "md:-translate-y-[calc(100%+16px)] md:focus-within:translate-y-0" : ""
       }`}
     >
+      {notice}
       <div
         className={`mx-auto flex max-w-[1400px] items-center justify-center px-5 py-4 md:pointer-events-auto md:justify-between md:rounded-2xl md:border md:border-black/10 md:bg-white md:px-7 md:py-3.5 md:text-black md:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.18)] ${
           overlay ? "text-white" : "border-b border-black/10 text-black"

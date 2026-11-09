@@ -22,6 +22,10 @@ export const CAMPEAO = {
 
 /** Faixa de aviso no topo da home (dispensável; a escolha fica no localStorage). */
 export const CAMPEAO_AVISO = { text: "Kimi Antonelli, campeão mundial 2026", cta: "ver", storageKey: "apex:aviso-campeao:v1" } as const;
+/** Script inline (home, antes do cabeçalho): com o aviso já dispensado, esconde a faixa antes da primeira pintura. Fica
+ * aqui (e não no componente client) porque constante importada de módulo "use client" num server component vira
+ * referência de cliente. */
+export const AVISO_SCRIPT = `try{if(localStorage.getItem(${JSON.stringify(CAMPEAO_AVISO.storageKey)})==="1"){var s=document.createElement("style");s.textContent="#aviso-campeao{display:none!important}";document.head.appendChild(s)}}catch(e){}`;
 
 /** A capa e a faixa da home aparecem até CAMPEAO_DESTAQUE_ATE (inclusive), pelo dia de São Paulo. */
 export function campeaoDestaqueAtivo(now: number = Date.now(), until: string = CAMPEAO_DESTAQUE_ATE): boolean {

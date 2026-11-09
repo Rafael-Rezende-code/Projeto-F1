@@ -38,6 +38,9 @@ import { giftBandCounts } from '@/lib/catalog/gifts'
 import { CollectionCard } from '@/components/collection-card'
 import { ProductGrid } from '@/components/product-grid'
 import { teams } from '@/lib/teams'
+import { CoroacaoCapa } from '@/components/campeao/coroacao'
+import { CampeaoAviso } from '@/components/campeao/aviso'
+import { AVISO_SCRIPT, campeaoDestaqueAtivo } from '@/lib/campeao'
 
 const BASE_IMAGE = 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_19-UziT4mNovMUn0LdmYLaeGddHhCK2VB.png'
 const REVEAL_IMAGE = 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%2028%20de%20set.%20de%202026%2C%2015_42_24-BobebdPiCa5YmPt5HBNd0l081R6lej.png'
@@ -75,15 +78,21 @@ export default async function Page() {
   const velocidadeProducts = [...featured.filter((product) => !shown.has(product.id)), ...featured.filter((product) => shown.has(product.id))].slice(0, 3)
   const homeCollections = collectionsWithProducts(allProducts).slice(0, 4)
   const gifts = giftBandCounts(allProducts).filter((band) => band.count > 0)
+  // Sessão do Campeão: capa (composição final estática) logo depois do hero e faixa de aviso no topo, até
+  // CAMPEAO_DESTAQUE_ATE (lib/campeao.ts). A cena da rolagem fica só em /campeao.
+  const campeao = campeaoDestaqueAtivo(now)
   return <main id="top" className="min-h-screen bg-white">
     <AuthErrorRedirect />
-    <SiteHeader variant="overlay" extraLinks={await navExtras()} />
+    {campeao && <script dangerouslySetInnerHTML={{ __html: AVISO_SCRIPT }} />}
+    <SiteHeader variant="overlay" extraLinks={await navExtras()} notice={campeao ? <CampeaoAviso /> : undefined} />
     <section className="hero-type relative h-screen w-full overflow-hidden bg-black" style={{ height: '100dvh' }}>
       <script dangerouslySetInnerHTML={{ __html: HERO_FONT_SCRIPT }} />
       <Spotlight image={REVEAL_IMAGE} base={BASE_IMAGE} /><div className="absolute inset-0 z-20 bg-gradient-to-b from-black/30 via-transparent to-black/45" /><div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-[55%] bg-gradient-to-t from-black/70 via-black/30 to-transparent sm:h-[45%] sm:from-black/55" />
       <div className="pointer-events-none absolute left-0 right-0 top-[14%] z-50 flex flex-col items-center px-5 text-center text-white"><h1 className="leading-[0.95]" style={{ fontSize: '14px' }}><span className="hero-serif block text-5xl font-normal italic sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.05em' }}>Feita para</span><span className="mt-[-0.08em] block text-5xl font-normal italic sm:text-7xl md:text-8xl" style={{ letterSpacing: '-0.08em' }}>pilotos</span></h1></div>
       <p className="absolute bottom-14 left-10 z-50 hidden max-w-[260px] text-sm leading-relaxed text-white/80 md:left-14 sm:block">Cada milissegundo é projetado. Das superfícies aerodinâmicas às unidades de potência construídas com precisão, a Fórmula 1 é onde tecnologia, velocidade e habilidade humana encontram o limite.</p><div className="absolute bottom-[calc(var(--dock-space)+2.5rem)] left-5 right-5 z-50 flex max-w-full flex-col items-start gap-4 sm:bottom-24 sm:left-auto sm:right-10 sm:max-w-[260px] sm:gap-5 md:right-14"><p className="text-xs leading-relaxed text-white/90 sm:text-sm">Explore camisetas premium de Fórmula 1, memorabilia das pistas, colecionáveis e peças inspiradas nas máquinas e equipes que definem o automobilismo.</p><a href="#collection" className="group inline-flex items-center gap-3 rounded-xl bg-[#b94f01] px-7 py-3 text-sm font-medium text-white transition-all hover:scale-[1.03] hover:bg-[#9f4300] active:scale-95">Ver coleção <ArrowUpRight /></a></div><div className="absolute bottom-6 left-1/2 z-50 hidden -translate-x-1/2 items-center gap-3 text-[10px] uppercase tracking-[0.25em] text-white/60 lg:flex"><span className="h-px w-8 bg-white/50" /> Pilotos <span className="h-px w-8 bg-white/50" /></div>
     </section>
+
+    {campeao && <CoroacaoCapa />}
 
     <BenefitsStrip />
 

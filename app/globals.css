@@ -595,3 +595,5 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
 @media (max-width: 767px) {
   .campeao-bandeira-palco { width: 100vw; aspect-ratio: 4 / 5; -webkit-mask-image: none; mask-image: none; }
 }
+/* Botão da capa acompanha o palco nas telas grandes (2560px). */
+.campeao-acao-palco a { font-size: clamp(14px, 1.05cqw, 22px); padding: .85em 1.6em; }
