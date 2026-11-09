@@ -1,12 +1,13 @@
 import { aCulturaDoDiaDeProva } from "./a-cultura-do-dia-de-prova";
 import { oBrasilDeVoltaAoGrid } from "./o-brasil-de-volta-ao-grid";
+import { oMaisJovemCampeaoDaHistoria } from "./o-mais-jovem-campeao-da-historia";
 import { sennaEAMcLaren } from "./senna-e-a-mclaren";
 import type { Article } from "./types";
 
 export type { Article, ArticleBlock, ArticleImage } from "./types";
 
 /** Artigos do Diário, do mais recente para o mais antigo. */
-export const articles: Article[] = [sennaEAMcLaren, oBrasilDeVoltaAoGrid, aCulturaDoDiaDeProva].sort((a, b) => b.date.localeCompare(a.date));
+export const articles: Article[] = [oMaisJovemCampeaoDaHistoria, sennaEAMcLaren, oBrasilDeVoltaAoGrid, aCulturaDoDiaDeProva].sort((a, b) => b.date.localeCompare(a.date));
 
 export const getArticle = (slug: string) => articles.find((article) => article.slug === slug);
 

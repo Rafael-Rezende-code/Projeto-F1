@@ -39,3 +39,26 @@ marcas). Fotos: editoriais e de piloto já usadas no site (PLACEHOLDERS: licenci
 | Parque fechado a partir da classificação (depois do 3º treino) | https://en.wikipedia.org/wiki/Formula_One_racing |
 | Luz verde abre a volta de apresentação; luzes vermelhas acendem uma de cada vez e a largada é quando se apagam | https://en.wikipedia.org/wiki/Formula_One_racing |
 | Os três primeiros sobem ao pódio | https://en.wikipedia.org/wiki/Formula_One_racing |
+
+## Vinte anos, uma coroa (`o-mais-jovem-campeao-da-historia`)
+
+Consulta em 09/11/2026. Fontes com as chaves de `docs/conteudo/antonelli.md` (F1, ESPN, SKY, GP, WIKI, F1-NUM,
+AUTOSPORT-NUM), mais [ESPN-GP] https://www.espn.com/f1/story/_/id/50320323/max-verstappen-wins-mexico-city-gp-red-bull-kimi-antonelli-seals-historic-title-mexico-city-grand-prix-formula-1-autodromo-hermanos-rodriguez,
+[GPF] https://www.gpfans.com/us/f1-news/1040579/mercedes-f1-lewis-hamilton-replacement-kimi-antonelli-2025-driver-number/ e
+[GPBLOG] https://www.gpblog.com/en/news/andrea-kimi-antonelli-f1-race-number-as-senna.html. Sem citações do piloto.
+
+| Fato | Fontes |
+| --- | --- |
+| GP da Cidade do México, 1º/11/2026, no Autódromo Hermanos Rodríguez; Verstappen venceu; Antonelli 3º | F1, ESPN-GP, GP |
+| Precisava só do 9º lugar; título com quatro corridas por disputar | F1, ESPN, GP |
+| 20 anos e 68 dias; o mais jovem campeão | SKY, GP (+ F1, ESPN, WIKI) |
+| Recorde anterior: Vettel, Red Bull, 2010, 23 anos e 134 dias; nenhum outro campeão antes dos 23 (Hamilton 23a300d, Alonso, Verstappen 24) | ESPN, SKY |
+| Nasceu em 25/08/2006, em Bologna | WIKI (+ idade em SKY) |
+| Chegou à Mercedes no lugar de Lewis Hamilton (heptacampeão: fontes-pilotos.md) | WIKI, GPF |
+| Número 12, associado a Ayrton Senna | F1-NUM, GPBLOG, AUTOSPORT-NUM |
+| Primeira vitória no GP da China; nove vitórias em 2026 até o título | SKY, ESPN (China), GP, WIKI |
+| Venceu em Monza: primeiro italiano a vencer o GP da Itália desde Ludovico Scarfiotti (1966) | ESPN, SKY |
+| Primeiro italiano campeão desde Alberto Ascari (segundo título, 1953): 73 anos; terceiro italiano campeão, depois de Farina (1950) e Ascari | SKY, GP, ESPN, WIKI |
+
+A imagem do corpo é a composição da coroação (montagem, legenda diz isso); a capa é a arte da bandeira (placeholder
+com a marca F1: licenciar antes da venda, ver docs/conteudo/imagens.md).
