@@ -19,6 +19,11 @@
     "h": 887,
     "blur": "data:image/webp;base64,UklGRh4BAABXRUJQVlA4WAoAAAAQAAAADwAABwAAQUxQSHUAAAABcFpt27I8z/vhW7jsQSUTdQGHRCJTIVH/nzGobtUddrBfh4iIhEMAIAFAPCLiD+fLYb8S5RGACLS379e2EwSBUX2g9d6G8Tee3WG/ohuGYfy/p8ns9v0YhmEkCtp4lvGQvuxuoefSAKjgCnkAiBJQCFABVAIAVlA4IIIAAAAwAgCdASoQAAgAAsBMJbACdAYrF8AHgBycAADgA0rl759PgchO4ZM0lhi8gqL95Pjfy349dPX+Xbtx3x/pAO8teGRiwRFbd9cK06arIObypMmZsSkX9TvYyK7cU1mXsPj+cPRb7s1VOBtVF43Ftkpv1ik5fPF6O2rYEx8ATpz/IAAA"
   },
+  "/images/campeao/derivados/bandeira-sem-texto.jpg": {
+    "w": 1672,
+    "h": 753,
+    "blur": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAABwAgCdASoQAAcAAsBMJbACdDiAPQABLQgFE1UAAP76jU2C2pXQu4nmzmmqdjkYH9mHX1fpRy0pDwArLuN35AW8O/14luEixLeb7d7L+pFE6QlwzlQNikjVRpz7VD5Hmkmv3/rwnPIo4Vya5tff/cAAAAA="
+  },
   "/images/campeao/fundo_rosto.png": {
     "w": 1672,
     "h": 941,
@@ -63,6 +68,26 @@
     "w": 1122,
     "h": 1402,
     "blur": "data:image/webp;base64,UklGRogBAABXRUJQVlA4WAoAAAAQAAAADwAAEwAAQUxQSNQAAAABgCPZtmpln3c/7hY7hKSuKSlDcFL3lJBiAowBcsjc3SGHyP3aRt77fwoRMQEAIAoAlCBUlCAAAkBJCGL9e0vLewMpCEnuPKYnPc/70oAAc3RGa62N5TwCVLx67UK/3Vc1MMFvF/nNGWRdxOVvc2o++KlDvP6gb0bl9MANrXOWd0OzdQKBrNI4Z3ibDAGCJCxS/9tQSgEQLIRtCgQQyErYbXJY6iWNc5YP+WFZ97T/3qsQ/Ct6tp9fX59fuiGs+I2e9J7tUAAgbYMTk2MTYx3pkH8JAlZQOCCOAAAA8AMAnQEqEAAUAD7RVKNLqCSjIbAIAQAaCWcAxnwgcjmJtHDZJe8E4AD+8esAMazt7tSExapik9ZJa6mh4EaCbLTALqu+RRueGC7PBiN7Q3M4KAGRO+/XoEMED2ffZOZJD/c55joSai+6hbmAGcY8XOmMWqJMMHRTJr0EPnQi4o1JYHfHmeRYX3WwbYEAAA=="
+  },
+  "/images/pilotos/antonelli/comemoracao.jpeg": {
+    "w": 1170,
+    "h": 1542,
+    "blur": "data:image/webp;base64,UklGRtoAAABXRUJQVlA4IM4AAABwBACdASoQABUAPtFUo0uoJKMhsAgBABoJYwBTAFuqpvI9UlBGJ1TNAz3UkADhJE9vfaoSWpqapjRLBjiNRSGLl+uUs3GeFFsTsqmZRjamTkaX+jL0YOFqlGDV2SBsYu0zQ7S1tjTYyofRf/WzpTTCmEFqyqczmXs9WTXNFvnnZ995fs09Rq4ZDo7qHf7zHWGcrukDb/AgUsJgUBzQZ8FzJQcDtohfQb4Urq1BKRuHKHB/P70NH4aYUF316N4J8F0ALnWJiQJmmSOiVuAAAA=="
+  },
+  "/images/pilotos/antonelli/olhar.jpeg": {
+    "w": 1170,
+    "h": 1431,
+    "blur": "data:image/webp;base64,UklGRsIAAABXRUJQVlA4ILYAAADQBACdASoQABQAPtFUo0uoJKMhsAgBABoJbACdEf/jeBb3Lcqb83whc2tAB+2MgAD+7FF6Sr2wpDlAdevEZLUJKnfY/uacYrnf8Kk3OVJ9k73nhpSHDW9oJWUQ7jZH1tVgO0DOaY/jZfzODAaeDI6f049jFCmUTvsr/Fyyv/SVFQ/vhb67aUyneQE/ELJaqy1Kfq1wOjcgk70W+wDSnhzeeIwtM5q/IF0zt3aAS9lIutSkMgAAAA=="
+  },
+  "/images/pilotos/antonelli/podio.jpeg": {
+    "w": 1170,
+    "h": 1560,
+    "blur": "data:image/webp;base64,UklGRt4AAABXRUJQVlA4INIAAADwBACdASoQABUAPtFUo0uoJKMhsAgBABoJbACdMoRwDhPSItFcM+JABV4mnRB9bSwA/tHo1+gxNMws4HWCW/dQGxy4oz2uhn2nBb9bUq+1jsp6MfS735ofmWvvnpWBLu8sCV71gnGX9ZtGjZdqxqn9HnPP/fLsZR1say2fg6OKdQoyfgBft6mbmNIjkXnO9f5/xA99XRRnuomNstoDfo5UirZ+OH+Gn4ZqHeEjrRxicI5H3nHV/kDnAmMCNvUC9w1nZ/7vxfVEDzDQ6/pAf8AAAAA="
+  },
+  "/images/pilotos/antonelli/retrato-garagem.jpeg": {
+    "w": 1170,
+    "h": 1587,
+    "blur": "data:image/webp;base64,UklGRoYAAABXRUJQVlA4IHoAAAAQBACdASoQABYAPtFUo0uoJKMhsAgBABoJaQAAW+zLg2HYJu+4r1CM0AD+9oQSRevmRrmHfk47s++vAqpq0eYa2mCm9gqlmb68AHwa/GHIWR4stUCcJZGBqW3Pvcc5iu+/bwocGgA1TfuaqcfxzJD0B4mjwYRpwzI4AA=="
   },
   "/images/pilotos/bortoleto.png": {
     "w": 1024,

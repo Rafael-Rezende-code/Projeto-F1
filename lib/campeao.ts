@@ -112,6 +112,29 @@ export const CAMPEAO_IMAGES = {
 export const STAGE_SIZES = "(max-width: 767px) 235vw, min(100vw, 177.78svh)";
 export const CROWN_SIZES = "(max-width: 767px) 190vw, min(81vw, 143.6svh)";
 
+// ---- Card dourado do campeão (feat/antonelli-2; components/campeao/gold-champion-card.tsx) ----
+// Home: fundo com a bandeira (sem coroa e sem o texto da F1 de cima), botão para a coroação. /pilotos: a foto do pódio,
+// botão para a ficha do campeão. `sizes`: largura DESENHADA da foto (object-cover numa caixa mais estreita que a foto).
+export type CampeaoCardVariant = "home" | "pilotos";
+export const CAMPEAO_CARD = {
+  eyebrow: "O campeão",
+  /** docs/conteudo/antonelli.md: campeão de 2026 (5 fontes) e o mais jovem da história (SKY, GP, F1, ESPN, WIKI). */
+  line: "Campeão mundial 2026 · o mais jovem da história",
+  home: {
+    image: { src: "/images/campeao/derivados/bandeira-sem-texto.jpg", width: 1672, height: 753, position: "50% 30%", alt: "Kimi Antonelli olha para o alto, enrolado na bandeira da Itália, com a medalha no peito" },
+    // celular: foto 16:11 em cima (~1,5× a largura da caixa, coberta pela foto 2,22:1); 640–1023: 16:9 (1,25×); lg: 2 linhas de cards.
+    sizes: "(min-width: 1024px) min(70vw, 980px), (min-width: 640px) 125vw, 155vw",
+    primary: { label: "Reviva a coroação", href: "/campeao" },
+    secondary: { label: "Ver a ficha do campeão", href: "/pilotos/antonelli" },
+  },
+  pilotos: {
+    image: { src: "/images/pilotos/antonelli/podio.jpeg", width: 1170, height: 1560, position: "58% 12%", alt: "Kimi Antonelli no pódio do México, de boné, com a bandeira da Itália na mão" },
+    sizes: "(min-width: 1480px) 694px, (min-width: 1024px) calc(50vw - 46px), (min-width: 640px) calc(100vw - 80px), calc(100vw - 40px)",
+    primary: { label: "Ver a ficha do campeão", href: "/pilotos/antonelli" },
+    secondary: { label: "Reviva a coroação", href: "/campeao" },
+  },
+} as const;
+
 // ---- Fatos (duas fontes cada: docs/conteudo/antonelli.md) ----
 export type CampeaoNumber = { value: string; label: string; unit?: string };
 /** No máximo 3 números (faixa do capítulo 2, com contagem animada). */
@@ -121,15 +144,18 @@ export const CAMPEAO_NUMBERS: CampeaoNumber[] = [
   { value: "73", unit: "anos", label: "de espera por um campeão italiano, desde Alberto Ascari em 1953" },
 ];
 
-/** Recordes (faixa do modo campeão na página do piloto). */
-export const CAMPEAO_RECORDS: CampeaoNumber[] = [
-  { value: "20", unit: "anos", label: "O mais jovem campeão mundial da F1 (antes: Sebastian Vettel, aos 23, em 2010)" },
-  { value: "73", unit: "anos", label: "Primeiro italiano campeão desde Alberto Ascari (1953)" },
-  { value: "4", unit: "corridas", label: "ainda por disputar quando o título foi decidido" },
+/** Faixa de números da ficha do campeão (/pilotos/antonelli): NO MÁXIMO 4, cada um com 2+ fontes (as siglas de
+ * docs/conteudo/antonelli.md ficam em `sources`, só para conferência; não aparecem na página). */
+export const CAMPEAO_RECORDS: (CampeaoNumber & { sources: string[] })[] = [
+  { value: "20", unit: "anos", label: "e 68 dias: o campeão mais jovem da história (antes: Sebastian Vettel, aos 23, em 2010)", sources: ["SKY", "GP", "ESPN"] },
+  { value: "9", unit: "vitórias", label: "na temporada de 2026 até o título", sources: ["SKY", "GP", "WIKI"] },
+  { value: "73", unit: "anos", label: "de espera: o primeiro italiano campeão desde Alberto Ascari (1953)", sources: ["SKY", "GP", "ESPN", "WIKI"] },
+  { value: "4", unit: "corridas", label: "ainda por disputar quando o título foi decidido", sources: ["ESPN", "GP"] },
 ];
 
-/** Linha do tempo curta (só fatos confirmados). */
+/** Linha do tempo da ficha do campeão (só fatos com 2+ fontes; docs/conteudo/antonelli.md). */
 export const CAMPEAO_TIMELINE: { date: string; title: string; text: string }[] = [
+  { date: "25 ago. 2006 · Bologna", title: "O começo", text: "Kimi Antonelli nasce em Bologna, na Itália." },
   { date: "2026 · China", title: "A primeira vitória", text: "No GP da China, a primeira vitória na Fórmula 1, pela Mercedes, com o número 12." },
   { date: "2026 · Monza", title: "Vitória em casa", text: "Venceu o GP da Itália: o primeiro italiano a vencer em Monza desde Ludovico Scarfiotti, em 1966." },
   { date: "1º nov. 2026 · México", title: "Campeão do mundo", text: "Terceiro lugar no GP da Cidade do México, com quatro corridas por disputar: título decidido aos 20 anos e 68 dias." },
@@ -167,3 +193,48 @@ export const CAMPEAO_META = {
   description:
     "Kimi Antonelli, o mais jovem campeão da história da Fórmula 1, aos 20 anos, e o primeiro italiano campeão desde 1953. A coroação, os números e a coleção do campeão.",
 };
+
+// ---- Barra superior dourada (feat/antonelli-2) ----
+// Enquanto CAMPEAO_DESTAQUE_ATE valer, o cabeçalho de TODAS as páginas ganha um estilo dourado discreto (fio dourado na
+// base do cartão, borda levemente dourada e o ponto do logo em ouro). Decidido NO NAVEGADOR, pelo relógio do visitante
+// (dia de São Paulo): páginas estáticas geradas antes da data voltam ao normal sozinhas, sem deploy novo. Mesma técnica do
+// HERO_FONT_SCRIPT: um <style> no <head> (nada de atributo no <html>, que o React compara na hidratação). Depois da data,
+// o mesmo script esconde a faixa de aviso da home (#aviso-campeao), caso a home em cache ainda a traga.
+export const CAMPEAO_BARRA_CSS =
+  ":root{--barra-ouro:1}.site-header-card{border-color:rgba(200,150,44,.55)!important}.site-header-marca{color:#c8962c!important}";
+export const CAMPEAO_BARRA_SCRIPT = `try{var d=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());var s=document.createElement("style");s.textContent=d<=${JSON.stringify(CAMPEAO_DESTAQUE_ATE)}?${JSON.stringify(CAMPEAO_BARRA_CSS)}:"#aviso-campeao{display:none!important}";document.head.appendChild(s)}catch(e){}`;
+
+// ---- Ficha do campeão (/pilotos/antonelli; components/campeao/ficha-campeao.tsx) ----
+export const CAMPEAO_FICHA = {
+  hero: {
+    image: { src: "/images/campeao/derivados/bandeira-sem-texto.jpg", width: 1672, height: 753, position: "50% 30%", alt: "Kimi Antonelli olha para o alto, enrolado na bandeira da Itália, com a medalha no peito" },
+    // Foto 2,22:1 com object-cover numa caixa mais alta: a largura desenhada é a altura da tela × 2,22.
+    sizes: "(min-width: 768px) max(100vw, 200svh), 220svh",
+    ribbon: "Campeão Mundial 2026",
+    /** Número do carro: WIKI, F1-NUM, AUTOSPORT-NUM. */
+    line: "Mercedes · carro número 12",
+  },
+  reviva: {
+    eyebrow: "A coroação",
+    title: "Reviva a coroação.",
+    body: "Role a página e coloque a coroa no campeão, quadro a quadro.",
+    cta: "Reviva a coroação",
+  },
+  colecao: {
+    eyebrow: "Coleção do Kimi",
+    title: "A coleção do campeão",
+    body: "Peças para celebrar o título de 2026.",
+    emptyTitle: "Em breve.",
+    emptyBody: "A coleção do campeão está sendo preparada. Entre na lista e saiba quando chegar.",
+  },
+} as const;
+
+/** Galeria em mosaico (bento). `area`: posição no mosaico de 12 colunas × 2 linhas (lg); abaixo de 1024px, 2 colunas com
+ * a proporção `ratio`. Fotos em public/images/pilotos/antonelli/ (docs/conteudo/imagens.md). */
+export type CampeaoFoto = { src: string; width: number; height: number; alt: string; position: string; area: "grande" | "alta" | "larga-1" | "larga-2"; ratio: string; span?: boolean };
+export const CAMPEAO_GALERIA: CampeaoFoto[] = [
+  { src: "/images/pilotos/antonelli/comemoracao.jpeg", width: 1170, height: 1542, area: "grande", ratio: "1 / 1", span: true, position: "50% 30%", alt: "De capacete, em pé no carro, Kimi Antonelli aponta para o alto ao lado da placa do primeiro lugar" },
+  { src: "/images/pilotos/antonelli/podio.jpeg", width: 1170, height: 1560, area: "alta", ratio: "3 / 4", position: "50% 25%", alt: "No pódio, de boné, Kimi Antonelli sorri com a bandeira da Itália na mão" },
+  { src: "/images/pilotos/antonelli/olhar.jpeg", width: 1170, height: 1431, area: "larga-1", ratio: "3 / 4", position: "50% 42%", alt: "Close no capacete verde e amarelo: só os olhos de Kimi Antonelli aparecem pela viseira" },
+  { src: "/images/pilotos/antonelli/retrato-garagem.jpeg", width: 1170, height: 1587, area: "larga-2", ratio: "16 / 10", span: true, position: "50% 24%", alt: "Kimi Antonelli sentado num pneu, cercado de pneus, sorrindo" },
+];

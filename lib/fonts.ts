@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { JetBrains_Mono, Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond, JetBrains_Mono, Playfair_Display } from "next/font/google";
 
 // TOKENS DE FONTE — o único lugar onde as famílias do site são definidas.
 // Para trocar uma fonte: mude o import e a chamada abaixo (mantenha `variable`); o CSS usa só as variáveis
@@ -74,5 +74,17 @@ export const fontMono = JetBrains_Mono({
   variable: "--font-mono-campeao",
 });
 
+// Sistema dourado do campeão (feat/antonelli-2; components/ui/gold.tsx): serifa itálica Cormorant Garamond 500 (SIL OFL),
+// só em "O CAMPEÃO" e acentos das telas do Kimi. Latin, sem preload: só baixa onde é usada; no card da home, só perto da
+// tela (fallback Georgia enquanto o card está pausado, CSS [data-pausado] .font-ouro-serif).
+export const fontGoldSerif = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: "500",
+  style: "italic",
+  display: "swap",
+  preload: false,
+  variable: "--font-ouro-serif",
+});
+
 /** Classes para o <html>: expõem as variáveis CSS das famílias. */
-export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontHero.variable} ${fontMono.variable}`;
+export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontHero.variable} ${fontMono.variable} ${fontGoldSerif.variable}`;

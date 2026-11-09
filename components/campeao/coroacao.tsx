@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import Link from "next/link";
 import { motion, useMotionValue, useMotionValueEvent, useTransform, type MotionValue } from "motion/react";
 import { CampeaoSelo } from "@/components/campeao/selo";
-import { PlayWhenVisible } from "@/components/campeao/play-when-visible";
 import { CAMPEAO_IMAGES, COROACAO, CROWN_SIZES, STAGE_SIZES, coroacaoFrame, type CampeaoImage } from "@/lib/campeao";
 
 // A COROAÇÃO (Sessão do Campeão). Porta em React do protótipo docs/referencia/coroacao/index.html, com os MESMOS valores
@@ -17,7 +15,6 @@ import { CAMPEAO_IMAGES, COROACAO, CROWN_SIZES, STAGE_SIZES, coroacaoFrame, type
 //   O encaixe (p ≥ 0,58: assentar, brilho e "ON") e o selo (p ≥ 0,72) são estados discretos, reversíveis.
 //   Respeita prefers-reduced-motion (move a tela inteira com a rolagem; regra do CLAUDE.md): fica na composição final,
 //   estática, e a seção tem a altura da tela.
-// <CoroacaoCapa>: a composição final, estática (capa da home), com o brilho dourado em loop leve e o botão "Coroar o Kimi".
 
 function Picture({ image, sizes, className, imgRef, priority, alt = "" }: { image: CampeaoImage; sizes: string; className?: string; imgRef?: React.Ref<HTMLImageElement>; priority?: boolean; alt?: string }) {
   return (
@@ -274,24 +271,5 @@ function StaticStage({ headingLevel, loopShine, action, faceRef, crownRef, ready
       ready={ready}
       priority={priority}
     />
-  );
-}
-
-/** Capa da home: composição final, estática, brilho em loop leve e o botão para a página do campeão. */
-export function CoroacaoCapa({ href = "/campeao", label = "Coroar o Kimi" }: { href?: string; label?: string }) {
-  // Capa estática: nada se move, então não espera a decodificação (decode() anteciparia as imagens lazy e disputaria
-  // banda com o hero). Fontes também só perto da tela (CSS .campeao-capa[data-pausado]).
-  const action = (
-    <Link
-      href={href}
-      className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0d0d0d] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#b88a2c] hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
-    >
-      {label} <span aria-hidden="true">→</span>
-    </Link>
-  );
-  return (
-    <PlayWhenVisible as="section" className="campeao-capa" aria-label="Kimi Antonelli, campeão mundial 2026">
-      <StaticStage headingLevel="h2" loopShine action={action} ready />
-    </PlayWhenVisible>
   );
 }

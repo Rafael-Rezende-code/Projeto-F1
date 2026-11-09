@@ -58,12 +58,12 @@ export function SiteHeader({ variant = "solid", extraLinks = [], notice }: { var
     >
       {notice}
       <div
-        className={`mx-auto flex max-w-[1400px] items-center justify-center px-5 py-4 md:pointer-events-auto md:justify-between md:rounded-2xl md:border md:border-black/10 md:bg-white md:px-7 md:py-3.5 md:text-black md:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.18)] ${
+        className={`site-header-card relative mx-auto flex max-w-[1400px] items-center justify-center px-5 py-4 md:pointer-events-auto md:justify-between md:rounded-2xl md:border md:border-black/10 md:bg-white md:px-7 md:py-3.5 md:text-black md:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.18)] ${
           overlay ? "text-white" : "border-b border-black/10 text-black"
         }`}
       >
         <Link href="/" className="font-playfair text-2xl italic tracking-[-0.07em] md:text-3xl" aria-label={`${BRAND.name}, início`}>
-          {BRAND.name}<span className={overlay ? "text-[#e8702a] md:text-[#b94f01]" : "text-[#b94f01]"}>{BRAND.mark}</span>
+          {BRAND.name}<span className={`site-header-marca ${overlay ? "text-[#e8702a] md:text-[#b94f01]" : "text-[#b94f01]"}`}>{BRAND.mark}</span>
         </Link>
         <nav className="hidden items-center gap-10 text-[11px] font-medium uppercase tracking-[0.18em] md:flex" aria-label="Navegação principal">
           {[...headerLinks, ...extraLinks].map((link) => (
@@ -76,6 +76,8 @@ export function SiteHeader({ variant = "solid", extraLinks = [], notice }: { var
           <SearchButton className="transition-opacity hover:opacity-60" />
           <CartButton />
         </div>
+        {/* Fio dourado do período do campeão (aceso pelo CAMPEAO_BARRA_SCRIPT, lib/campeao.ts). */}
+        <span aria-hidden="true" className="site-header-ouro pointer-events-none absolute inset-x-8 bottom-0 hidden h-px md:block" />
       </div>
     </header>
   );

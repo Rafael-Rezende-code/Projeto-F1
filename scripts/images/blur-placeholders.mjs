@@ -4,7 +4,8 @@
 // `blur` é a foto reduzida a 16px de largura em WebP (~150–300 bytes): o navegador amplia e desfoca. `w`/`h` são as
 // dimensões reais do arquivo (servem para saber, no build, se existe uma versão opcional e qual a orientação dela).
 // Logos (public/images/logos-equipes) ficam de fora: são <img> pequenas e monocromáticas, sem placeholder. Os derivados
-// da Sessão do Campeão (images/campeao/derivados) também: o placeholder é o do original.
+// da Sessão do Campeão (images/campeao/derivados) também: o placeholder é o do original; exceção: os derivados usados
+// direto pelo next/image (KEEP, ex.: bandeira-sem-texto.jpg). Pastas _extras (fotos fora de uso) ficam de fora.
 import { readdir, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -13,9 +14,11 @@ const ROOT = path.resolve(import.meta.dirname, "../..");
 const PUBLIC = path.join(ROOT, "public");
 const OUT = path.join(ROOT, "lib/generated/blur-placeholders.json");
 const SKIP = [path.join(PUBLIC, "images/logos-equipes"), path.join(PUBLIC, "images/campeao/derivados")];
+const KEEP = [path.join(PUBLIC, "images/campeao/derivados/bandeira-sem-texto.jpg")];
 
 async function walk(dir) {
-  if (SKIP.some((skip) => dir.startsWith(skip))) return [];
+  if (path.basename(dir) === "_extras") return [];
+  if (SKIP.some((skip) => dir.startsWith(skip))) return KEEP.filter((file) => path.dirname(file) === dir);
   const entries = await readdir(dir, { withFileTypes: true });
   const nested = await Promise.all(entries.map((entry) => {
     const full = path.join(dir, entry.name);

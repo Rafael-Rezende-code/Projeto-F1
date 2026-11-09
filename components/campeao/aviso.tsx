@@ -38,17 +38,19 @@ export function CampeaoAviso() {
   };
   return (
     <div id="aviso-campeao" className="campeao-aviso relative flex min-h-9 items-center justify-center bg-[#0d0d0d] px-12 text-[12px] text-white md:pointer-events-auto md:-mx-4 md:-mt-3 md:mb-3">
-        <Link href={CAMPEAO.href} className="group inline-flex min-h-9 items-center gap-2 py-1.5 text-center underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e9cf8f]">
-          <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-[#e9cf8f]" />
+        <Link href={CAMPEAO.href} className="group inline-flex min-h-9 items-center gap-2 py-1.5 text-center underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c36a]">
+          <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-[#e8c36a]" />
           <span>
-            {CAMPEAO_AVISO.text} <span className="text-[#e9cf8f]">→ {CAMPEAO_AVISO.cta}</span>
+            {CAMPEAO_AVISO.text} <span className="text-[#e8c36a]">→ {CAMPEAO_AVISO.cta}</span>
           </span>
         </Link>
+        {/* Estilo dourado discreto (sistema dourado do campeão): fio na base. */}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,var(--ouro)_20%,var(--ouro-claro)_50%,var(--ouro)_80%,transparent)]" />
         <button
           type="button"
           onClick={dismiss}
           aria-label="Dispensar o aviso do campeão"
-          className="absolute right-1.5 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-[#e9cf8f]"
+          className="absolute right-1.5 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-[#e8c36a]"
         >
           <X size={16} aria-hidden="true" />
         </button>

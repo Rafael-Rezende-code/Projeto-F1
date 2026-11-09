@@ -486,13 +486,13 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
    Porta do protótipo docs/referencia/coroacao/index.html com os MESMOS valores. Só transform/opacity animados; nenhum
    filtro animado; will-change só nas camadas que se movem. Nenhum ancestral da cena pode ter overflow hidden/auto,
    transform ou filter (o filho é sticky). */
-.campeao-cena, .campeao-capa { --papel: #e4dfdc; --tinta: #0d0d0d; --ease-coroa: cubic-bezier(.22, 1, .36, 1);
+.campeao-cena { --papel: #e4dfdc; --tinta: #0d0d0d; --ease-coroa: cubic-bezier(.22, 1, .36, 1);
   position: relative; background: var(--papel); color: var(--tinta); }
 .campeao-cena { height: 320svh; }
-.campeao-cena.is-estatica, .campeao-capa { height: 100svh; }
+.campeao-cena.is-estatica { height: 100svh; }
 .font-campeao-mono { font-family: var(--font-mono-campeao), ui-monospace, monospace; }
 .campeao-fixo { position: sticky; top: 0; height: 100svh; display: grid; place-items: center; overflow: hidden; }
-.campeao-capa .campeao-fixo, .campeao-cena.is-estatica .campeao-fixo { position: relative; }
+.campeao-cena.is-estatica .campeao-fixo { position: relative; }
 
 /* Palco 16:9 das camadas; nunca estoura a tela; bordas laterais esmaecem para o papel. */
 .campeao-palco { position: relative; width: min(100vw, 177.78svh); aspect-ratio: 16 / 9; container-type: inline-size;
@@ -511,9 +511,13 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
 .campeao-cursor { animation: campeao-pisca 1s steps(1) infinite; }
 @keyframes campeao-pisca { 50% { opacity: 0; } }
 @keyframes campeao-cai { from { transform: translate3d(0, -.5em, 0); opacity: 0; } to { transform: none; opacity: 1; } }
-.campeao-titulo b { display: block; margin-top: .5cqw; font-family: var(--font-hero), "Helvetica Neue", Arial, sans-serif;
-  font-weight: 500; font-size: 12.6cqw; line-height: .84; letter-spacing: -.035em; will-change: transform, opacity; }
-.campeao-capa .campeao-titulo b, .is-estatica .campeao-titulo b { will-change: auto; }
+.campeao-titulo b { display: block; margin-top: 0; font-family: var(--font-hero), "Helvetica Neue", Arial, sans-serif;
+  /* feat/antonelli-2: Inter 400, 14cqw, tracking -.02em e sem a margem de cima: altura das letras, base e centro iguais aos de
+     original.png (docs/antonelli/prints/tipografia-original-x-site-2.png). O desenho não fica idêntico: a original.png foi
+     renderizada na fonte de reserva do protótipo (Helvetica Neue: pingo do i quadrado, letras mais largas); a Inter não tem
+     pingo quadrado em nenhum conjunto estilístico (testados ss07, ss08, cv13 e o tamanho óptico Display). */
+  font-weight: 400; font-size: 14cqw; line-height: .84; letter-spacing: -.02em; will-change: transform, opacity; }
+.is-estatica .campeao-titulo b { will-change: auto; }
 
 /* Sombra de contato no cabelo */
 .campeao-sombra { left: 29%; top: 63.2%; width: 42%; height: 9%; opacity: 0;
@@ -522,7 +526,7 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
 /* Camada coroa + mãos */
 .campeao-coroa { left: 9.99%; top: 23.06%; width: 80.74%; transform-origin: 50% 40%; will-change: transform;
   transform: translate3d(0, -150%, 0) rotate(-3deg) scale(1.06); }
-.campeao-capa .campeao-coroa, .is-estatica .campeao-coroa { will-change: auto; }
+.is-estatica .campeao-coroa { will-change: auto; }
 .campeao-fixo:not([data-ready]) .campeao-coroa { opacity: 0; }
 .campeao-assenta { position: relative; }
 .campeao-assenta img { display: block; width: 100%; height: auto;
@@ -597,17 +601,44 @@ body:has([data-buy-bar]) .whatsapp-fab { bottom: calc(var(--dock-space) + 84px);
 }
 /* Botão da capa acompanha o palco nas telas grandes (2560px). */
 .campeao-acao-palco a { font-size: clamp(14px, 1.05cqw, 22px); padding: .85em 1.6em; }
-/* Card dourado do campeão (components/campeao/champion-card.tsx) */
-.campeao-ouro { background: linear-gradient(135deg, #f1dfae 0%, #dcbb6a 45%, #b48a36 100%); color: #0d0d0d; }
-.campeao-selo-card { width: 76px; container-type: inline-size; color: #0d0d0d; }
-.campeao-selo-card .campeao-selo-miolo { font-size: 26cqw; }
-.campeao-selo-modo { width: clamp(84px, 14vw, 128px); container-type: inline-size; color: #14110a; }
-.campeao-selo-modo .campeao-selo-miolo { font-size: 26cqw; }
 /* Animações em loop da Sessão do Campeão pausadas fora da tela (components/campeao/play-when-visible.tsx). */
 [data-pausado] .campeao-selo svg, [data-pausado] .campeao-brilho i, [data-pausado] .campeao-bandeira-img,
 [data-pausado] .campeao-bandeira-luz, [data-pausado] .campeao-cursor, [data-pausado] .campeao-dica i { animation-play-state: paused; }
-/* Capa da home: as fontes da sessão (Inter do título, mono) só são pedidas quando a capa chega perto da tela; antes,
-   os fallbacks com as mesmas métricas (o hero carrega a Inter só depois do primeiro quadro: não antecipar). */
-.campeao-capa[data-pausado] .campeao-titulo b, .campeao-capa[data-pausado] .campeao-selo-texto { font-family: "fontHero Fallback", Arial, sans-serif; }
-.campeao-capa[data-pausado] .font-campeao-mono { font-family: ui-monospace, monospace; }
-.campeao-selo-card .campeao-selo-texto { font-family: var(--font-sans), Arial, sans-serif; font-weight: 600; }
+
+/* ---- Sistema dourado do campeão (feat/antonelli-2; components/ui/gold.tsx) ----
+   RESERVADO ao campeão: só nas telas e cards do Kimi. Só transform/opacity animados; will-change só enquanto anima (fora
+   da tela tudo pausa: PlayWhenVisible põe [data-pausado]). Animações sempre ligadas (não movem a tela). */
+:root { --ouro-sombra: #5c4310; --ouro-escuro: #8f6a1e; --ouro: #c8962c; --ouro-claro: #e8c36a; --ouro-brilho: #fff3c4; }
+.font-ouro-serif { font-family: var(--font-ouro-serif), "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 500; font-synthesis: none; }
+[data-pausado] .font-ouro-serif.ouro-adiado { font-family: Georgia, serif; }
+/* Texto dourado (degradê fixo, só sobre fundo escuro: #c8962c dá ~7:1 sobre #0b0b0c). */
+.gold-text { color: var(--ouro-claro); background: linear-gradient(100deg, var(--ouro-escuro) 0%, var(--ouro) 24%, var(--ouro-claro) 44%,
+  var(--ouro-brilho) 52%, var(--ouro-claro) 60%, var(--ouro) 80%, var(--ouro-escuro) 100%); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; }
+@media (forced-colors: active) { .gold-text { -webkit-text-fill-color: currentColor; background: none; } }
+/* Borda com feixe: 1px de degradê fixo + um feixe que gira (transform) por trás do miolo. O quadrado do feixe tem 170% da
+   largura (cobre a diagonal de cards até 4:5; --beam-size para outros formatos). */
+.gold-beam { position: relative; isolation: isolate; overflow: hidden; border-radius: 1rem; padding: 1px;
+  background: linear-gradient(135deg, var(--ouro-claro), var(--ouro-escuro) 35%, var(--ouro-sombra) 55%, var(--ouro) 100%); }
+.gold-beam::before { content: ""; position: absolute; z-index: -1; left: 50%; top: 50%; width: var(--beam-size, 170%); aspect-ratio: 1;
+  margin: calc(var(--beam-size, 170%) / -2) 0 0 calc(var(--beam-size, 170%) / -2);
+  background: conic-gradient(from 0deg, transparent 0 62%, var(--ouro-claro) 74%, var(--ouro-brilho) 78%, var(--ouro-claro) 82%, transparent 92%);
+  animation: gold-beam 8s linear infinite; }
+.gold-beam > .gold-beam-miolo { position: relative; height: 100%; overflow: hidden; border-radius: calc(1rem - 1px); background: #0b0b0c; }
+@keyframes gold-beam { to { transform: rotate(360deg); } }
+/* Brilho passando de tempos em tempos (uma faixa clara atravessa o card a cada 7 s). */
+.gold-sheen { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 2; }
+.gold-sheen i { position: absolute; top: -20%; left: 0; width: 28%; height: 140%; opacity: .55; mix-blend-mode: soft-light;
+  background: linear-gradient(90deg, transparent, rgba(255, 243, 196, .9) 50%, transparent);
+  transform: translate3d(-130%, 0, 0) skewX(-16deg); animation: gold-sheen 7s cubic-bezier(.45, .05, .3, 1) 1.2s infinite; }
+@keyframes gold-sheen { 0% { transform: translate3d(-130%, 0, 0) skewX(-16deg); } 28%, 100% { transform: translate3d(480%, 0, 0) skewX(-16deg); } }
+.gold-anim:not([data-pausado]) .gold-beam::before, .gold-anim.gold-beam:not([data-pausado])::before,
+.gold-anim:not([data-pausado]) .gold-sheen i { will-change: transform; }
+[data-pausado] .gold-beam::before, [data-pausado] .gold-sheen i, .gold-beam[data-pausado]::before, .gold-beam[data-pausado] .gold-sheen i { animation-play-state: paused; will-change: auto; }
+/* Fita "Campeão Mundial 2026": faixa dourada com as pontas recortadas (clip-path fixo). Texto escuro (~7:1). */
+.gold-ribbon { display: inline-flex; align-items: center; gap: .6em; padding: .55em 1.5em; color: #1a1306;
+  background: linear-gradient(100deg, var(--ouro-escuro), var(--ouro) 30%, var(--ouro-claro) 52%, var(--ouro) 74%, var(--ouro-escuro));
+  font-size: 11px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; line-height: 1;
+  clip-path: polygon(0 0, 100% 0, calc(100% - .7em) 50%, 100% 100%, 0 100%, .7em 50%); }
+/* Fio da barra superior (cabeçalho) no período do campeão: lib/campeao.ts (CAMPEAO_BARRA_SCRIPT) liga as variáveis. */
+.site-header-ouro { opacity: var(--barra-ouro, 0); background: linear-gradient(90deg, transparent, var(--ouro) 20%, var(--ouro-claro) 50%, var(--ouro) 80%, transparent); }

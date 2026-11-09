@@ -18,7 +18,8 @@ export default function PilotosPage() {
         <div className="mt-8">
           <PageIntro eyebrow="Os pilotos" title="Escolha seu piloto" body="Camisetas, bonés, miniaturas e pôsteres de quem acelera no grid." />
         </div>
-        <DriverCardList className="mt-12" blurs={driverCardBlurs()} />
+        {/* Card dourado do campeão com a foto do pódio e título h2 (o h1 é o da página). */}
+        <DriverCardList className="mt-12" blurs={driverCardBlurs()} champion="pilotos" championHeading="h2" />
       </div>
     </div>
   );

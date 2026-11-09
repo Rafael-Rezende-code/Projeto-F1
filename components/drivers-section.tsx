@@ -9,7 +9,8 @@ import { RevealGroup } from "@/components/motion/reveal-group";
 import { driverTransitionName, SharedTransition } from "@/components/motion/view-transition";
 import { SectionTitle } from "@/components/motion/section-title";
 import { HoverTransition } from "@/components/ui/hover-transition";
-import { ChampionCard } from "@/components/campeao/champion-card";
+import { GoldChampionCard } from "@/components/campeao/gold-champion-card";
+import type { CampeaoCardVariant } from "@/lib/campeao";
 import { driverHoverTransition, drivers, type Driver } from "@/lib/drivers";
 
 // Largura real do card em cada breakpoint (o navegador multiplica pelo DPR para escolher a imagem):
@@ -140,21 +141,36 @@ function DriverCard({ driver, blur }: { driver: Driver; blur?: string }) {
   );
 }
 
-// Lista dos cards (carrossel no celular, grade a partir de 640px). Usada na home e em /pilotos.
-export function DriverCardList({ className = "", blurs = {} }: { className?: string; /** placeholders desfocados por slug (lib/driver-card-blurs.ts) */ blurs?: Record<string, string> }) {
+// Lista dos cards. O campeão (card dourado, components/campeao/gold-champion-card.tsx) vem sempre primeiro e FORA do
+// carrossel: no celular, a largura toda; de 640 a 1023px, a linha inteira; a partir de 1024px, 2 colunas à esquerda com a
+// altura dos 2 × 2 cards dos outros pilotos à direita (sem buraco na grade). Os demais: carrossel no celular, grade a
+// partir de 640px. Usada na home (fundo com a bandeira) e em /pilotos (foto do pódio, título h2).
+export function DriverCardList({
+  className = "",
+  blurs = {},
+  champion = "home",
+  championHeading = "h3",
+}: {
+  className?: string;
+  /** placeholders desfocados por slug (lib/driver-card-blurs.ts); o card do campeão usa "campeao-home"/"campeao-pilotos" */
+  blurs?: Record<string, string>;
+  champion?: CampeaoCardVariant;
+  championHeading?: "h2" | "h3";
+}) {
+  const hasChampion = drivers.some((driver) => driver.champion);
   return (
-    <RevealGroup
-      role="list"
-      className={`-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 py-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4 ${className}`}
-    >
-      {/* O campeão (card dourado) vem sempre primeiro. */}
-      {drivers.filter((driver) => driver.champion).map((driver) => (
-        <ChampionCard key={driver.slug} driver={driver} blur={blurs[driver.slug]} />
-      ))}
-      {drivers.filter((driver) => !driver.champion).map((driver) => (
-        <DriverCard key={driver.slug} driver={driver} blur={blurs[driver.slug]} />
-      ))}
-    </RevealGroup>
+    <div className={`grid grid-cols-1 gap-3 lg:grid-cols-4 ${className}`}>
+      {hasChampion && <GoldChampionCard variant={champion} headingLevel={championHeading} blur={blurs[`campeao-${champion}`]} className="lg:col-span-2" />}
+      <RevealGroup
+        role="list"
+        aria-label="Pilotos"
+        className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overscroll-x-contain px-5 py-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:py-0 lg:col-span-2 lg:grid-cols-2"
+      >
+        {drivers.filter((driver) => !driver.champion).map((driver) => (
+          <DriverCard key={driver.slug} driver={driver} blur={blurs[driver.slug]} />
+        ))}
+      </RevealGroup>
+    </div>
   );
 }
 

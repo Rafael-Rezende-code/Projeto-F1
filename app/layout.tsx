@@ -15,6 +15,7 @@ import { fontVariables } from '@/lib/fonts'
 import { BRAND, brandTitle } from '@/lib/brand'
 import { siteRobots } from '@/lib/indexing'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { CAMPEAO_BARRA_SCRIPT } from '@/lib/campeao'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -45,6 +46,8 @@ export default async function RootLayout({
   return (
     <html lang="pt-BR" className={fontVariables}>
       <body className="antialiased">
+        {/* Barra superior dourada no período do campeão, pelo relógio do visitante (lib/campeao.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: CAMPEAO_BARRA_SCRIPT }} />
         <HydrationMark />
         <SiteUIProvider>
           <CartProvider>

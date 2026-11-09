@@ -22,7 +22,7 @@ import { blurProps, findLocalImage, localImage } from "@/lib/local-images";
 import { signaturePaths } from "@/lib/signature-paths";
 import { drivers as driverCards } from "@/lib/drivers";
 import { championProducts } from "@/lib/campeao-products";
-import { ModoCampeao } from "@/components/campeao/modo-campeao";
+import { FichaCampeao } from "@/components/campeao/ficha-campeao";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -62,12 +62,16 @@ export const revalidate = 3600;
 export default async function DriverPage({ params }: Params) {
   const driver = await catalog.getDriverBySlug((await params).slug);
   if (!driver) notFound();
-  // Campeão (Sessão do Campeão): "modo campeão" e, como produtos dele, os com a tag `antonelli` (entram pelo admin).
+  // Campeão (Sessão do Campeão): ficha do campeão e, como produtos dele, os com a tag `antonelli` (entram pelo admin).
   const champion = driverCards.find((card) => card.slug === driver.slug)?.champion;
   const [team, products] = await Promise.all([
     catalog.getTeamBySlug(driver.teamSlug),
     champion ? catalog.getProducts().then(championProducts) : catalog.getProducts({ driver: driver.slug }),
   ]);
+
+  // Campeão (feat/antonelli-2): a página inteira é a "ficha do campeão" (topo com a bandeira, números, linha do tempo,
+  // galeria, coleção e o card da coroação).
+  if (champion) return <FichaCampeao products={products} driverSlug={driver.slug} />;
 
   const main = driver.photoMain;
   const second = driver.photoSecondary;
@@ -186,8 +190,6 @@ export default async function DriverPage({ params }: Params) {
         {photo}
         {stageBlock}
       </header>
-
-      {champion && <ModoCampeao />}
 
       {/* Ordem (refino 2): topo → produtos → história e números → bloco editorial com a foto secundária. */}
       <section aria-labelledby="produtos-piloto" id="produtos-piloto-secao" className="scroll-mt-24 px-5 pt-16 sm:px-10 sm:pt-20">
