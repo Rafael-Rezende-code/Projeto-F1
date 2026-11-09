@@ -25,6 +25,10 @@ const nextConfig = {
       { source: '/:path*', headers: [...security, ...(allowIndexing ? [] : [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }])] },
     ]
   },
+  // Sessão do Campeão: o link de coleção do título leva à coleção dentro da página (308).
+  async redirects() {
+    return [{ source: '/colecao/campeao-2026', destination: '/campeao#colecao', permanent: true }]
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

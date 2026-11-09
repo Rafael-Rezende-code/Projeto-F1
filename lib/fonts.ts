@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { Playfair_Display } from "next/font/google";
+import { JetBrains_Mono, Playfair_Display } from "next/font/google";
 
 // TOKENS DE FONTE — o único lugar onde as famílias do site são definidas.
 // Para trocar uma fonte: mude o import e a chamada abaixo (mantenha `variable`); o CSS usa só as variáveis
@@ -64,5 +64,15 @@ export const fontHero = localFont({
   variable: "--font-hero",
 });
 
+// Sessão do Campeão (components/campeao): textos pequenos em monoespaçada ("THE CHAMPION", "ROLE PARA COROAR"), como
+// no protótipo da coroação. JetBrains Mono 500 (SIL OFL), latin, sem preload: só baixa nas páginas que a usam.
+export const fontMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: "500",
+  display: "swap",
+  preload: false,
+  variable: "--font-mono-campeao",
+});
+
 /** Classes para o <html>: expõem as variáveis CSS das famílias. */
-export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontHero.variable}`;
+export const fontVariables = `${fontDisplay.variable} ${fontSans.variable} ${fontAccent.variable} ${fontHero.variable} ${fontMono.variable}`;
